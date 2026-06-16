@@ -1,17 +1,17 @@
 #include <Arduino.h>
 
-#define LED_PIN LED_BUILTIN
+#define LED_PIN RGB_BUILTIN
 
 void setColor(uint8_t pin, uint32_t color);
 
 void setup() {
-  pinMode(RGB_BUILTIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
-  setColor(RGB_BUILTIN, 0xFF0000);
+  setColor(LED_PIN, 0xFF0000);
   delay(1000);
-  setColor(RGB_BUILTIN, 0x0000FF);
+  setColor(LED_PIN, 0x0000FF);
   delay(1000);
 }
 
