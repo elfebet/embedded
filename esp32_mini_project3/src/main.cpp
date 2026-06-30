@@ -9,8 +9,8 @@ constexpr uint8_t PIN_BUTTON = 6;       // button
 constexpr uint8_t PIN_BUZZER = 7;       // piezo buzzer (sound)
 
 PullDownButton button = PullDownButton(PIN_BUTTON);
-AlarmBlink alarmBlink = AlarmBlink(PIN_ALARM_LED);
-LaserDetector laserDetector = LaserDetector(PIN_LDR);
+AlarmBlink alarmBlink = AlarmBlink(PIN_ALARM_LED, PIN_BUZZER, 500);
+LaserDetector laserDetector = LaserDetector(PIN_LDR, 3000);
 
 void setup() {
   Serial.begin(115200);
