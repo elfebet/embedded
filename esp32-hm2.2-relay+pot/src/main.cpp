@@ -44,6 +44,6 @@ void loop() {
 
   if (currentTime - lastPotReadTime >= POT_DELAY) {
     lastPotReadTime = currentTime;
-    Serial.printf("Pot: %d, val: %d\n", val);
+    Serial.printf("Pot: %d\n", val);
   }
 }
