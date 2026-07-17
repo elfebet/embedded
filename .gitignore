@@ -1,2 +1,18 @@
+# vscode noise
 .pio
 .vscode
+
+# esp-idf built binaries
+build/
+build_*_*/
+sdkconfig
+sdkconfig.old
+
+# esp-idf noise
+.settings
+.espressif
+
+.clang-format
+.clangd
+.cproject
+.project
