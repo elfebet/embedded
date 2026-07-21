@@ -2,6 +2,8 @@
 
 #ifdef ESP32_ESPRESSIF_BOARD
     #define FAN_PIN GPIO_NUM_4
+#elif STM32_ARDUINO_BOARD
+    #define FAN_PIN PA0
 #else // arduino board
     #define FAN_PIN 4
 #endif
