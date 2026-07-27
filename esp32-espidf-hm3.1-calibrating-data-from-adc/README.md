@@ -1,11 +1,11 @@
-ESP-IDF template app
-====================
+Завдання
 
-This is a template application to be used with [Espressif IoT Development Framework](https://github.com/espressif/esp-idf).
-
-Please check [ESP-IDF docs](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for getting started instructions.
-
-*Code in this repository is in the Public Domain (or CC0 licensed, at your option.)
-Unless required by applicable law or agreed to in writing, this
-software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.*
+1. Підключити потенціометр (~10 кОм) у вигляді подільника напруги.
+- візьміть до уваги опорну напругу, атенюацію та розрядність. Можна додати їх до таблиці також для інформації.
+2. Налаштувати АЦП та зчитувати значення кожні ~100 мс.
+3. Зробити кілька вимірювань. Для кожного вимірювання:
+- зчитати RAW значення АЦП та обчислити напругу за формулою
+- зчитати напругу за допомогою каліброваного АЦП;
+- обчислити похибку (%) між обчисленою та каліброваною напругою.
+4. Вивести в серійну консоль таблицю. Приклад нижче:
+RAW   U_manual(mV)   U_cali(mV)   Error(%)
