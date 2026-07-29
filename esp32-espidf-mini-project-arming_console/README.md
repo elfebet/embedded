@@ -20,4 +20,4 @@
 
 ## Схема на макетній платі
 
-![Схема ESP32-S3](esp32-s3-schema-photo.heic)
+![Схема ESP32-S3](esp32-s3-schema-photo.jpg)
