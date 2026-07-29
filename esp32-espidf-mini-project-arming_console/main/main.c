@@ -112,6 +112,7 @@ static void handle_arm_button(button_event_t ev, uint32_t now_ms) {
             s_zones[i].tripped = false;
         }
         s_panic_latched = false;
+        nvs_storage_erase();
         sys_transition(SYS_DISARMED, now_ms);
         load_buzzer_set(false);
         ESP_LOGW(TAG, "FULL RESET OFF PANEL (LONG PRESS ARM).");
@@ -122,6 +123,7 @@ static void handle_zone_button(int zone_idx, button_event_t ev) {
     zone_t *z = &s_zones[zone_idx];
     if (ev == BTN_EVENT_SHORT_PRESS) {
         z->tripped = true;
+        nvs_storage_write_bool(z->name, STORAGE_VALUE_TRIPPED, z->tripped);
         ESP_LOGI(TAG, "%s: simulation working of sensor (bypass=%d)", z->name, z->bypassed);
         if (s_sys_state == SYS_ARMED && !z->bypassed) {
             sys_transition(SYS_ALARM, (uint32_t)(esp_timer_get_time() / 1000ULL));
@@ -129,7 +131,7 @@ static void handle_zone_button(int zone_idx, button_event_t ev) {
         }
     } else if (ev == BTN_EVENT_LONG_PRESS) {
         z->bypassed = !z->bypassed;
-        nvs_storage_writeBypassedValue(z->name, z->bypassed);
+        nvs_storage_write_bool(z->name, STORAGE_VALUE_BYPASSED, z->bypassed);
         request_chirp(z->bypassed ? 150: 50);
         ESP_LOGW(TAG, "%s: bypass %s", z->name, z->bypassed ? "TURN ON" : "TURN OFF");
     }
@@ -227,7 +229,8 @@ void app_main(void) {
     // create NVS storage and read "bypassed" values
     nvs_storage_init();
     for (int i = 0; i < N_ZONES; i++) {
-        s_zones[i].bypassed = nvs_storage_readBypassedValue(s_zones[i].name);
+        s_zones[i].bypassed = nvs_storage_read_bool(s_zones[i].name, STORAGE_VALUE_BYPASSED);
+        s_zones[i].tripped = nvs_storage_read_bool(s_zones[i].name, STORAGE_VALUE_TRIPPED);
     }
 
     // init buttons
