@@ -1,7 +1,9 @@
-# Homework for lesson 2.5 (Timers)
+# Модуль 2.5. Таймери
 
-Project works for 3 platforms
-1. Espressif IDE platform realization - `main_espidf.c`
+Керування двигуном через реле, який вмикається кожні 15 секунд на 5 секунд. 
+
+Реалізація в vscode для 3 різних платформ
+1. Espressif IDE - `main_espidf.c`
 2. ESP32 arduino - `main_arduino.cpp`
 3. STM32 arduino - `main_stm32_arduino.cpp`
 
