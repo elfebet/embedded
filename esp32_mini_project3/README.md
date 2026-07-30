@@ -8,3 +8,6 @@
 
 
 [Відео реалізованого проекту](mini-project-3.mp4)
+
+
+Альтернативна реалізація проекту: https://gitlab.com/prime72w/laserirradiationdetector/
