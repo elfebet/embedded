@@ -1,11 +1,36 @@
-ESP-IDF template app
-====================
+## Модуль 3.2 ADC дані, фоторезистор і термістор (терморезистор)
 
-This is a template application to be used with [Espressif IoT Development Framework](https://github.com/espressif/esp-idf).
+Структура проекту
 
-Please check [ESP-IDF docs](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for getting started instructions.
+```
+project/
+├── components/
+│   ├── config/
+│   │   ├── CMakeLists.txt
+│   │   └── include/
+│   │       └── config.h     <-- Загальний конфіг
+│   ├── ldr/
+│   │   ├── CMakeLists.txt
+│   │   ├── ldr.c            <-- Фунціонал для LDR
+│   │   └── include/
+│   │       └── ldr.h
+│   ├── ntc/
+│   │   ├── CMakeLists.txt
+│   │   ├── ntc.c           <-- Фунціонал для NTC
+│   │   └── include/
+│   │       └── ntc.h
+└── main/
+```
 
-*Code in this repository is in the Public Domain (or CC0 licensed, at your option.)
-Unless required by applicable law or agreed to in writing, this
-software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.*
+1. Фоторезистор (LDR)
+- зчитуємо ADC значення + фільтруємо (SMA)
+- використовуємо поріг для вмикання і вимикання світлодіоду. Якщо темно - вмикаємо, якщо світло - вимикаємо.
+
+2. Термістор (NTC)
+- зчитуємо ADC значення + фільтруємо (SMA)
+- використовуємо формулу для переводу значень в температуру і виводимо в лог.
+
+
+## Схема підключення на макетній платі
+
+[Схема esp32s3](schema.jpg)
