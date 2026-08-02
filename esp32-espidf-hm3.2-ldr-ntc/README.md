@@ -49,4 +49,4 @@ LDR_task: Raw: 2455 | Filtered: 2452 | LED: 0
 
 ## Схема підключення на макетній платі
 
-[Схема esp32s3](schema.jpg)
+![Схема esp32s3](schema.jpg)
