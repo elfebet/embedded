@@ -20,7 +20,7 @@
 #define LEDC_TIMER_NUM   LEDC_TIMER_0
 #define LEDC_CHANNEL_NUM LEDC_CHANNEL_0
 #define LEDC_MODE        LEDC_LOW_SPEED_MODE
-#define LEDC_DUTY_RES    LEDC_TIMER_14_BIT   // Роздільна здатність 14 біт (2^14 = 16384 значень)
+#define LEDC_DUTY_RES    LEDC_TIMER_14_BIT   // 14 bit (2^14 = 16384)
 
 #define POT_ADC_UNIT    ADC_UNIT_1
 #define POT_ADC_CHANNEL ADC_CHANNEL_5 //  esp32-s3 ADC1_5 -> GPIO 6
@@ -120,7 +120,7 @@ void app_main(void) {
         now = esp_timer_get_time();
         if (now - current_time > 500 * 1000) {
             current_time = now;
-            ESP_LOGI(TAG, "Кут: %d, raw: %d", angle, adc_raw);
+            ESP_LOGI(TAG, "Angle: %d, raw: %d", angle, adc_raw);
         }
 
         vTaskDelay(pdMS_TO_TICKS(20));
