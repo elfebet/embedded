@@ -8,7 +8,7 @@
 Апаратна реалізація:
 
 Схема приблизно як на картинці
-[Circuit](schema_like.png)
+![Circuit](schema_like.png)
 
 Додатково:
 - використовуємо mosfet IRL540N
@@ -16,4 +16,7 @@
 
 ## Схема підключення на макетній платі
 
-[Схема esp32s3](schema_board.jpg)
+![Схема esp32s3](schema_board.jpg)
+
+
+![Відео демо](video_demo.mov)
