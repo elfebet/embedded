@@ -1,11 +1,19 @@
-ESP-IDF template app
-====================
+## Модуль 3.3 Керування швидкістю двигуна + яскравість діоду
 
-This is a template application to be used with [Espressif IoT Development Framework](https://github.com/espressif/esp-idf).
+Програмна реалізація:
+- створюємо таймер з двома каналами (для двигуна і LED)
+- створюємо ADC для потенціометру
+- считуємо ADC значення з потенціометру й встановлюємо "dutyCycle" для каналів (двигун і LED)
 
-Please check [ESP-IDF docs](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for getting started instructions.
+Апаратна реалізація:
+Схема приблизно як на картинці
+[Circuit](schema_like.png)
+Додатково:
+- використовуємо mosfet IRL540N
+- додаємо flyback diode між живленням і двигуном для захисту від стрибків напруги
 
-*Code in this repository is in the Public Domain (or CC0 licensed, at your option.)
-Unless required by applicable law or agreed to in writing, this
-software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.*
+## Схема підключення на макетній платі
+
+[Схема esp32s3](schema_board.jpg)
+
+[Демо відео](video_demo.mov)
