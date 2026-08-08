@@ -1,9 +1,7 @@
-//#include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include "driver/pulse_cnt.h"
 #include "esp_log.h"
-//#include "esp_timer.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "hal/pcnt_types.h"
