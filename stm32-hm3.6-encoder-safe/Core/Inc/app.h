@@ -13,8 +13,10 @@ extern "C" {
 #endif
 
 void app_setup(void);
-void app_counter_callback(void);
-void app_button_callback(void);
+void app_loop(void);
+
+void app_isr_counter_callback(void);
+void app_isr_button_callback(void);
 
 #ifdef __cplusplus
 }
