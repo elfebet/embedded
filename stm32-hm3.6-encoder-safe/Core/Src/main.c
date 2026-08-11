@@ -117,10 +117,6 @@ int main(void)
   while (1)
   {
       app_loop();
-
-      // when there is nothing to do - fall asleep until the next interruption
-//      HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
