@@ -44,26 +44,6 @@ INCORRECT PIN-CODE!
 ```
 === SAFE IS LOCKED ===
 Enter PIN-code (4 digits). Attempts left: 3
-Code: 2 0 6 3
-INCORRECT PIN-CODE!
-
-Attempts left: 2
-Code: 0 4 5 3
-INCORRECT PIN-CODE!
-
-Attempts left: 1
-Code: 0 0 1 1
-INCORRECT PIN-CODE!
-
-
-=======================
- The safe is locked!
-=======================
-```
-
-```
-=== SAFE IS LOCKED ===
-Enter PIN-code (4 digits). Attempts left: 3
 Code: 3 7 0 5
 
 =======================
