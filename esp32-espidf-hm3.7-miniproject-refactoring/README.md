@@ -1,11 +1,20 @@
-ESP-IDF template app
-====================
+# Модуль 3.7 Мініпроєкт. Завдання: Порефакторити код мініпроєкту
 
-This is a template application to be used with [Espressif IoT Development Framework](https://github.com/espressif/esp-idf).
+Орігінальний код файлу в `main_legacy.c`
 
-Please check [ESP-IDF docs](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for getting started instructions.
+## Реалізація
+- зібрав схему
+- розбив на окремі файли (компоненти): `ldc`, `servo`
+- додав SMA для ldr, щоб значення змінювались плавно
+- зробив рефакторінг коду для ldr
+- зробив рефакторінг коду для servo
+- в `main.c`
+    - ініціюємо ldr and servo
+    - в `while` циклі зчитуємо значення ldr, конвертуємо в `angle` й передаємо в `angle` в servo
+    
+## Схема на макетній платі
 
-*Code in this repository is in the Public Domain (or CC0 licensed, at your option.)
-Unless required by applicable law or agreed to in writing, this
-software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.*
+![Схема ESP32-S3](schema.jpg)
+
+
+[Video demo](video_demo.mp4)
