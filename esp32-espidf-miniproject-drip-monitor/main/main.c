@@ -1,4 +1,3 @@
-//#include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -23,7 +22,7 @@ void app_main(void) {
     clamp_servo_init();
     alarm_driver_init();
 
-    int8_t open_percent = 30;   // початкове положення відкриття, скориговане контуром нижче
+    int open_percent = 30;   // початкове положення відкриття, скориговане контуром нижче
     bool silenced = false;
 
     while (1) {
@@ -43,7 +42,7 @@ void app_main(void) {
             open_percent = 0;   // БЕЗУМОВНЕ закриття при відмові будь-якого критичного датчика
         } else {
             float error_dpm = target_dpm - actual_dpm;
-            open_percent += (uint8_t)(error_dpm > 0 ? 1 : (error_dpm < 0 ? -1 : 0));
+            open_percent += (int)(error_dpm > 0 ? 1 : (error_dpm < 0 ? -1 : 0));
             if (open_percent > 100) open_percent = 100;
             if (open_percent < 0)   open_percent = 0;
         }
@@ -69,7 +68,7 @@ void app_main(void) {
         bool sw_now = rate_dial_button_pressed();
         if (sw_now && !sw_prev) {
             silenced = !silenced;
-            ESP_LOGW(TAG, "звук тривоги: %s", silenced ? "вимкнено вручну" : "увімкнено");
+            ESP_LOGW(TAG, "Alarm sound: %s", silenced ? "Manual OFF" : "ON");
         }
         sw_prev = sw_now;
 

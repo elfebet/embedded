@@ -17,7 +17,7 @@ static bool s_armed = true; // true = чекаємо на провал (поча
 static int64_t s_last_event_us = 0;
 static float s_intervals_s[RATE_WINDOW_N] = {0};
 static int s_interval_idx = 0;
-static int64_t s_last_seen_event_us = 0; // для drop_sensor_is_stalled()
+static int64_t s_last_seen_event_us = 0; // for drop_sensor_is_stalled()
 
 void drop_sensor_init(void) {
     adc_oneshot_unit_init_cfg_t unit_cfg = { .unit_id = ADC_UNIT_1 };
@@ -47,7 +47,7 @@ bool drop_sensor_poll_event(void) {
     return false;
 }
 
-// Викликати ЩОРАЗУ, коли drop_sensor_poll_event() повернув true (Крок 9)
+// Викликати ЩОРАЗУ, коли drop_sensor_poll_event() повернув true
 void drop_sensor_register_event(void) {
     int64_t now_us = esp_timer_get_time();
     s_last_seen_event_us = now_us;
@@ -74,7 +74,7 @@ float drop_sensor_get_rate_dpm(void) {
     if (n == 0) return 0.0f;
 
     float avg_interval_s = sum / n;
-    return 60.0f / avg_interval_s; // крапель за хвилину
+    return 60.0f / avg_interval_s; // drops per minute
 }
 
 bool drop_sensor_is_stalled(uint32_t timeout_ms) {

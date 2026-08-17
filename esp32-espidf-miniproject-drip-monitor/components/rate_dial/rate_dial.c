@@ -42,23 +42,23 @@ void rate_dial_init(void) {
 
     // Протилежна полярність каналів A/B — справжнє X4-декодування
     pcnt_channel_set_edge_action(
-        chan_a, 
-        PCNT_CHANNEL_EDGE_ACTION_DECREASE, 
+        chan_a,
+        PCNT_CHANNEL_EDGE_ACTION_DECREASE,
         PCNT_CHANNEL_EDGE_ACTION_INCREASE
     );
     pcnt_channel_set_level_action(
-        chan_a, 
-        PCNT_CHANNEL_LEVEL_ACTION_KEEP, 
+        chan_a,
+        PCNT_CHANNEL_LEVEL_ACTION_KEEP,
         PCNT_CHANNEL_LEVEL_ACTION_INVERSE
     );
     pcnt_channel_set_edge_action(
-        chan_b, 
-        PCNT_CHANNEL_EDGE_ACTION_INCREASE, 
+        chan_b,
+        PCNT_CHANNEL_EDGE_ACTION_INCREASE,
         PCNT_CHANNEL_EDGE_ACTION_DECREASE
     );
     pcnt_channel_set_level_action(
-        chan_b, 
-        PCNT_CHANNEL_LEVEL_ACTION_KEEP, 
+        chan_b,
+        PCNT_CHANNEL_LEVEL_ACTION_KEEP,
         PCNT_CHANNEL_LEVEL_ACTION_INVERSE
     );
 

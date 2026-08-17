@@ -6,10 +6,10 @@
 #define SERVO_MODE      LEDC_LOW_SPEED_MODE
 #define SERVO_CHANNEL   LEDC_CHANNEL_1
 #define SERVO_FREQ_HZ   50
-#define SERVO_RES       LEDC_TIMER_14_BIT // апаратна межа ESP32-S3
+#define SERVO_RES       LEDC_TIMER_14_BIT
 
-#define SERVO_MIN_US    500.0f // 0% відкриття (затискач закритий)
-#define SERVO_MAX_US    2500.0f // 100% відкриття (затискач повністю відкритий)
+#define SERVO_MIN_US    500.0f // 0% opened (closed)
+#define SERVO_MAX_US    2500.0f // 100% opened (clamp fully opened)
 #define SERVO_PERIOD_US 20000.0f
 
 static void servo_write_pulse(float pulse_us) {
@@ -39,7 +39,7 @@ void clamp_servo_init(void) {
     };
     ledc_channel_config(&ch_cfg);
 
-    servo_write_pulse(SERVO_MIN_US); // БЕЗПЕЧНИЙ СТАН ЗА ЗАМОВЧУВАННЯМ: закрито
+    servo_write_pulse(SERVO_MIN_US); // safe state by default: closed
 }
 
 void clamp_servo_set_open_percent(uint8_t percent) {

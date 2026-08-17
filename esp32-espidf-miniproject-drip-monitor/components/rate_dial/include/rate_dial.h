@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 void rate_dial_init(void);
-float rate_dial_get_target_dpm(void); // 5..80 крапель/хв
-bool rate_dial_button_pressed(void); // "озвучити тривогу / тиша"
+float rate_dial_get_target_dpm(void); // 5..80 drops per minute
+bool rate_dial_button_pressed(void); // "play alarm / silence"
 
 #ifdef __cplusplus
 }
