@@ -24,6 +24,12 @@ void temp_sensor_init(void) {
     ESP_ERROR_CHECK(adc_oneshot_config_channel(s_adc_handle, TEMP_ADC_CHANNEL, &chan_cfg));
 }
 
+uint16_t temp_sensor_read_raw() {
+    int raw = 0;
+    ESP_ERROR_CHECK(adc_oneshot_read(s_adc_handle, TEMP_ADC_CHANNEL, &raw));
+    return (uint16_t)raw;
+}
+
 bool temp_sensor_read_celsius(float *out_c, float *out_err_c) {
     int raw = 0;
     ESP_ERROR_CHECK(adc_oneshot_read(s_adc_handle, TEMP_ADC_CHANNEL, &raw));
@@ -32,14 +38,10 @@ bool temp_sensor_read_celsius(float *out_c, float *out_err_c) {
         return false;
     }
 
-    // raw/4095 ~ частка напруги живлення на нижньому резисторі (10кОм).
-    // R_ntc = R_divider * (Vcc/V_node - 1), де V_node/Vcc = raw/4095
-    float ratio = (float)raw / 4095.0f;
-    float r_ntc = DIVIDER_R_OHM * (1.0f / ratio - 1.0f);
-
+    float r_ntc = DIVIDER_R_OHM * ((4095.0f / (float)raw) - 1.0f);
     float inv_t = (1.0f / NTC_T0_K) + (1.0f / NTC_B) * logf(r_ntc / NTC_R0_OHM);
     float temp_c = (1.0f / inv_t) - 273.15f;
-    
+
     // Бюджет похибки: ±½ LSB на raw (0.4 мВ при ADC_ATTEN_DB_12) поширений
     // через похідну нелінійної формули термістора — тут спрощено оцінений
     // як стала ±0.3°C у робочому діапазоні 20-45°C (реальний розрахунок

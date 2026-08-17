@@ -46,6 +46,7 @@ void alarm_buzzer_set(uint32_t freq_hz, uint8_t volume_percent) {
 
     ESP_ERROR_CHECK(ledc_set_freq(BUZZER_MODE, BUZZER_TIMER, freq_hz));
     uint32_t max_duty = (1u << BUZZER_RES) - 1u;
+//    uint32_t duty = (max_duty * volume_percent) / 100u / 2u;
     uint32_t duty = (max_duty * volume_percent) / 100u / 2u;
     ESP_ERROR_CHECK(ledc_set_duty(BUZZER_MODE, BUZZER_CHANNEL, duty));
     ESP_ERROR_CHECK(ledc_update_duty(BUZZER_MODE, BUZZER_CHANNEL));

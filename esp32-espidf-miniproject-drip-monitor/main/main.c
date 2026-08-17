@@ -1,7 +1,9 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include "drop_sensor.h"
+#include "esp_timer.h"
 #include "temp_sensor.h"
 #include "rate_dial.h"
 #include "clamp_servo.h"
@@ -24,6 +26,7 @@ void app_main(void) {
 
     int open_percent = 30;   // початкове положення відкриття, скориговане контуром нижче
     bool silenced = false;
+    uint64_t last_time = 0;
 
     while (1) {
         if (drop_sensor_poll_event()) {
@@ -56,7 +59,7 @@ void app_main(void) {
             alarm_buzzer_set(2500, silenced ? 0 : 100);   // максимальна тривога
             alarm_led_set_level(100);
         } else if (deviation_pct > 30.0f) {
-            alarm_buzzer_set(1500, silenced ? 0 : 60);
+            alarm_buzzer_set(1500, silenced ? 0 : 80);
             alarm_led_set_level((uint8_t)(actual_dpm * 100 / 80));
         } else {
             alarm_buzzer_set(1000, 0);   // в межах норми — тиша
@@ -72,12 +75,16 @@ void app_main(void) {
         }
         sw_prev = sw_now;
 
-        ESP_LOGI(TAG, "темп=%.1f/%.1f крапель/хв | t=%s%.1f°C | відкриття=%u%% | %s",
-                 actual_dpm,
-                 target_dpm,
-                 temp_ok ? "" : "ПОМИЛКА ",
-                 temp_ok ? temp_c : 0.0f,
-                 open_percent, stalled ? "ЗУПИНКА ПОТОКУ" : "ОК");
+        const uint64_t now = esp_timer_get_time();
+        if (now - last_time > 500 * 1000) {
+            last_time = now;
+            ESP_LOGI(TAG, "темп=%.1f/%.1f крапель/хв | t=%s%.1f°C | відкриття=%u%% | %s",
+                     actual_dpm,
+                     target_dpm,
+                     temp_ok ? "" : "ПОМИЛКА ",
+                     temp_ok ? temp_c : 0.0f,
+                     open_percent, stalled ? "ЗУПИНКА ПОТОКУ" : "ОК");
+        }
 
         vTaskDelay(pdMS_TO_TICKS(20));
     }
