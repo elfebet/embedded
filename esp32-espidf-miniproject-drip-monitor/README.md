@@ -1,6 +1,6 @@
 # Тренажер монітора інфузії: лічильник крапель, затискач і аварійний зупин
 
-Інструкція реалізації проєкту: [Drip monitor project](drip_monitor_project.md)
+Інструкція реалізації проєкту: [Drip monitor project guide](drip_monitor_project.md)
 
 ## Що зроблено
 
