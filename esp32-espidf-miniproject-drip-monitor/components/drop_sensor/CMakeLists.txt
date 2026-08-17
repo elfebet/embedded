@@ -4,4 +4,5 @@ idf_component_register(
     REQUIRES
         esp_adc
         esp_timer
+    PRIV_REQUIRES config
 )

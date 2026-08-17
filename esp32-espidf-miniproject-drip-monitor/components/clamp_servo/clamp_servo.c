@@ -1,7 +1,7 @@
 #include "clamp_servo.h"
+#include "config.h"
 #include "driver/ledc.h"
 
-#define SERVO_PIN       15
 #define SERVO_TIMER     LEDC_TIMER_1
 #define SERVO_MODE      LEDC_LOW_SPEED_MODE
 #define SERVO_CHANNEL   LEDC_CHANNEL_1
@@ -15,8 +15,8 @@
 static void servo_write_pulse(float pulse_us) {
     uint32_t max_duty = (1u << SERVO_RES) - 1u;
     uint32_t duty = (uint32_t)((pulse_us / SERVO_PERIOD_US) * max_duty);
-    ledc_set_duty(SERVO_MODE, SERVO_CHANNEL, duty);
-    ledc_update_duty(SERVO_MODE, SERVO_CHANNEL);
+    ESP_ERROR_CHECK(ledc_set_duty(SERVO_MODE, SERVO_CHANNEL, duty));
+    ESP_ERROR_CHECK(ledc_update_duty(SERVO_MODE, SERVO_CHANNEL));
 }
 
 void clamp_servo_init(void) {
@@ -27,7 +27,7 @@ void clamp_servo_init(void) {
         .freq_hz = SERVO_FREQ_HZ,
         .clk_cfg = LEDC_AUTO_CLK,
     };
-    ledc_timer_config(&timer_cfg);
+    ESP_ERROR_CHECK(ledc_timer_config(&timer_cfg));
 
     ledc_channel_config_t ch_cfg = {
         .gpio_num = SERVO_PIN,
@@ -37,7 +37,7 @@ void clamp_servo_init(void) {
         .duty = 0,
         .hpoint = 0,
     };
-    ledc_channel_config(&ch_cfg);
+    ESP_ERROR_CHECK(ledc_channel_config(&ch_cfg));
 
     servo_write_pulse(SERVO_MIN_US); // safe state by default: closed
 }

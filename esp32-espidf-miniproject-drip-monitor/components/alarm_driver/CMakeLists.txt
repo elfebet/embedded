@@ -4,5 +4,6 @@ idf_component_register(
     REQUIRES
         esp_driver_ledc
         esp_driver_sdm
+    PRIV_REQUIRES config
 )
 

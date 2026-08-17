@@ -4,4 +4,5 @@ idf_component_register(
     REQUIRES
         esp_driver_gpio
         esp_driver_pcnt
+    PRIV_REQUIRES config
 )
