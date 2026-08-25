@@ -3,17 +3,15 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include "driver/i2c_master.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "rtc_time.h"
+#include "rtc_time.h" // for DS1307 (serial real-time clock (RTC) chip)
+#include "temp_sensor.h" // for DS18B20 (digital temperature sensor)
 #include "u8g2.h"
 #include "u8g2_hal.h"
 #include "bitmap_logo.h"
-
-//#include <time.h>
-//#include <sys/time.h>
-
 
 #define I2C_PORT       I2C_NUM_0
 #define I2C_SDA_PIN    8
@@ -21,6 +19,7 @@
 
 #define SSD1306_ADDR   0x3C // 7bit, value from i2c_scan
 #define DS1307_ADDR    0x68
+#define DS18B20_PIN    4
 
 static const char *TAG = "I2C_CLOCK_DISPLAY";
 static i2c_master_bus_handle_t bus_handle;
@@ -53,16 +52,23 @@ static void u8g2_init_display(void) {
     u8g2_SetPowerSave(&u8g2, 0);
 }
 
-static void draw_clock_screen(const rtc_time_t *t) {
+static void draw_clock_screen(const rtc_time_t *t, float temperature) {
     char line_time[16], line_date[24];
     snprintf(line_time, sizeof(line_time), "%02u:%02u:%02u", t->hour, t->min, t->sec);
     snprintf(line_date, sizeof(line_date), "%s %02u.%02u.20%02u", WEEKDAY[t->wday], t->date, t->month, t->year);
+
+    char line_temp[6];
+    snprintf(line_temp, sizeof(line_temp), "%.1f", temperature);
 
     u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_logisoso24_tr);   // large font for the time
     u8g2_DrawStr(&u8g2, 4, 30, line_time);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);      // smaller font for the date
     u8g2_DrawStr(&u8g2, 4, 55, line_date);
+
+    u8g2_SetFont(&u8g2, u8g2_font_logisoso16_tr);   // large font for the temperature
+    u8g2_DrawStr(&u8g2, 85, 55, line_temp);
+
     u8g2_SendBuffer(&u8g2);
 }
 
@@ -86,22 +92,26 @@ void app_main(void) {
 
     i2c_bus_init();
     u8g2_init_display();
+    temp_sensor_task_create(DS18B20_PIN);
 
     rtc_set_device(bus_handle, DS1307_ADDR);
     rtc_set_time_from_compile();
-    
+
     show_boot_logo(5);
-    rtc_time_t t;
+    rtc_time_t time = {0};
+    float temperature = 0;
 
     while (true) {
-        esp_err_t err = rtc_read_time(&t);
-        if (err == ESP_OK) {
-            ESP_LOGI(TAG, "DS1307: %s %02u.%02u.20%02u  %02u:%02u:%02u",
-                     WEEKDAY[t.wday], t.date, t.month, t.year, t.hour, t.min, t.sec);
-            draw_clock_screen(&t);
-        } else {
-            ESP_LOGE(TAG, "Failed to read DS1307 (0x%02X): %s", DS1307_ADDR, esp_err_to_name(err));
-        }
+        temperature = temp_sensor_get_temperature();
+        ESP_ERROR_CHECK(rtc_read_time(&time));
+
+        ESP_LOGI(TAG, "DS1307: %s %02u.%02u.20%02u  %02u:%02u:%02u, DS18B20: %.2fC",
+                WEEKDAY[time.wday],
+                time.date, time.month, time.year,
+                time.hour, time.min, time.sec,
+                temperature);
+
+        draw_clock_screen(&time, temperature);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

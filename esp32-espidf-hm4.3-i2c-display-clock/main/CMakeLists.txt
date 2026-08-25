@@ -6,12 +6,14 @@ idf_component_register(
         main.c
         rtc_time.c
         u8g2_hal.c
+        temp_sensor.c
     INCLUDE_DIRS   "."  # optional, add here public include directories
     PRIV_INCLUDE_DIRS   # optional, add here private include directories
     REQUIRES            # optional, list the public requirements (component names)
         esp_driver_i2c
         esp_timer
-        app_update
+        ds18b20
+        onewire_bus
         u8g2
     PRIV_REQUIRES       # optional, list the private requirements
 )

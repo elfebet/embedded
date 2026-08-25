@@ -3,6 +3,8 @@
 #include "esp_err.h"
 #include <unistd.h>
 
+// for DS1307
+
 typedef struct {
     uint8_t sec;
     uint8_t min;
