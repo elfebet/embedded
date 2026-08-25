@@ -1,0 +1,18 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 6.0.2
+  u8g2:
+    component_hash: 511dd0182456fccd70675523e33a4862541a234f2d7c93625a72efd312afee5e
+    dependencies: []
+    source:
+      git: https://github.com/olikraus/u8g2.git
+      path: .
+      type: git
+    version: 414efcdb7a908667ea461c9e3a3a31da14fc4ea5
+direct_dependencies:
+- u8g2
+manifest_hash: 9c0f64ea5ea0fabf68b808bcc7acc66cf20c198203197bbed9fb7381f399c92b
+target: esp32s3
+version: 3.0.0
