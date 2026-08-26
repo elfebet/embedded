@@ -17,11 +17,11 @@
 git clone https://github.com/olikraus/u8g2.git
 ```
 2. В проєкті компілюємо тільки `u8g2/csrc`
-- в `Project Explorer` відкриваємо `properties` для папки `u8g2`, `C/C++ General` -> `Paths and Symbols` -> ставимо галочку для `Exclude resource from build` -> Apply and close
+- в `Project Explorer` відкриваємо `properties` для папки `u8g2`, `C/C++ General -> Paths and Symbols` -> ставимо галочку для `Exclude resource from build` -> Apply and close
 - Відкриваємо `properties` для папки `u8g2/csrc` і навпаки знімаємо галочку з `Exclude resource from build`
 3. Додаємо `u8g2/csrc` в `Include directories`
 - Відкриваємо `properties` для проєкту (в `Project Explorer` ПКМ на проєкті)
-- `Properties` → `C/C++ General` → `Paths and Symbols` → `Includes` -> додаємо шлях до `Middlewares/u8g2/csrc`
+- `Properties → C/C++ General → Paths and Symbols → Includes` -> додаємо шлях до `Middlewares/u8g2/csrc`
 
 ## Схема на макетній платі
 
