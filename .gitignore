@@ -14,9 +14,6 @@ sdkconfig.old
 
 .clang-format
 .clangd
-.cproject
-.project
-
 
 # stm32cube noise
 Debug/
