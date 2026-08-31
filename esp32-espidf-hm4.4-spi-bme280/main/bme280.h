@@ -1,12 +1,17 @@
 #pragma once
+#include <stdint.h>
+#include "esp_err.h"
 
-#define PIN_SCLK        5
-#define PIN_MOSI        6
-#define PIN_MISO        15
-#define PIN_CS          7
-#define SPI_HOST_USED   SPI3_HOST      // VSPI, через GPIO matrix, до ~26 МГц
+typedef struct {
+    double temperature, pressure, humidity;
+} bme280_data_t;
 
-#define BME280_REG_ID   0xD0           // "адреса" з уже встановленим read-бітом (0x50 | 0x80)
-
-void bme280_spi_bus_and_device_init(void);
+void bme280_spi_bus_and_device_init(int mosi_pin, int miso_pin, int sclk_pin, int cs_pin);
 void bme280_check_device(void);
+
+esp_err_t bme280_read_regs(uint8_t reg, uint8_t *out, size_t len);
+esp_err_t bme280_write_reg(uint8_t reg, uint8_t value);
+
+void bme280_read_calibration(void);
+void bme280_force_measurement(void);
+void bme280_read_measurements(bme280_data_t *data);
