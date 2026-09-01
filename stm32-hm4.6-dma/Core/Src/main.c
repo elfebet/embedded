@@ -49,7 +49,7 @@ DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 
-#define ADC_BUF_SIZE   200   // 200 семплів -- ділиться навпіл: [0..99] і [100..199]
+#define ADC_BUF_SIZE   200   // 200 samples - divides in half: [0..99] і [100..199]
 
 static uint16_t adc_buffer[ADC_BUF_SIZE];
 static volatile uint8_t half_ready = 0;
@@ -58,9 +58,6 @@ static volatile uint8_t full_ready = 0;
 static char tx_line[64];
 static uint8_t rx_frame[64];
 static volatile uint8_t uart_tx_busy = 0;
-
-//static uint16_t adc_buf_A[ADC_BUF_SIZE/2];
-//static uint16_t adc_buf_B[ADC_BUF_SIZE/2];
 
 /* USER CODE END PV */
 
@@ -76,6 +73,11 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+int _write(int file, char *ptr, int len) {
+    HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
     if (hadc->Instance == ADC1) {
@@ -162,14 +164,6 @@ int main(void)
 
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_frame, sizeof(rx_frame));
   __HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);   // див. примітку нижче
-
-//  HAL_DMAEx_MultiBufferStart_IT(
-//      hadc1.DMA_Handle,                 // хендл DMA, прив'язаний до ADC1 через __HAL_LINKDMA (робить CubeMX)
-//      (uint32_t)&hadc1.Instance->DR,    // джерело -- регістр даних ADC (не змінюється, той самий, що в HAL_ADC_Start_DMA)
-//      (uint32_t)adc_buf_A,              // M0AR -- перший буфер
-//      (uint32_t)adc_buf_B,              // M1AR -- другий буфер (саме цей параметр і вмикає Double-Buffer mode)
-//      100                               // довжина ОДНОГО буфера (не сумарна!)
-//  );
 
   /* USER CODE END 2 */
 
@@ -366,11 +360,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-int _write(int file, char *ptr, int len) {
-    HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
-    return len;
-}
 
 /* USER CODE END 4 */
 
