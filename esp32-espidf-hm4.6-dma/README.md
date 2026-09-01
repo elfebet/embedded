@@ -1,11 +1,15 @@
-ESP-IDF template app
-====================
+# Модуль 4.6. DMA: Як передавати великі обсяги даних, не навантажуючи процесор
 
-This is a template application to be used with [Espressif IoT Development Framework](https://github.com/espressif/esp-idf).
+## DMA
 
-Please check [ESP-IDF docs](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for getting started instructions.
+## Реалізація
+- реалізовано на ESP-IDF v6.x
+- зчитуємо значення з АЦП використовуючи DMA
+- зчитані значення виправляємо по UART в консоль використовуючи DMA
+- функціонал осцилографа, відображаємо в консолі Vmin, Vmax, Vpp, Vavg
 
-*Code in this repository is in the Public Domain (or CC0 licensed, at your option.)
-Unless required by applicable law or agreed to in writing, this
-software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.*
+## Схема на макетній платі
+
+![Схема](schema.jpg)
+
+[Video demo](video_demo.mp4)
