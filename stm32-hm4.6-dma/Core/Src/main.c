@@ -106,18 +106,28 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 }
 
 void process_and_send(uint16_t *buf, uint16_t len) {
+    if (uart_tx_busy) {
+        return; // попередня DMA-передача ще не завершена -- пропустити цей цикл, а не чекати
+    }
+
     uint32_t sum = 0;
-    uint16_t vmin = 0xFFFF, vmax = 0;
+    uint16_t min_raw = 0xFFFF, max_raw = 0;
     for (uint16_t i = 0; i < len; i++) {
         sum += buf[i];
-        if (buf[i] < vmin) vmin = buf[i];
-        if (buf[i] > vmax) vmax = buf[i];
+        if (buf[i] < min_raw) min_raw = buf[i];
+        if (buf[i] > max_raw) max_raw = buf[i];
     }
-    uint16_t avg = sum / len;
 
-    if (uart_tx_busy) return;   // попередня DMA-передача ще не завершена -- пропустити цей цикл, а не чекати
+    static const float vref = 3.3f;
+    static const float adc_resolution = 4095.0f;
+    float v_min = ((float)min_raw / adc_resolution) * vref;
+    float v_max = ((float)max_raw / adc_resolution) * vref;
+    float v_avg = ((float)(sum / len) / adc_resolution) * vref;
 
-    int n = snprintf(tx_line, sizeof(tx_line), "min=%u max=%u avg=%u\r\n", vmin, vmax, avg);
+    int n = snprintf(tx_line, sizeof(tx_line),
+            "Vmin: %.2fV | Vmax: %.2fV | Vpp: %.2fV | Vavg: %.2fV\r\n",
+            v_min, v_max, v_max - v_min, v_avg);
+
     uart_tx_busy = 1;
     HAL_UART_Transmit_DMA(&huart1, (uint8_t *)tx_line, n);
 }
