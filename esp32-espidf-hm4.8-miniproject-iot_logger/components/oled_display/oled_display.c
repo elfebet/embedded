@@ -74,6 +74,13 @@ void oled_play_wolf_boot_animation(uint32_t anim_duration_ms) {
     }
 }
 
+void oled_draw_text(const char *message) {
+    u8g2_ClearBuffer(&u8g2);
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tf);
+    u8g2_DrawStr(&u8g2, 4, 64/2, message);
+    u8g2_SendBuffer(&u8g2);
+}
+
 void oled_draw_dashboard(
     const rtc_time_t *time,
     const bme280_data_t *bme,

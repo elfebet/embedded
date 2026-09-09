@@ -8,6 +8,7 @@ extern "C" {
 
 void oled_display_init(void);
 void oled_play_wolf_boot_animation(uint32_t anim_duration_ms);
+void oled_draw_text(const char *message);
 void oled_draw_dashboard(
     const rtc_time_t *time,
     const bme280_data_t *bme,

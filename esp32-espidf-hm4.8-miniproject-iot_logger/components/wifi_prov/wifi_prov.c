@@ -67,7 +67,8 @@ static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *da
     }
 }
 
-void wifi_prov_init_and_connect(void) {
+// 1. Initialization
+void wifi_prov_init(void) {
     // Init NVS (required to save Wi-Fi data)
     ESP_ERROR_CHECK(nvs_flash_init());
 
@@ -76,7 +77,6 @@ void wifi_prov_init_and_connect(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
-    esp_netif_create_default_wifi_ap();  // needs only for SoftAP-provisioning
 
     // Registering event handlers
     ESP_ERROR_CHECK(esp_event_handler_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
@@ -92,56 +92,69 @@ void wifi_prov_init_and_connect(void) {
         .scheme_event_handler = NETWORK_PROV_EVENT_HANDLER_NONE,
     };
     ESP_ERROR_CHECK(network_prov_mgr_init(prov_cfg));
+}
 
+// 2. Check is provisioned
+bool wifi_prov_is_provisioned(void) {
     bool provisioned = false;
     ESP_ERROR_CHECK(network_prov_mgr_is_wifi_provisioned(&provisioned));
-    if (provisioned) {
-        ESP_LOGI(TAG, "Found saved Wi-Fi data. Connecting...");
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-        ESP_ERROR_CHECK(esp_wifi_start());
+    return provisioned;
+}
 
-        ESP_LOGI(TAG, "Waiting for IP with stored credentials (timeout %d sec)...", STA_CONNECT_TIMEOUT_MS / 1000);
-        EventBits_t bits = xEventGroupWaitBits(
-            s_event_group, 
-            CONNECTED_BIT, 
-            pdFALSE, 
-            pdTRUE,
-            pdMS_TO_TICKS(STA_CONNECT_TIMEOUT_MS)
-        );
-        if (!(bits & CONNECTED_BIT)) {
-            ESP_LOGW(TAG, "Stored Wi-Fi credentials did not connect in time -- resetting "
-                          "provisioning and rebooting into SoftAP so they can be re-entered");
-            network_prov_mgr_reset_wifi_provisioning();
-            esp_restart();
-        } else {
-            network_prov_mgr_deinit();
-        }
+// 3. If provisioned==true, connect to saved wifi
+void wifi_prov_connect_to_saved_wifi(void) {
+    network_prov_mgr_deinit();
 
-    } else {
-        ESP_LOGI(TAG, "Wi-FI data not found. Start Provisioning...");
+    ESP_LOGI(TAG, "Found saved Wi-Fi data. Connecting...");
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_connect());
 
-        uint8_t mac[6];
-        esp_wifi_get_mac(WIFI_IF_STA, mac);
-        char service_name[24];
-        snprintf(service_name, sizeof(service_name), "PROV_iot_logger_%02X%02X", mac[4], mac[5]);
-
-        ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(
-            NETWORK_PROV_SECURITY_1,
-            "iot logger", // pin for enter in app
-            service_name, 
-            NULL
-        ));
-
-        // waiting without timeout (it's normal state). waiting for open app on phone
-        ESP_LOGI(TAG, "Waiting for IP...");
-        xEventGroupWaitBits(
-            s_event_group, 
-            CONNECTED_BIT, 
-            pdFALSE, 
-            pdTRUE, 
-            portMAX_DELAY
-        );
+    ESP_LOGI(TAG, "Waiting for IP with stored credentials (timeout %d sec)...", STA_CONNECT_TIMEOUT_MS / 1000);
+    EventBits_t bits = xEventGroupWaitBits(
+        s_event_group, 
+        CONNECTED_BIT, 
+        pdFALSE, 
+        pdTRUE,
+        pdMS_TO_TICKS(STA_CONNECT_TIMEOUT_MS)
+    );
+    if (!(bits & CONNECTED_BIT)) {
+        ESP_LOGW(TAG, "Stored Wi-Fi credentials did not connect in time -- resetting "
+                      "provisioning and rebooting into SoftAP so they can be re-entered");
+        network_prov_mgr_reset_wifi_provisioning();
+        esp_restart();
     }
+
+    ESP_LOGI(TAG, "Wi-Fi is ready");
+}
+
+// 4. If provisioned==false, start provisioning
+void wifi_prov_start_provisioning(void) {
+    ESP_LOGI(TAG, "Wi-FI data not found. Start Provisioning...");
+
+    esp_netif_create_default_wifi_ap();  // needs only for SoftAP-provisioning
+
+    uint8_t mac[6];
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    char service_name[24];
+    snprintf(service_name, sizeof(service_name), "PROV_iot_logger_%02X%02X", mac[4], mac[5]);
+
+    ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(
+        NETWORK_PROV_SECURITY_1,
+        "iot logger", // pin for enter in app
+        service_name, 
+        NULL
+    ));
+
+    // waiting without timeout (it's normal state). waiting for open app on phone
+    ESP_LOGI(TAG, "Waiting for IP...");
+    xEventGroupWaitBits(
+        s_event_group, 
+        CONNECTED_BIT, 
+        pdFALSE, 
+        pdTRUE, 
+        portMAX_DELAY
+    );
 
     ESP_LOGI(TAG, "Wi-Fi is ready");
 }

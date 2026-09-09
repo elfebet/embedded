@@ -134,14 +134,21 @@ void app_main(void)
     ESP_LOGI("SYSTEM_INFO", "Compiled with IDF version: %s", IDF_VER);
     ESP_LOGI("SYSTEM_INFO", "Compiled with С version: %ld", __STDC_VERSION__);
 
-    wifi_prov_init_and_connect(); // SoftAP on first launch, then after connect -> STA
-    mqtt_link_init(on_mqtt_led_command, on_time_synced);  // broker/client ID from idf.py menuconfig
-
-    led_ctrl_init(LED_PIN);
     i2c_bus_init(I2C_SDA_PIN, I2C_SCL_PIN, I2C_PORT); // init only once for any I2C 
+    oled_display_init();
+
+    wifi_prov_init();
+    if (wifi_prov_is_provisioned()) {
+        oled_draw_text("Connect to WiFi...");
+        wifi_prov_connect_to_saved_wifi();
+    } else {
+        oled_draw_text("Start provisioning...");
+        wifi_prov_start_provisioning();
+    }
+
 //    env_i2c_init();
     rtc_ds1307_init();
-    oled_display_init();
+    led_ctrl_init(LED_PIN);
     env_spi_init(SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCLK_PIN, SPI_CS_PIN);
     ctrl_adc_init(ADC_UNIT, ADC_CHANNEL);
 
@@ -149,6 +156,8 @@ void app_main(void)
 
 //    ESP_LOGI(TAG, "Showing boot wolf animation...");
 //    oled_play_wolf_boot_animation(3000);
+
+    mqtt_link_init(on_mqtt_led_command, on_time_synced);  // broker/client ID from idf.py menuconfig
 
     rtc_time_t time = {0};
     bme280_data_t spi_bme_data = {0};
