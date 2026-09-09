@@ -1,0 +1,14 @@
+menu "IoT Logger — MQTT Configuration"
+
+    config MQTT_BROKER_URI
+        string "MQTT broker URI (mqtt://IP:1883)"
+        default "mqtt://192.168.0.135:1883"
+        help
+            IP-адреса комп'ютера з Mosquitto у тій самій Wi-Fi
+            мережі, куди підключився логер через provisioning.
+
+    config MQTT_CLIENT_IDENTIFIER
+        string "MQTT Client ID"
+        default "esp32s3-iot-logger-01"
+
+endmenu
