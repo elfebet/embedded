@@ -61,7 +61,7 @@ static void on_time_synced(void) {
     time_t now;
     time(&now);
     struct tm timeinfo;
-    gmtime_r(&now, &timeinfo);
+    localtime_r(&now, &timeinfo);
     rtc_ds1307_set_from_tm(&timeinfo);
 }
 
@@ -153,16 +153,19 @@ void app_main(void)
     ctrl_adc_init(ADC_UNIT, ADC_CHANNEL);
 
     run_wiring_self_test();
+    ESP_LOGI(TAG, "Showing boot wolf animation...");
+    oled_play_wolf_boot_animation(3000);
 
-//    ESP_LOGI(TAG, "Showing boot wolf animation...");
-//    oled_play_wolf_boot_animation(3000);
+    // set local time zone
+    setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
+    tzset(); // Update internal C library time variables
 
     mqtt_link_init(on_mqtt_led_command, on_time_synced);  // broker/client ID from idf.py menuconfig
 
     rtc_time_t time = {0};
     bme280_data_t spi_bme_data = {0};
 //    bme280_data_t i2c_bme_data = {0};
-    
+
     while (1) {
         bool rtc_ok = rtc_ds1307_read_time(&time);
 //        bool i2c_ok = env_i2c_read(&i2c_bme_data);
