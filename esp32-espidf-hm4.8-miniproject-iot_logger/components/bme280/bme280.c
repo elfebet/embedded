@@ -68,7 +68,7 @@ uint32_t bme280_compensate_H(bme280_calib_t *c, int32_t adc_H) {
     return (uint32_t)(v_x1_u32r >> 12);
 }
 
-void bme280_read_measurements(bme280_calib_t *c, const uint8_t raw[8], bme280_data_t *data) {
+void bme280_read_measurements(bme280_calib_t *c, const uint8_t raw[8], bme280_data_t *out) {
     int32_t adc_P = ((int32_t)raw[0] << 12) | ((int32_t)raw[1] << 4) | (raw[2] >> 4);
     int32_t adc_T = ((int32_t)raw[3] << 12) | ((int32_t)raw[4] << 4) | (raw[5] >> 4);
     int32_t adc_H = ((int32_t)raw[6] << 8)  |  (int32_t)raw[7];
@@ -77,7 +77,7 @@ void bme280_read_measurements(bme280_calib_t *c, const uint8_t raw[8], bme280_da
     uint32_t P_q24_8 = bme280_compensate_P(c, adc_P);
     uint32_t H_q22_10= bme280_compensate_H(c, adc_H);
 
-    data->temperature = T_int / 100.0f;
-    data->pressure    = (P_q24_8 / 256.0f) / 100.0f;
-    data->humidity    = H_q22_10 / 1024.0f;
+    out->temperature = T_int / 100.0f;
+    out->pressure    = (P_q24_8 / 256.0f) / 100.0f;
+    out->humidity    = H_q22_10 / 1024.0f;
 }

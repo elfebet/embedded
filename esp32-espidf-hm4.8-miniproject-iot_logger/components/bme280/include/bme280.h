@@ -23,7 +23,7 @@ typedef struct {
 } bme280_data_t;
 
 void bme280_parse_calib(bme280_calib_t *c, const uint8_t buf_tp[26], const uint8_t buf_h[7]);
-void bme280_read_measurements(bme280_calib_t *c, const uint8_t raw[8], bme280_data_t *data); // helper
+void bme280_read_measurements(bme280_calib_t *c, const uint8_t raw[8], bme280_data_t *out); // helper
 
 int32_t  bme280_compensate_T(bme280_calib_t *c, int32_t adc_T);   // 0.01 град.Ц (5123 -> 51.23)
 uint32_t bme280_compensate_P(bme280_calib_t *c, int32_t adc_P);   // Q24.8, Па -- поділити на 256.0
