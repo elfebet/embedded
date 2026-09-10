@@ -1007,13 +1007,15 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# IoT Logger — MQTT Configuration
+# IoT Logger Configuration
 #
 # default:
-CONFIG_MQTT_BROKER_URI="mqtt://192.168.0.135:1883"
+CONFIG_IOT_LOGGER_MQTT_BROKER_URI="mqtt://192.168.0.143:1883"
 # default:
-CONFIG_MQTT_CLIENT_IDENTIFIER="esp32s3-iot-logger-01"
-# end of IoT Logger — MQTT Configuration
+CONFIG_IOT_LOGGER_MQTT_CLIENT_IDENTIFIER="esp32s3-iot-logger-01"
+# default:
+CONFIG_IOT_LOGGER_PROVISIONING_PIN="iot logger"
+# end of IoT Logger Configuration
 
 #
 # Compiler options

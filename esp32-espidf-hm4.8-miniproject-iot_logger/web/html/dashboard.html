@@ -99,7 +99,7 @@
   </section>
 
   <footer class="notes">
-    <p><strong style="color:var(--ink-dim)">Field notes.</strong> This console speaks MQTT over WebSocket directly from the browser — no external library, no server. Point it at the same broker as the firmware's <code>CONFIG_MQTT_BROKER_URI</code>, but on the <strong>websockets</strong> listener, not the raw TCP one.</p>
+    <p><strong style="color:var(--ink-dim)">Field notes.</strong> This console speaks MQTT over WebSocket directly from the browser — no external library, no server. Point it at the same broker as the firmware's <code>CONFIG_IOT_LOGGER_MQTT_BROKER_URI</code>, but on the <strong>websockets</strong> listener, not the raw TCP one.</p>
     <p>Mosquitto needs a second listener alongside the existing one — add to <code>mosquitto.conf</code>: <code>listener 9001</code> / <code>protocol websockets</code>, then restart the broker.</p>
     <p>If "LINK" refuses to connect from a page opened over <code>https://</code>, that's the browser blocking insecure <code>ws://</code> from a secure page (mixed content) — save this file and open it locally (<code>file://</code>), or serve it from your own LAN, to reach the broker directly.</p>
   </footer>

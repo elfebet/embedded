@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "sdkconfig.h"
 #include <string.h>
 #include <time.h>
 
@@ -22,7 +23,7 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t event_i
     switch (event_id) {
     case MQTT_EVENT_CONNECTED:
         s_connected = true;
-        ESP_LOGI(TAG, "MQTT connected to %s, subscribing to %s", CONFIG_MQTT_BROKER_URI, TOPIC_CONTROL);
+        ESP_LOGI(TAG, "MQTT connected to %s, subscribing to %s", CONFIG_IOT_LOGGER_MQTT_BROKER_URI, TOPIC_CONTROL);
         esp_mqtt_client_subscribe(s_client, TOPIC_CONTROL, 1); // QoS 1
         break;
     case MQTT_EVENT_DISCONNECTED:
@@ -59,8 +60,8 @@ void mqtt_link_init(mqtt_link_led_cb_t on_led_command, mqtt_link_time_synced_cb_
     }
 
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = CONFIG_MQTT_BROKER_URI,
-        .credentials.client_id = CONFIG_MQTT_CLIENT_IDENTIFIER,
+        .broker.address.uri = CONFIG_IOT_LOGGER_MQTT_BROKER_URI,
+        .credentials.client_id = CONFIG_IOT_LOGGER_MQTT_CLIENT_IDENTIFIER,
     };
     s_client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(s_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);

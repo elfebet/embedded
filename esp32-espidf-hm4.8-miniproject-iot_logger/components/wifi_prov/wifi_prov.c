@@ -10,6 +10,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "sdkconfig.h"
 
 // If stored WiFi credentials (in NVS) can't connect to this device during timeout - 
 // consider it non-working (credentials outdated), reset provisioning and got to SoftAP again (restart esp32s3)
@@ -141,7 +142,7 @@ void wifi_prov_start_provisioning(void) {
 
     ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(
         NETWORK_PROV_SECURITY_1,
-        "iot logger", // pin for enter in app
+        CONFIG_IOT_LOGGER_PROVISIONING_PIN, // pin for enter in app
         service_name, 
         NULL
     ));

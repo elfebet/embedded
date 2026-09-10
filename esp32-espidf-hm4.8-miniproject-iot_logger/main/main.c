@@ -54,6 +54,7 @@ static void on_mqtt_led_command(bool led_on) {
     s_mqtt_override_on = led_on;
     s_mqtt_override_active = true;
     s_mqtt_override_last_cmd_us = esp_timer_get_time();
+    ESP_LOGI(TAG, "DID RECEIVE COMMAND FROM MQTT LED_ON: %d", led_on);
 }
 
 // Викликається з mqtt_link ОДРАЗУ після успішного SNTP -- "засіює" Tiny RTC
@@ -99,7 +100,7 @@ static void run_wiring_self_test(void) {
     ESP_LOGI(TAG, "========================================");
 }
 
-void mqtt_send_json(
+void mqtt_send_json_if_needed(
     const char *utc_time,
     const bme280_data_t *bme,
     uint32_t adc_raw,
@@ -107,6 +108,10 @@ void mqtt_send_json(
     bool led_on,
     const char *led_source
 ) {
+    uint32_t now = esp_timer_get_time();
+    if (now - json_send_last_time <= JSON_SEND_DELAY_US) return;
+
+    json_send_last_time = now;
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "utc_time", utc_time);
     if (bme != NULL) {
@@ -197,17 +202,14 @@ void app_main(void)
             snprintf(utc_time, sizeof(utc_time), "%02u:%02u:%02u", time.hour, time.min, time.sec);
         }
 
-        if (now - json_send_last_time > JSON_SEND_DELAY_US) {
-            json_send_last_time = now;
-            mqtt_send_json(
-                utc_time,
-                spi_ok ? &spi_bme_data : NULL,
-                adc_raw,
-                threshold_c,
-                led_on,
-                led_source
-            );
-        }
+        mqtt_send_json_if_needed(
+            utc_time,
+            spi_ok ? &spi_bme_data : NULL,
+            adc_raw,
+            threshold_c,
+            led_on,
+            led_source
+        );
 
         ESP_LOGI(TAG, "%s | SPI T=%.1fC | threshold=%.1fC | LED=%s(%s) | MQTT=%s",
                  utc_time, spi_bme_data.temperature, threshold_c, led_on ? "ON" : "OFF", led_source,
