@@ -23,7 +23,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 6.0.2
+    version: 6.1.0
   u8g2:
     component_hash: 511dd0182456fccd70675523e33a4862541a234f2d7c93625a72efd312afee5e
     dependencies: []

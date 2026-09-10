@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOT-LOGGER // UNIT-01 — Data Link Console</title>
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="frame">
+  <header class="topbar">
+    <div class="unit-id">
+      <div class="name">IOT-LOGGER // UNIT-01</div>
+      <div class="sub">Data Logging &amp; Control Station — I²C / SPI / MQTT</div>
+    </div>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="status-chip" id="statusChip" data-state="offline">
+        <span class="dot"></span>
+        <span id="statusText">OFFLINE</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">THEME</button>
+    </div>
+  </header>
+
+  <section class="linkbar">
+    <div class="field">
+      <span class="label">Broker (WebSocket)</span>
+      <input type="text" id="brokerUrl" value="ws://192.168.1.10:9001" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field" style="flex:0 1 200px;">
+      <span class="label">Client ID</span>
+      <input type="text" id="clientId" autocomplete="off" spellcheck="false">
+    </div>
+    <label class="chk"><input type="checkbox" id="autoReconnect" checked> Auto-relink</label>
+    <button class="btn primary" id="linkBtn" type="button">LINK</button>
+  </section>
+
+  <main class="grid">
+    <article class="tile" id="tileI2C" data-ch="i2c">
+      <div class="tile-head">
+        <span class="label">Sensor · I²C · BME280 0x76</span>
+        <span class="pill" id="pillI2C" data-ok="false">NO DATA</span>
+      </div>
+      <div class="big-num"><span id="tempI2C">--</span><span class="unit">°C</span></div>
+      <div class="rows">
+        <div class="row"><span class="k">Humidity</span><span class="v" id="humI2C">-- %RH</span></div>
+        <div class="row"><span class="k">Pressure</span><span class="v" id="presI2C">-- hPa</span></div>
+      </div>
+    </article>
+
+    <article class="tile" id="tileSPI" data-ch="spi">
+      <div class="tile-head">
+        <span class="label">Sensor · SPI · BME280 CS5</span>
+        <span class="pill" id="pillSPI" data-ok="false">NO DATA</span>
+      </div>
+      <div class="big-num"><span id="tempSPI">--</span><span class="unit">°C</span></div>
+      <div class="rows">
+        <div class="row"><span class="k">Humidity</span><span class="v" id="humSPI">-- %RH</span></div>
+        <div class="row"><span class="k">Pressure</span><span class="v" id="presSPI">-- hPa</span></div>
+      </div>
+    </article>
+
+    <article class="tile">
+      <div class="tile-head">
+        <span class="label">Threshold &amp; Alarm</span>
+        <span class="pill" id="pillThresh" data-ok="false">--°C</span>
+      </div>
+
+      <div>
+        <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+        <div class="gauge-scale"><span>15°C</span><span>ADC1 · GPIO4 · DMA</span><span>35°C</span></div>
+      </div>
+
+      <div class="rows">
+        <div class="row"><span class="k">Potentiometer (raw)</span><span class="v" id="adcRaw">-- / 4095</span></div>
+      </div>
+
+      <div class="led-row">
+        <span class="led-lamp" id="ledLamp" data-on="false"></span>
+        <span class="led-state" id="ledState">OFF</span>
+        <span class="led-source" id="ledSource">--</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="ledOnBtn" type="button">ARM (ON)</button>
+        <button class="btn danger" id="ledOffBtn" type="button">SAFE (OFF)</button>
+      </div>
+    </article>
+  </main>
+
+  <section class="feed">
+    <div class="feed-head">
+      <span class="label">Data Link · logger/telemetry</span>
+      <span class="label" id="feedCount">0 MSG</span>
+    </div>
+    <div class="feed-log" id="feedLog"><span class="empty">Awaiting link...</span></div>
+  </section>
+
+  <footer class="notes">
+    <p><strong style="color:var(--ink-dim)">Field notes.</strong> This console speaks MQTT over WebSocket directly from the browser — no external library, no server. Point it at the same broker as the firmware's <code>CONFIG_IOT_LOGGER_MQTT_BROKER_URI</code>, but on the <strong>websockets</strong> listener, not the raw TCP one.</p>
+    <p>Mosquitto needs a second listener alongside the existing one — add to <code>mosquitto.conf</code>: <code>listener 9001</code> / <code>protocol websockets</code>, then restart the broker.</p>
+    <p>If "LINK" refuses to connect from a page opened over <code>https://</code>, that's the browser blocking insecure <code>ws://</code> from a secure page (mixed content) — save this file and open it locally (<code>file://</code>), or serve it from your own LAN, to reach the broker directly.</p>
+  </footer>
+</div>
+
+<script src="../js/dashboard.js"></script>
+</body>
+</html>

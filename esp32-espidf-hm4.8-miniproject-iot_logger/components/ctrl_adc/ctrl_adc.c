@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include "ctrl_adc.h"
+#include "esp_adc/adc_continuous.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define FRAME_SIZE     256
+#define POOL_FRAMES    4
+
+#define THRESH_MIN_C   15.0f
+#define THRESH_MAX_C   35.0f
+
+static const char *TAG = "CTRL_ADC";
+static adc_continuous_handle_t adc_handle;
+static TaskHandle_t adc_task_handle;
+
+static volatile float s_threshold_c = 25.0f;   // default value
+static volatile uint32_t s_adc_raw = 0;        // 0..4095
+
+static bool IRAM_ATTR adc_conv_done_cb(
+    adc_continuous_handle_t handle,
+    const adc_continuous_evt_data_t *edata,
+    void *user_data
+) {
+    BaseType_t must_yield = pdFALSE;
+    vTaskNotifyGiveFromISR(adc_task_handle, &must_yield);
+    return must_yield == pdTRUE;
+}
+
+static void adc_read_task(void *arg) {
+    uint8_t result[FRAME_SIZE];
+    uint32_t bytes_read;
+
+    ESP_ERROR_CHECK(adc_continuous_start(adc_handle));
+
+    while (1) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        esp_err_t err = adc_continuous_read(
+            adc_handle, 
+            result, 
+            FRAME_SIZE, 
+            &bytes_read, 
+            100
+        );
+        if (err != ESP_OK) continue;
+
+        adc_digi_output_data_t *data = (adc_digi_output_data_t *)result;
+        int count = bytes_read / sizeof(adc_digi_output_data_t);
+
+        uint32_t sum = 0;
+        for (int i = 0; i < count; i++) {
+            sum += data[i].type2.data;
+        }
+        
+        uint32_t avg_raw = sum / count;
+        float frac = avg_raw / 4095.0f; // 0.0..1.0
+        s_threshold_c = THRESH_MIN_C + frac * (THRESH_MAX_C - THRESH_MIN_C);
+        s_adc_raw = avg_raw;
+    }
+}
+
+void ctrl_adc_init(uint8_t unit, uint8_t channel) {
+    adc_continuous_handle_cfg_t handle_cfg = {
+        .max_store_buf_size = FRAME_SIZE * POOL_FRAMES,
+        .conv_frame_size    = FRAME_SIZE,
+    };
+    ESP_ERROR_CHECK(adc_continuous_new_handle(&handle_cfg, &adc_handle));
+
+    adc_digi_pattern_config_t pattern[1] = {
+        {
+            .atten = ADC_ATTEN_DB_12,
+            .channel = channel,
+            .unit = unit,
+            .bit_width = ADC_BITWIDTH_12
+        },
+    };
+    adc_continuous_config_t dig_cfg = {
+        .sample_freq_hz = 20000, // 20 kHz
+        .conv_mode      = ADC_CONV_SINGLE_UNIT_1,
+        .pattern_num    = 1,
+        .adc_pattern    = pattern,
+    };
+    ESP_ERROR_CHECK(adc_continuous_config(adc_handle, &dig_cfg));
+
+    adc_continuous_evt_cbs_t cbs = { .on_conv_done = adc_conv_done_cb };
+    ESP_ERROR_CHECK(adc_continuous_register_event_callbacks(adc_handle, &cbs, NULL));
+
+    xTaskCreate(adc_read_task, "adc_read_task", 4096, NULL, 5, &adc_task_handle);
+    ESP_LOGI(TAG, "ADC1 continuous+DMA is ready: Unit: %d, channel: %d, threshold %.0f-%.0f`C",
+        unit, channel, THRESH_MIN_C, THRESH_MAX_C);
+}
+
+float ctrl_adc_get_threshold_c(void) {
+    return s_threshold_c;
+}
+
+uint32_t ctrl_adc_get_raw(void) {
+    return s_adc_raw;
+}
