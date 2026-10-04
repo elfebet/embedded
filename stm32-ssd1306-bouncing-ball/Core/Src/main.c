@@ -161,14 +161,14 @@ int main(void)
         rebound = true;
     }
 
-//    if (rebound && !led_on) {
-//      last_led_rebound_time = now;
-//      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-//      led_on = true;
-//    } else if (led_on && now - last_led_rebound_time > 100) {
-//      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-//      led_on = false;
-//    }
+    if (rebound && !led_on) {
+      last_led_rebound_time = now;
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+      led_on = true;
+    } else if (led_on && now - last_led_rebound_time > 100) {
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+      led_on = false;
+    }
 
     ssd1306_Fill(Black);
     ssd1306_FillRectangle((int)ball_x, (int)ball_y, (int)ball_x + ball_size, (int)ball_y + ball_size, White);
