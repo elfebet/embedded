@@ -5,32 +5,6 @@
 #include "images.h"
 
 /* Arg count, CMD, Args if any */
-#if defined USE_ST7735
-const uint8_t init_cmd[] = {
-    0,  CMD_SLPOUT,
-//  3,  CMD_FRMCTR1, 0x01, 0x2C, 0x2D,                     // Standard frame rate
-//  3,  CMD_FRMCTR2, 0x01, 0x2C, 0x2D,                     // Standard frame rate
-//  6,  CMD_FRMCTR3, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D,   // Standard frame rate
-    3,  CMD_FRMCTR1, 0x01, 0x01, 0x01,                     // Max
-    3,  CMD_FRMCTR2, 0x01, 0x01, 0x01,                     // Max
-    6,  CMD_FRMCTR3, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,   // Max frame rate
-    1,  CMD_INVCTR,  0x07,
-    3,  CMD_PWCTR1,  0xA2, 0x02, 0x84,
-    1,  CMD_PWCTR2,  0xC5,
-    2,  CMD_PWCTR3,  0x0A, 0x00,
-    2,  CMD_PWCTR4,  0x8A, 0x2A,
-    2,  CMD_PWCTR5,  0x8A, 0xEE,
-    1,  CMD_VMCTR1,  0x0E,
-    1,  CMD_INVOFF,  0x00,
-    1,  CMD_COLMOD,  0x05,
-    2,  CMD_CASET,   0x00, LCD_WIDTH-1,
-    2,  CMD_RASET,   0x00, LCD_HEIGHT-1,
-    1,  CMD_MADCTL,  LCD_ROTATION_CMD,
-    16, CMD_GMCTRP1, 0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10,
-    16, CMD_GMCTRN1, 0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x10,
-    0,  CMD_NORON,
-};
-#elif defined USE_ST7789
 const uint8_t init_cmd[] = {
     0,  CMD_SLPOUT,
     1,  CMD_COLMOD,  CMD_COLOR_MODE_16bit,
@@ -51,13 +25,11 @@ const uint8_t init_cmd[] = {
     0,  CMD_INVON,
     0,  CMD_NORON
 };
-#endif
 
 //#define LCD_UPR_COMMAND     0
 //#define LCD_UPR_DATA        1
 //#define LCD_UPR_PAUSE       2
 //#define LCD_UPR_END         3
-
 
 char str[32];
 
@@ -278,32 +250,16 @@ void LCD_SetRotation(uint8_t m)
   switch (m)
   {
   case 0:
-#if LCD_IS_160X80
-    cmd[1] = CMD_MADCTL_MX | CMD_MADCTL_MY | CMD_MADCTL_BGR;
-#else
     cmd[1] = CMD_MADCTL_MX | CMD_MADCTL_MY | CMD_MADCTL_RGB;
-#endif
     break;
   case 1:
-#if CMD_IS_160X80
-    cmd[1] = CMD_MADCTL_MY | CMD_MADCTL_MV | CMD_MADCTL_BGR;
-#else
     cmd[1] = CMD_MADCTL_MY | CMD_MADCTL_MV | CMD_MADCTL_RGB;
-#endif
     break;
   case 2:
-#if CMD_IS_160X80
-    cmd[1] = CMD_MADCTL_BGR;
-#else
     cmd[1] = CMD_MADCTL_RGB;
-#endif
     break;
   case 3:
-#if CMD_IS_160X80
-    cmd[1] = CMD_MADCTL_MX | CMD_MADCTL_MV | CMD_MADCTL_BGR;
-#else
     cmd[1] = CMD_MADCTL_MX | CMD_MADCTL_MV | CMD_MADCTL_RGB;
-#endif
     break;
   }
   LCD_WriteCommand(cmd, sizeof(cmd)-1);
@@ -906,7 +862,7 @@ void LCD_Test(void)
   LCD_PutStr(10, 5, "Image ANTON", DEFAULT_FONT, C_YELLOW, C_RED);
   UG_Update();
   UG_FontSetTransparency(t);
-  HAL_Delay(7000);
+  HAL_Delay(5000);
 #endif
   HAL_Delay(1000);
 }

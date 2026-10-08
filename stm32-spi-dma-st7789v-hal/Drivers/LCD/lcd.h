@@ -1,5 +1,5 @@
-#ifndef __ST7735_H__
-#define __ST7735_H__
+#ifndef __ST7789_H__
+#define __ST7789_H__
 
 #include <stm32f4xx_hal.h>
 #include <sys/_stdint.h>
@@ -22,87 +22,12 @@
 #define USE_DMA                       /* Use DMA for transfers when possible */
 //#define LCD_LOCAL_FB                /* Use local framebuffer. Needs a lot of ram, but removes flickering and redrawing glitches  */
 
-//#define USE_ST7735                    /* LCD Selection */
-#define USE_ST7789
-
 #define LCD_ROTATION 3                /* XY rotation/mirroring. Valid values: 0...3 */
 
-#ifdef USE_ST7735                     /* ST7735 LCD sizes */
-  #define LCD_160X128
-//#define LCD_128X128
-//#define LCD_160X80
-#elif defined USE_ST7789              /* ST7789 LCD sizes */
-//#define LCD_135X240
 //#define LCD_240X240
   #define LCD_240X280
-#endif
 
-
-
-
-#ifdef USE_ST7735
-  #ifdef LCD_160X128
-    #define LCD_X_SHIFT 0
-    #define LCD_Y_SHIFT 0
-    #if (LCD_ROTATION == 0) || (LCD_ROTATION == 2)
-      #define LCD_WIDTH  128
-      #define LCD_HEIGHT 160
-    #elif (LCD_ROTATION == 1) || (LCD_ROTATION == 3)
-      #define LCD_WIDTH  160
-      #define LCD_HEIGHT 128
-    #endif
-  #elif defined LCD_128X128
-    #define LCD_X_SHIFT 0
-    #define LCD_Y_SHIFT 0
-    #define LCD_WIDTH  128
-    #define LCD_HEIGHT 128
-  #elif defined LCD_160X80
-    #define LCD_X_SHIFT 0
-    #define LCD_Y_SHIFT 0
-    #if (LCD_ROTATION == 0) || (LCD_ROTATION == 2)
-      #define LCD_WIDTH  80
-      #define LCD_HEIGHT 160
-    #elif (LCD_ROTATION == 1) || (LCD_ROTATION == 3)
-      #define LCD_WIDTH  160
-      #define LCD_HEIGHT 80
-    #endif
-  #endif
-
-  #if LCD_ROTATION == 0
-    #ifdef LCD_160X80
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MY | CMD_MADCTL_BGR)
-    #else
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MY | CMD_MADCTL_RGB)
-    #endif
-  #elif LCD_ROTATION == 1
-    #ifdef LCD_160X80
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MY | CMD_MADCTL_MV | CMD_MADCTL_BGR)
-    #else
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MY | CMD_MADCTL_MV | CMD_MADCTL_RGB)
-    #endif
-  #elif LCD_ROTATION == 2
-    #ifdef LCD_160X80
-      #define LCD_ROTATION_CMD (CMD_MADCTL_BGR)
-    #else
-      #define LCD_ROTATION_CMD (CMD_MADCTL_RGB)
-    #endif
-  #elif LCD_ROTATION == 3
-    #ifdef LCD_160X80
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MV | CMD_MADCTL_BGR)
-    #else
-      #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MV | CMD_MADCTL_RGB)
-    #endif
-  #endif
-#elif defined USE_ST7789
-  #ifdef LCD_135X240
-    #if (LCD_ROTATION == 0) || (LCD_ROTATION == 2)
-      #define LCD_WIDTH  135
-      #define LCD_HEIGHT 240
-    #elif (LCD_ROTATION == 1) || (LCD_ROTATION == 3)
-      #define LCD_WIDTH  240
-      #define LCD_HEIGHT 135
-    #endif
-  #elif defined LCD_240X240
+  #ifdef LCD_240X240
     #define LCD_WIDTH  240
     #define LCD_HEIGHT 240
     #define LCD_X_SHIFT 0
@@ -121,38 +46,21 @@
 
   #if LCD_ROTATION == 0
     #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MY | CMD_MADCTL_RGB)
-    #ifdef LCD_135X240
-      #define LCD_X_SHIFT 53
-      #define LCD_Y_SHIFT 40
-    #elif defined LCD_240X280
-    #endif
   #elif LCD_ROTATION == 1
     #define LCD_ROTATION_CMD (CMD_MADCTL_MY | CMD_MADCTL_MV | CMD_MADCTL_RGB)
-    #ifdef LCD_135X240
-      #define LCD_X_SHIFT 40
-      #define LCD_Y_SHIFT 52
-    #elif defined LCD_240X280
-    #endif
   #elif LCD_ROTATION == 2
     #define LCD_ROTATION_CMD (CMD_MADCTL_RGB)
-    #ifdef LCD_135X240
-      #define LCD_X_SHIFT 52
-      #define LCD_Y_SHIFT 40
-    #elif defined LCD_240X280
+    #ifdef LCD_240X280
       #define LCD_X_SHIFT 20
       #define LCD_Y_SHIFT 0
     #endif
   #elif LCD_ROTATION == 3
     #define LCD_ROTATION_CMD (CMD_MADCTL_MX | CMD_MADCTL_MV | CMD_MADCTL_RGB)
-    #ifdef LCD_135X240
-      #define LCD_X_SHIFT 40
-      #define LCD_Y_SHIFT 53
-    #elif defined LCD_240X280
+    #ifdef LCD_240X280
       #define LCD_X_SHIFT 20
       #define LCD_Y_SHIFT 0
     #endif
   #endif
-#endif
 
 /* LCD Commands */
 typedef enum{
@@ -255,4 +163,4 @@ void LCD_TearEffect(uint8_t tear);
 /* Simple test function. */
 void LCD_Test(void);
 
-#endif // __ST7735_H__
+#endif // __ST7789_H__
