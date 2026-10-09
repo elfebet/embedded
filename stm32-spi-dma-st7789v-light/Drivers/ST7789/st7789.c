@@ -203,12 +203,13 @@ void ST7789_Init(void)
 		uint8_t data[] = {0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23};
 		ST7789_WriteData(data, sizeof(data));
 	}
-    ST7789_WriteCommand (ST7789_INVON);		//	Inversion ON
+//    ST7789_WriteCommand (ST7789_INVON);		//	Inversion ON
 	ST7789_WriteCommand (ST7789_SLPOUT);	//	Out of sleep mode
   	ST7789_WriteCommand (ST7789_NORON);		//	Normal Display on
   	ST7789_WriteCommand (ST7789_DISPON);	//	Main screen turned on	
 
 	//HAL_Delay(50);
+  	ST7789_BLK_Set();
 	ST7789_Fill_Color(BLACK);				//	Fill with Black.
 }
 

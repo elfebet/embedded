@@ -26,6 +26,7 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 #endif
 
 /* If u need Backlight control, uncomment below */
+#define USE_BLK
 #define BLK_PORT TFT_BLK_GPIO_Port
 #define BLK_PIN TFT_BLK_Pin
 
@@ -204,10 +205,10 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 /* RGB/BGR Order ('0' = RGB, '1' = BGR) */
 #define ST7789_MADCTL_RGB 0x00
 
-//#define ST7789_RDID1   0xDA
-//#define ST7789_RDID2   0xDB
-//#define ST7789_RDID3   0xDC
-//#define ST7789_RDID4   0xDD
+#define ST7789_RDID1   0xDA
+#define ST7789_RDID2   0xDB
+#define ST7789_RDID3   0xDC
+#define ST7789_RDID4   0xDD
 
 /* Advanced options */
 #define ST7789_COLOR_MODE_16bit 0x55    //  RGB565 (16bit)
@@ -225,6 +226,14 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 #else
 #define ST7789_Select() asm("nop")
 #define ST7789_UnSelect() asm("nop")
+#endif
+
+#ifdef USE_BLK
+#define ST7789_BLK_Clr() HAL_GPIO_WritePin(BLK_PORT, BLK_PIN, GPIO_PIN_RESET)
+#define ST7789_BLK_Set() HAL_GPIO_WritePin(BLK_PORT, BLK_PIN, GPIO_PIN_SET)
+#else
+#define ST7789_BLK_Clr() asm("nop")
+#define ST7789_BLK_Set() asm("nop")
 #endif
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))

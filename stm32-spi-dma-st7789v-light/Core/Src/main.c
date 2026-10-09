@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "st7789.h"
+#include "st7789.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,14 +101,14 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-//  ST7789_Init();
-//  ST7789_TestColors();
+  ST7789_Init();
+  ST7789_TestColors();
 //  ST7789_Fill_Color(BLACK);
 
   while (1)
   {
-//      ST7789_Test();
-//	  ST7789_TestColors();
+      ST7789_Test();
+//      ST7789_TestColors();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
