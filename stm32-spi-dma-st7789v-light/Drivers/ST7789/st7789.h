@@ -12,22 +12,22 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 #define USE_DMA
 
 /* If u need CS control, comment below*/
-#define CFG_NO_CS
+//#define CFG_NO_CS
 
 /* Pin connection*/
-#define ST7789_RST_PORT ST7789_RST_GPIO_Port
-#define ST7789_RST_PIN  ST7789_RST_Pin
-#define ST7789_DC_PORT  ST7789_DC_GPIO_Port
-#define ST7789_DC_PIN   ST7789_DC_Pin
+#define ST7789_RST_PORT TFT_RST_GPIO_Port
+#define ST7789_RST_PIN  TFT_RST_Pin
+#define ST7789_DC_PORT  TFT_DC_GPIO_Port
+#define ST7789_DC_PIN   TFT_DC_Pin
 
 #ifndef CFG_NO_CS
-//#define ST7789_CS_PORT  ST7789_CS_GPIO_Port
-//#define ST7789_CS_PIN   ST7789_CS_Pin
+#define ST7789_CS_PORT  TFT_CS_GPIO_Port
+#define ST7789_CS_PIN   TFT_CS_Pin
 #endif
 
 /* If u need Backlight control, uncomment below */
-#define BLK_PORT
-#define BLK_PIN
+#define BLK_PORT TFT_BLK_GPIO_Port
+#define BLK_PIN TFT_BLK_Pin
 
 
 /*
@@ -162,6 +162,7 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 #define LBBLUE      0X2B12
 
 /* Control Registers and constant codes */
+
 #define ST7789_NOP     0x00
 #define ST7789_SWRESET 0x01
 #define ST7789_RDDID   0x04
@@ -203,10 +204,10 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 /* RGB/BGR Order ('0' = RGB, '1' = BGR) */
 #define ST7789_MADCTL_RGB 0x00
 
-#define ST7789_RDID1   0xDA
-#define ST7789_RDID2   0xDB
-#define ST7789_RDID3   0xDC
-#define ST7789_RDID4   0xDD
+//#define ST7789_RDID1   0xDA
+//#define ST7789_RDID2   0xDB
+//#define ST7789_RDID3   0xDC
+//#define ST7789_RDID4   0xDD
 
 /* Advanced options */
 #define ST7789_COLOR_MODE_16bit 0x55    //  RGB565 (16bit)
