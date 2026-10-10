@@ -42,13 +42,14 @@ void st7789_init(uint8_t orientation) {
     lcd_port_reset();
 
     lcd_port_writeCommand(ST7789_SWRESET,   0, 0);
-    lcd_port_delay(5);
-    lcd_port_writeCommand(ST7789_SLPOUT,    0, 0);
+    lcd_port_delay(150);
     lcd_port_writeCommand(ST7789_DISPOFF,   0, 0);
+    lcd_port_writeCommand(ST7789_SLPOUT,    0, 0);
+    lcd_port_delay(120);
     lcd_port_writeCommand(ST7789_COLMOD,    (const uint8_t[]){ ST7789_COLOR_MODE_16bit }, 1);
+    lcd_port_writeCommand(ST7789_MADCTL,    (const uint8_t[]){ st7789_MADCTLConfig(orientation) }, 1);
     lcd_port_writeCommand(ST7789_PORCTRL,   (const uint8_t[]){ 0x0C, 0x0C, 0x00, 0x33, 0x33 }, 5); // Standard porch
 //    lcd_port_writeCommand(ST7789_PORCTRL, (const uint8_t[]){ 0x01, 0x01, 0x00, 0x11, 0x11 }, 5); // Minimum porch (7% faster screen refresh rate)
-    lcd_port_writeCommand(ST7789_MADCTL,    (const uint8_t[]){ st7789_MADCTLConfig(orientation) }, 1);
     lcd_port_writeCommand(ST7789_GCTRL,     (const uint8_t[]){ 0x35 }, 1);
     lcd_port_writeCommand(ST7789_VCOMS,     (const uint8_t[]){ 0x19 }, 1);
     lcd_port_writeCommand(ST7789_LCMCTRL,   (const uint8_t[]){ 0X2C }, 1);
@@ -61,8 +62,9 @@ void st7789_init(uint8_t orientation) {
     lcd_port_writeCommand(ST7789_NVGAMCTRL, (const uint8_t[]){ 0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23 }, 14);
 //    lcd_port_writeCommand(ST7789_INVON,   0, 0);
     lcd_port_writeCommand(ST7789_NORON,     0, 0);
+    // --- add fill background color? ---
     lcd_port_writeCommand(ST7789_DISPON,    0, 0);
-    lcd_port_delay(120);
+    lcd_port_delay(50);
 
     lcd_port_backlight(true);
 }
