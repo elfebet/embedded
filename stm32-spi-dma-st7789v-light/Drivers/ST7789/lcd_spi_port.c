@@ -179,6 +179,8 @@ void lcd_port_init(void) {
 }
 
 void lcd_port_reset(void) {
+//    HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_SET);
+//    HAL_Delay(10);
     HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_RESET);
     HAL_Delay(10);
     HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_SET);

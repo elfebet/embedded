@@ -40,8 +40,9 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 
 /* Choose a type you are using */
 //#define USING_135X240
-#define USING_240X240
+//#define USING_240X240
 //#define USING_170X320
+#define USING_240X320
 
 /* Choose a display rotation you want to use: (0-3) */
 //#define ST7789_ROTATION 0
@@ -134,6 +135,12 @@ extern SPI_HandleTypeDef ST7789_SPI_PORT;
 
 #endif
 
+#ifdef USING_240X320
+    #define ST7789_WIDTH 240
+    #define ST7789_HEIGHT 320
+    #define X_SHIFT 0
+    #define Y_SHIFT 0
+#endif
 /**
  *Color of pen
  *If you want to use another color, you can choose one in RGB565 format.
