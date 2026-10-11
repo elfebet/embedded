@@ -22,7 +22,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+// #include "st7789.h"
 #include "st7789.h"
+#include "st7789_driver.h"
+#include "gfx.h"
+#include "stm32f4xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -109,21 +113,47 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
   printf("Start init st7789V \r\n");
-  ST7789_Init();
-  ST7789_TestColors();
-//  ST7789_Fill_Color(BLACK);
-  printf("End init st7789V \r\n");
 
+  st7789_spi_connected_data_t spi_data = {
+      .spi = &hspi1,
+      .dc = {TFT_DC_GPIO_Port, TFT_DC_Pin},
+      .cs = {TFT_CS_GPIO_Port, TFT_CS_Pin},
+      .rst = {TFT_RST_GPIO_Port, TFT_RST_Pin},
+      .blk = {TFT_BLK_GPIO_Port, TFT_BLK_Pin},
+  };
+  st7789_window_data_t window_data = {
+      .width = 240,
+      .height = 320,
+      // .x_offset = 0,
+      // .y_offset = 0,
+      // .orientation = LCD_ORIENTATION_PORTRAIT,
+  };
+
+  st7789_init(&spi_data, &window_data);
+  gfx_init();
+
+  printf("End init and set green color \r\n");
   uint32_t start_time = HAL_GetTick();
+  gfx_fill_screen(GREEN);
+  uint32_t elapsed_time = HAL_GetTick() - start_time;
+  printf("Green fill time: %lu ms\r\n", elapsed_time);
+  HAL_Delay(3000);
+
+  // ST7789_Init();
+  // ST7789_TestColors();
+//  ST7789_Fill_Color(BLACK);
+
   while (1)
   {
-      ST7789_Test();
+          // ST7789_Test();
 //      ST7789_TestColors();
 
+    uint32_t start_time = HAL_GetTick();
+    gfx_fill_screen(RED);
     uint32_t elapsed_time = HAL_GetTick() - start_time;
     printf("-- Elapsed time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 
@@ -198,10 +228,10 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
