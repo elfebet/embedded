@@ -1,210 +1,145 @@
 #include "lcd_spi_port.h"
 
-#ifdef LCD_CS_PIN
-  #define CS_LOW()   HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_RESET)
-  #define CS_HIGH()  HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_SET)
-#else
-  #define CS_LOW()
-  #define CS_HIGH()
-#endif
-#define DC_LOW()   HAL_GPIO_WritePin(LCD_DC_PORT,  LCD_DC_PIN,  GPIO_PIN_RESET)
-#define DC_HIGH()  HAL_GPIO_WritePin(LCD_DC_PORT,  LCD_DC_PIN,  GPIO_PIN_SET)
+static SPI_HandleTypeDef *s_hspi;
+static int8_t s_spi_size = -1;
+static int8_t s_dma_size = -1;
+static int8_t s_dma_mem = -1;
 
-// SET:   LCD_CS_PORT->BSRR = LCD_CS_PIN;
-// RESET: LCD_CS_PORT->BSRR = (uint32_t)LCD_CS_PIN << 16U;
+void lcd_spi_init(SPI_HandleTypeDef *hspi) {
+    s_hspi = hspi;
+    s_spi_size = -1;
+    s_dma_size = -1;
+    s_dma_mem = -1;
+}
 
-typedef enum {
-    LCD_DMA_MEM_UNKNOWN = -1,
-    LCD_DMA_MEM_FIXED = 0, // fill window / rect / line
-    LCD_DMA_MEM_INCREMENT = 1  // draw image, frame buffer, font?
-} LCD_DMA_MemMode;
+void lcd_spi_set_size(lcd_spi_size_t size) {
+    if (s_hspi == NULL || s_spi_size == size) return;
 
-typedef enum {
-    LCD_SPI_SIZE_UNKNOWN = -1,
-    LCD_SPI_8BIT  = 0, // commands, draw 1 pixel, 8-bit frame buffer
-    LCD_SPI_16BIT = 1, // image, font?, fill rect, fill straight lines, 16-bit frame buffer
-} LCD_SPI_Size;
+    s_spi_size = size;
+    __HAL_SPI_DISABLE(s_hspi);
 
-typedef struct {
-    LCD_SPI_Size spi_sz;
-    LCD_SPI_Size dma_sz;
-    LCD_DMA_MemMode dma_mem_mode;
-} spi_config_t;
-
-// LCD_Fill: fixed, 16bit, else: mode_16bit
-// LCD_FillArea: fixed, 16bit, else: mode_16bit
-// LCD_DrawImage: increase, 16bit, else: mode_16bit
-
-//#define mem_fixed     0
-//#define mem_increase  1
-//#define mode_8bit     0 // для команд, координати вікна, 1 піксель
-//#define mode_16bit    1 // для малювання, масив пікселів, заливка прямокутника
+// #define SET_BIT(REG, BIT)     ((REG) |= (BIT))
+// #define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
 
 
-static spi_config_t spi_config = {
-  .spi_sz = LCD_SPI_SIZE_UNKNOWN,
-  .dma_sz = LCD_SPI_SIZE_UNKNOWN,
-  .dma_mem_mode = LCD_DMA_MEM_UNKNOWN,
-};
-
-// Sets SPI interface word size
-// call this function ONLY before transit
-static void setSPI_Size(LCD_SPI_Size size) {
-    if (spi_config.spi_sz == size) return;
-
-    __HAL_SPI_DISABLE(&LCD_SPI_PORT);
-    spi_config.spi_sz = size;
-    if (size == LCD_SPI_16BIT) {
-        LCD_SPI_PORT.Init.DataSize = SPI_DATASIZE_16BIT;
-        LCD_SPI_PORT.Instance->CR1 |= SPI_CR1_DFF;
-    } else if (size == LCD_SPI_8BIT) {
-        LCD_SPI_PORT.Init.DataSize = SPI_DATASIZE_8BIT;
-        LCD_SPI_PORT.Instance->CR1 &= ~(SPI_CR1_DFF);
-    } else {
-        // assert?
+    if (size == LCD_SPI_SIZE_16BIT) {
+        s_hspi->Init.DataSize = SPI_DATASIZE_16BIT;
+        s_hspi->Instance->CR1 |= SPI_CR1_DFF;
+    } else { // size == LCD_SPI_SIZE_8BIT
+        s_hspi->Init.DataSize = SPI_DATASIZE_8BIT;
+        s_hspi->Instance->CR1 &= ~(SPI_CR1_DFF);
     }
     // __HAL_SPI_ENABLE will calls inside HAL_SPI_Transmit
 }
 
-/**
- * @brief Configures DMA / SPI interface.
- * @param memInc Enable/disable memory address increase
- * @param mode16 Enable/disable 16 bit mode (disabled = 8 bit)
- * @return none
- */
-#ifdef LCD_USE_DMA
-// call this function ONLY before transit DMA
-static void setDMAMemMode(LCD_DMA_MemMode mode, LCD_SPI_Size size) {
-    setSPI_Size(size);
-    if (spi_config.dma_sz == size && spi_config.dma_mem_mode == mode) return;
+void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
+    lcd_spi_set_size(size);
 
-    spi_config.dma_sz = size;
-    spi_config.dma_mem_mode = mode;
-    __HAL_DMA_DISABLE(LCD_SPI_PORT.hdmatx);
+    if (s_hspi == NULL || s_hspi->hdmatx == NULL) return;
+    if (s_dma_size == size && s_dma_mem == mem) return;
+
+    s_dma_size = size;
+    s_dma_mem = mem;
+
+    DMA_HandleTypeDef *hdma = s_hspi->hdmatx;
+    __HAL_DMA_DISABLE(hdma);
 
 #ifdef DMA_SxCR_EN
-    while ((LCD_SPI_PORT.hdmatx->Instance->CR & DMA_SxCR_EN) != RESET);
+    while ((hdma->Instance->CR & DMA_SxCR_EN) != RESET);
 #elif defined DMA_CCR_EN
-    while ((LCD_SPI_PORT.hdmatx->Instance->CCR & DMA_CCR_EN) != RESET);
+    while ((hdma->Instance->CCR & DMA_CCR_EN) != RESET);
 #endif
 
-    if (mode == LCD_DMA_MEM_INCREMENT) {
-        LCD_SPI_PORT.hdmatx->Init.MemInc = DMA_MINC_ENABLE;
+    if (mem == LCD_SPI_MEM_FIXED) {
+        hdma->Init.MemInc = DMA_MINC_DISABLE;
 #ifdef DMA_SxCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CR |= DMA_SxCR_MINC;
+        hdma->Instance->CR &= ~(DMA_SxCR_MINC);
 #elif defined DMA_CCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CCR |= DMA_CCR_MINC;
+        hdma->Instance->CCR &= ~(DMA_CCR_MINC);
 #endif
-    } else if (mode == LCD_DMA_MEM_FIXED) {
-        LCD_SPI_PORT.hdmatx->Init.MemInc = DMA_MINC_DISABLE;
+    } else { // (mem == LCD_SPI_MEM_INCREMENT)
+        hdma->Init.MemInc = DMA_MINC_ENABLE;
 #ifdef DMA_SxCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CR &= ~(DMA_SxCR_MINC);
+        hdma->Instance->CR |= DMA_SxCR_MINC;
 #elif defined DMA_CCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CCR &= ~(DMA_CCR_MINC);
+        hdma->Instance->CCR |= DMA_CCR_MINC;
 #endif
-    } else {
-        // assert?
     }
 
-    if (size == LCD_SPI_16BIT) {
-        LCD_SPI_PORT.hdmatx->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-        LCD_SPI_PORT.hdmatx->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    if (size == LCD_SPI_SIZE_16BIT) {
+        hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+        hdma->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
 #ifdef DMA_SxCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CR = (LCD_SPI_PORT.hdmatx->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk)) |
-                                            (1<<DMA_SxCR_PSIZE_Pos | 1<<DMA_SxCR_MSIZE_Pos);
+        hdma->Instance->CR = (hdma->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk)) | (1u << DMA_SxCR_PSIZE_Pos | 1u << DMA_SxCR_MSIZE_Pos);
 #elif defined DMA_CCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CCR = (LCD_SPI_PORT.hdmatx->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk)) |
-                                             (1<<DMA_CCR_PSIZE_Pos | 1<<DMA_CCR_MSIZE_Pos);
+        hdma->Instance->CCR = (hdma->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk)) | (1u << DMA_CCR_PSIZE_Pos | 1u << DMA_CCR_MSIZE_Pos);
 #endif
-    } else if (size == LCD_SPI_8BIT) {
-        LCD_SPI_PORT.hdmatx->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-        LCD_SPI_PORT.hdmatx->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    } else { // (size == LCD_SPI_SIZE_8BIT)
+        hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+        hdma->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
 #ifdef DMA_SxCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CR = (LCD_SPI_PORT.hdmatx->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk));
+        hdma->Instance->CR = (hdma->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk));
 #elif defined DMA_CCR_EN
-        LCD_SPI_PORT.hdmatx->Instance->CCR = (LCD_SPI_PORT.hdmatx->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk));
+        hdma->Instance->CCR = (hdma->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk));
 #endif
-    } else {
-        // assert?
     }
 
     // __HAL_SPI_ENABLE will calls inside HAL_SPI_Transmit_DMA
 }
 
-spi_config_t make_spiConfig(LCD_DMA_MemMode mode, LCD_SPI_Size size) {
-    return (spi_config_t){
-        .spi_sz = size,
-        .dma_sz = size,
-        .dma_mem_mode = mode,
-   };
+void lcd_delay(uint32_t ms) {
+     HAL_Delay(ms);
 }
 
-spi_config_t dataType_to_spiConfig(LCD_DataType dataType) {
-    switch (dataType) {
-    case LCD_TYPE_PIXEL:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_8BIT);
-    case LCD_TYPE_FILL:
-        return make_spiConfig(LCD_DMA_MEM_FIXED, LCD_SPI_16BIT);
-    case LCD_TYPE_IMAGE:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_16BIT);
-    case LCD_TYPE_FONT:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_8BIT); // check it!!
-    case LCD_TYPE_FRAMEBUFFER_8BIT:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_8BIT);
-    case LCD_TYPE_FRAMEBUFFER_16BIT:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_16BIT);
-    default:
-        return make_spiConfig(LCD_DMA_MEM_INCREMENT, LCD_SPI_8BIT);
+uint8_t lcd_spi_dma_ready() {
+    if (s_hspi == NULL || s_hspi->hdmatx == NULL) return 0;
+    return HAL_DMA_GetState(s_hspi->hdmatx) == HAL_DMA_STATE_READY;
+}
+
+void lcd_spi_dma_wait(void) {
+    if (s_hspi == NULL || s_hspi->hdmatx == NULL) return;
+    while (HAL_DMA_GetState(s_hspi->hdmatx) != HAL_DMA_STATE_READY);
+}
+
+static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
+    if (s_hspi == NULL || data == NULL) return;
+
+    const uint8_t unit_bytes = (s_spi_size == LCD_SPI_SIZE_16BIT) ? 2u : 1u;
+    const int mem_fixed = s_dma_mem == LCD_SPI_MEM_FIXED;
+
+    while (count > 0u) {
+        uint16_t chunk = (count > 65535u) ? 65535u : (uint16_t)count;
+#if ST7789_USE_DMA
+        if (use_dma && s_hspi->hdmatx != NULL) {
+            HAL_SPI_Transmit_DMA(s_hspi, data, chunk);
+            lcd_spi_dma_wait();
+        } else
+#endif
+        {
+            if (mem_fixed) {
+                for (uint32_t i = 0; i < chunk; i++) {
+                    HAL_SPI_Transmit(s_hspi, data, 1, HAL_MAX_DELAY);
+                }
+            } else {
+                HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
+            }
+        }
+
+        if (!mem_fixed) {
+            data += (uint32_t)chunk * unit_bytes;
+        }
+        count -= chunk;
     }
 }
 
-#endif
-
-//LCD_Fill: fixed, 16bit, else: mode_16bit
-//LCD_FillArea: fixed, 16bit, else: mode_16bit
-//LCD_DrawImage: increase, 16bit, else: mode_16bit
-
-
-//void lcd_port_memMode(uint8_t memInc, uint8_t modeSz) {
-//#ifdef LCD_USE_DMA
-//    setDMAMemMode(memInc, modeSz);
-//#else
-//    setSPI_Size(modeSz);
-//#endif
-//}
-
-void lcd_port_init(void) {
-    CS_HIGH();
-    DC_HIGH();
+void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count)  {
+    transmit(data, count, 0);
+}
+void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count) {
+    transmit(data, count, 1);
 }
 
-void lcd_port_reset(void) {
-//    HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_SET);
-//    HAL_Delay(10);
-    HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_RESET);
-    HAL_Delay(10);
-    HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_SET);
-    HAL_Delay(120);
-}
-
-void lcd_port_backlight(bool on) {
-#ifdef LCD_BLK_PIN
-    HAL_GPIO_WritePin(LCD_BLK_PORT, LCD_BLK_PIN, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
-#endif
-}
-
-void lcd_port_delay(uint32_t ms) {
-    HAL_Delay(ms);
-}
-
-void lcd_port_lock(void) {
-    CS_LOW();
-}
-
-void lcd_port_unlock(void) {
-    CS_HIGH();
-}
-
+/*
 void lcd_port_writeCommand(uint8_t cmd, const uint8_t *args, uint8_t arg_count) {
     DC_LOW();
     CS_LOW();
@@ -251,3 +186,4 @@ void lcd_port_writeData(const uint8_t *buff, size_t buff_size, LCD_DataType data
 
     CS_HIGH();
 }
+*/
