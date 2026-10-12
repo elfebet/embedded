@@ -7,36 +7,19 @@ static st7789_spi_connected_data_t s_spi_data;
 static st7789_window_data_t s_window_data;
 static uint16_t s_fill_color; // TODO: check it, seems can be removed, because lcd_spi_transmit_dma uses pointer to color, not value
 
-static void pin_write(const st7789_pin_t *pin, GPIO_PinState state) {
-    if (pin->port != NULL) {
-        HAL_GPIO_WritePin(pin->port, pin->pin, state);
-    }
-}
-
-static void cs_low(void) {
-    pin_write(&s_spi_data.cs, GPIO_PIN_RESET);
-}
-
-static void cs_high(void) {
-    pin_write(&s_spi_data.cs, GPIO_PIN_SET);
-}
-
-static void dc_command(void) {
-    pin_write(&s_spi_data.dc, GPIO_PIN_RESET);
-}
-
-static void dc_data(void) {
-    pin_write(&s_spi_data.dc, GPIO_PIN_SET);
-}
+#define CS_LOW()         if (s_spi_data.cs.port) { s_spi_data.cs.port->BSRR = (uint32_t)s_spi_data.cs.pin << 16U; }
+#define CS_HIGH()        if (s_spi_data.cs.port) { s_spi_data.cs.port->BSRR = s_spi_data.cs.pin; }
+#define DC_COMMAND()     { s_spi_data.dc.port->BSRR = (uint32_t)s_spi_data.dc.pin << 16U; }
+#define DC_DATA()        { s_spi_data.dc.port->BSRR = s_spi_data.dc.pin; }
 
 static void st7789_reset(void) {
     if (s_spi_data.rst.port == NULL) return;
 
-//    pin_write(&s_spi_data.rst, GPIO_PIN_SET);
-//    HAL_Delay(10);
-    pin_write(&s_spi_data.rst, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(s_spi_data.rst.port, s_spi_data.rst.pin, GPIO_PIN_SET);
+    // HAL_Delay(10);
+    HAL_GPIO_WritePin(s_spi_data.rst.port, s_spi_data.rst.pin, GPIO_PIN_RESET);
     HAL_Delay(15);
-    pin_write(&s_spi_data.rst, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(s_spi_data.rst.port, s_spi_data.rst.pin, GPIO_PIN_SET);
     HAL_Delay(20);
 }
 
@@ -76,14 +59,14 @@ static uint8_t st7789_MADCTLConfig(uint8_t orientation) {
 
 void st7789_write_command_data(uint8_t cmd, const uint8_t *data, uint8_t count) {
     lcd_spi_set_size(LCD_SPI_SIZE_8BIT);
-    dc_command();
-    cs_low();
+    DC_COMMAND();
+    CS_LOW();
     lcd_spi_transmit_blocking(&cmd, 1);
     if (data != NULL && count > 0) {
-        dc_data();
+        DC_DATA();
         lcd_spi_transmit_blocking(data, count);
     }
-    cs_high();
+    CS_HIGH();
 }
 
 void st7789_write_command(uint8_t cmd) {
@@ -96,7 +79,7 @@ void st7789_init(const st7789_spi_connected_data_t *spi_data, const st7789_windo
     lcd_spi_init(s_spi_data.spi);
     const uint8_t madctl = st7789_MADCTLConfig(s_window_data.orientation);
 
-    cs_high();
+    CS_HIGH();
 
     st7789_reset();
     // st7789_write_command(ST7789_SWRESET);
@@ -147,7 +130,8 @@ void st7789_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
 }
 
 void st7789_backlight(bool on) {
-    pin_write(&s_spi_data.blk, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (s_spi_data.blk.port == NULL) return;
+    HAL_GPIO_WritePin(s_spi_data.blk.port, s_spi_data.blk.pin, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 void st7789_set_orientation(uint8_t orientation) {
@@ -183,10 +167,10 @@ void st7789_write_pixels(const uint16_t *pixels, uint32_t count) {
     if (pixels == NULL || count == 0) return;
 
     // lcd_spi_set_dma(LCD_SPI_MEM_INCREMENT, LCD_SPI_SIZE_16BIT);
-    dc_data();
-    cs_low();
+    DC_DATA();
+    CS_LOW();
     lcd_spi_transmit_dma((const uint8_t *)pixels, count);
-    cs_high();
+    CS_HIGH();
 }
 
 void st7789_fill_pixels(uint32_t count, uint16_t color) {
@@ -194,16 +178,16 @@ void st7789_fill_pixels(uint32_t count, uint16_t color) {
 
     s_fill_color = color;
     lcd_spi_set_dma(LCD_SPI_MEM_FIXED, LCD_SPI_SIZE_16BIT);
-    dc_data();
-    cs_low();
+    DC_DATA();
+    CS_LOW();
     lcd_spi_transmit_dma((const uint8_t *)&s_fill_color, count);
-    cs_high();
+    CS_HIGH();
 }
 
 void st7789_draw_pixel(uint16_t color) {
     lcd_spi_set_size(LCD_SPI_SIZE_16BIT);
-    dc_data();
-    cs_low();
+    DC_DATA();
+    CS_LOW();
     lcd_spi_transmit_blocking((const uint8_t *)&color, 1);
-    cs_high();
+    CS_HIGH();
 }
