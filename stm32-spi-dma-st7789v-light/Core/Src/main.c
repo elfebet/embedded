@@ -84,7 +84,6 @@ int main(void)
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Enable DWT
     DWT->CYCCNT = 0;                                // Clear counter
     DWT->CTRL = DWT_CTRL_CYCCNTENA_Msk;             // Enable counter
-    printf("Enable DWT, enable counter \r\n");
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
