@@ -41,9 +41,6 @@ void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
     DMA_HandleTypeDef *hdma = s_hspi->hdmatx;
     __HAL_DMA_DISABLE(hdma);
 
-    // #define __HAL_DMA_ENABLE(__HANDLE__)      ((__HANDLE__)->Instance->CR |=  DMA_SxCR_EN)
-    // #define __HAL_DMA_DISABLE(__HANDLE__)     ((__HANDLE__)->Instance->CR &=  ~DMA_SxCR_EN)
-
 #ifdef DMA_SxCR_EN
     while ((hdma->Instance->CR & DMA_SxCR_EN) != RESET);
 #elif defined DMA_CCR_EN
@@ -54,15 +51,19 @@ void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
         hdma->Init.MemInc = DMA_MINC_DISABLE;
 #ifdef DMA_SxCR_EN
         hdma->Instance->CR &= ~(DMA_SxCR_MINC);
+        // CLEAR_BIT(hdma->Instance->CR, DMA_SxCR_MINC);
 #elif defined DMA_CCR_EN
         hdma->Instance->CCR &= ~(DMA_CCR_MINC);
+        // CLEAR_BIT(hdma->Instance->CCR, DMA_CCR_MINC);
 #endif
     } else { // (mem == LCD_SPI_MEM_INCREMENT)
         hdma->Init.MemInc = DMA_MINC_ENABLE;
 #ifdef DMA_SxCR_EN
         hdma->Instance->CR |= DMA_SxCR_MINC;
+        // SET_BIT(hdma->Instance->CR, DMA_SxCR_MINC);
 #elif defined DMA_CCR_EN
         hdma->Instance->CCR |= DMA_CCR_MINC;
+        // SET_BIT(hdma->Instance->CCR, DMA_CCR_MINC);
 #endif
     }
 
@@ -71,16 +72,20 @@ void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
         hdma->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
 #ifdef DMA_SxCR_EN
         hdma->Instance->CR = (hdma->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk)) | (1u << DMA_SxCR_PSIZE_Pos | 1u << DMA_SxCR_MSIZE_Pos);
+        // MODIFY_REG(hdma->Instance->CR, DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk, (1U << DMA_SxCR_PSIZE_Pos) | (1U << DMA_SxCR_MSIZE_Pos));
 #elif defined DMA_CCR_EN
         hdma->Instance->CCR = (hdma->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk)) | (1u << DMA_CCR_PSIZE_Pos | 1u << DMA_CCR_MSIZE_Pos);
+        // MODIFY_REG(hdma->Instance->CCR, DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk, (1U << DMA_CCR_PSIZE_Pos) | (1U << DMA_CCR_MSIZE_Pos));
 #endif
     } else { // (size == LCD_SPI_SIZE_8BIT)
         hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
         hdma->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
 #ifdef DMA_SxCR_EN
         hdma->Instance->CR = (hdma->Instance->CR & ~(DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk));
+        // CLEAR_BIT(hdma->Instance->CR, DMA_SxCR_PSIZE_Msk | DMA_SxCR_MSIZE_Msk);
 #elif defined DMA_CCR_EN
         hdma->Instance->CCR = (hdma->Instance->CCR & ~(DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk));
+        // CLEAR_BIT(hdma->Instance->CCR, DMA_CCR_PSIZE_Msk | DMA_CCR_MSIZE_Msk);
 #endif
     }
     // __HAL_DMA_ENABLE will calls inside HAL_SPI_Transmit_DMA
@@ -129,52 +134,3 @@ void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count)  {
 void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count) {
     transmit(data, count, 1);
 }
-
-/*
-void lcd_port_writeCommand(uint8_t cmd, const uint8_t *args, uint8_t arg_count) {
-    DC_LOW();
-    CS_LOW();
-    setSPI_Size(LCD_SPI_8BIT);
-    HAL_SPI_Transmit(&LCD_SPI_PORT, &cmd, 1, HAL_MAX_DELAY);
-    if (args && arg_count) {
-        DC_HIGH();
-        HAL_SPI_Transmit(&LCD_SPI_PORT, args, arg_count, HAL_MAX_DELAY);
-    }
-    CS_HIGH();
-}
-
-void lcd_port_writeData(const uint8_t *buff, size_t buff_size, LCD_DataType dataType) {
-    DC_LOW();
-    CS_LOW();
-
-#ifdef LCD_USE_DMA
-    spi_config_t config = dataType_to_spiConfig(dataType);
-    setDMAMemMode(config.dma_mem_mode, config.dma_sz);
-#endif
-
-    while (buff_size > 0) {
-        uint16_t chunk_size = buff_size > 65535 ? 65535 : buff_size;
-#ifdef LCD_USE_DMA
-        if (buff_size > LCD_DMA_MIN_SIZE) {
-            HAL_SPI_Transmit_DMA(&LCD_SPI_PORT, buff, chunk_size);
-            while (HAL_DMA_GetState(LCD_SPI_PORT.hdmatx) != HAL_DMA_STATE_READY);
-            if (spi_config.dma_mem_mode == LCD_DMA_MEM_INCREMENT) {
-                // WHY WE DO IT???
-                buff += (spi_config.dma_sz == LCD_SPI_16BIT) ? chunk_size : chunk_size*2;
-            }
-        } else {
-            HAL_SPI_Transmit(&LCD_SPI_PORT, buff, chunk_size, HAL_MAX_DELAY);
-            // WHY WE DO IT???
-            buff += (spi_config.spi_sz == LCD_SPI_16BIT) ? chunk_size : chunk_size*2;
-        }
-#else
-        HAL_SPI_Transmit(&LCD_SPI_PORT, buff, chunk_size, HAL_MAX_DELAY);
-        // SHOULD WE ADD THIS BELOW???
-//        buff += (spi_config.spi_sz == LCD_SPI_16BIT) ? chunk_size : chunk_size*2;
-#endif
-        buff_size -= chunk_size;
-    }
-
-    CS_HIGH();
-}
-*/
