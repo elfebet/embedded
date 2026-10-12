@@ -1,5 +1,7 @@
 #include "lcd_spi_port.h"
 #include "stm32f4xx.h"
+#include <stdint.h>
+#include <stdio.h>
 
 static SPI_HandleTypeDef *s_hspi;
 static int8_t s_spi_size = -1;
@@ -102,6 +104,7 @@ uint8_t lcd_spi_dma_ready() {
 
 void lcd_spi_dma_wait(void) {
     if (s_hspi == NULL || s_hspi->hdmatx == NULL) return;
+
     while (HAL_DMA_GetState(s_hspi->hdmatx) != HAL_DMA_STATE_READY);
 }
 
@@ -111,13 +114,13 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
     const uint8_t dma = use_dma && s_hspi->hdmatx != NULL;
     const uint8_t mem_fixed = dma && s_dma_mem == LCD_SPI_MEM_DMA_FIXED;
     const uint8_t unit_bytes = s_spi_size == LCD_SPI_SIZE_16BIT ? 2u : 1u;
-    const uint16_t limit = s_spi_size == LCD_SPI_SIZE_16BIT ? 32767u : 65535u;
 
     while (count > 0u) {
-        uint16_t chunk = (count > limit) ? limit : (uint16_t)count;
+        uint16_t chunk = (count > 65535u) ? 65535u : (uint16_t)count;
         if (dma) {
             HAL_SPI_Transmit_DMA(s_hspi, data, chunk);
             lcd_spi_dma_wait();
+            printf("SPI wait. transit finished! ");
         } else {
             HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
         }
