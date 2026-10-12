@@ -10,7 +10,7 @@ void gfx_draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
     if (x >= st7789_width() || y >= st7789_height()) return;
 
     st7789_set_window(x, y, x, y);
-    st7789_draw_pixel(x, y, color);
+    st7789_draw_pixel(color);
 }
 
 void gfx_fill_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
@@ -26,7 +26,12 @@ void gfx_fill_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
 
     uint32_t pixels = (x2 - x1 + 1) * (y2 - y1 + 1);
     st7789_set_window(x1, y1, x2, y2);
-    st7789_fill_pixels(pixels, color);
+
+    // ANTON TODO: DEBUG, not resolved yet.
+    for (uint32_t i = 0; i < pixels; i++) {
+        st7789_draw_pixel(color);
+    }
+//   st7789_fill_pixels(pixels, color);
 }
 
 void gfx_fill_screen(uint16_t color) {

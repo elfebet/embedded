@@ -1,4 +1,6 @@
 #include "lcd_spi_port.h"
+#include "stm32f4xx.h"
+#include <stdio.h>
 
 static SPI_HandleTypeDef *s_hspi;
 static int8_t s_spi_size = -1;
@@ -16,18 +18,20 @@ void lcd_spi_set_size(lcd_spi_size_t size) {
     if (s_hspi == NULL || s_spi_size == size) return;
 
     s_spi_size = size;
+
     __HAL_SPI_DISABLE(s_hspi);
 
 // #define SET_BIT(REG, BIT)     ((REG) |= (BIT))
 // #define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
 
-
     if (size == LCD_SPI_SIZE_16BIT) {
         s_hspi->Init.DataSize = SPI_DATASIZE_16BIT;
-        s_hspi->Instance->CR1 |= SPI_CR1_DFF;
+        // s_hspi->Instance->CR1 |= SPI_CR1_DFF;
+        SET_BIT(s_hspi->Instance->CR1, SPI_CR1_DFF);
     } else { // size == LCD_SPI_SIZE_8BIT
         s_hspi->Init.DataSize = SPI_DATASIZE_8BIT;
-        s_hspi->Instance->CR1 &= ~(SPI_CR1_DFF);
+        // s_hspi->Instance->CR1 &= ~(SPI_CR1_DFF);
+        CLEAR_BIT(s_hspi->Instance->CR1, SPI_CR1_DFF);
     }
     // __HAL_SPI_ENABLE will calls inside HAL_SPI_Transmit
 }
@@ -40,7 +44,7 @@ void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
 
     s_dma_size = size;
     s_dma_mem = mem;
-
+/*
     DMA_HandleTypeDef *hdma = s_hspi->hdmatx;
     __HAL_DMA_DISABLE(hdma);
 
@@ -85,6 +89,7 @@ void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size) {
     }
 
     // __HAL_SPI_ENABLE will calls inside HAL_SPI_Transmit_DMA
+*/
 }
 
 void lcd_delay(uint32_t ms) {
@@ -116,13 +121,23 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
         } else
 #endif
         {
-            if (mem_fixed) {
+            HAL_StatusTypeDef status;
+            if (mem_fixed) { // Це не працює для фіксованої пам'яті, бо тоді треба передавати різні дані, а не один колір
                 for (uint32_t i = 0; i < chunk; i++) {
-                    HAL_SPI_Transmit(s_hspi, data, 1, HAL_MAX_DELAY);
+                    status = HAL_SPI_Transmit(s_hspi, data, 1, HAL_MAX_DELAY);
+                    // DEBUG
+                    if (status != HAL_OK) {
+                        printf("SPI transmit error: %d\r\n", status);
+                        break;
+                    }
                 }
             } else {
-                HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
-            }
+                status = HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
+                // DEBUG
+                if (status != HAL_OK) {
+                    printf("SPI transmit error: %d\r\n", status);
+                }
+           }
         }
 
         if (!mem_fixed) {

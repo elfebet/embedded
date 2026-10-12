@@ -22,7 +22,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-// #include "st7789.h"
 #include "st7789.h"
 #include "st7789_driver.h"
 #include "gfx.h"
@@ -70,6 +69,8 @@ int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
+#define NEW_DISPLAY 1
+
 /* USER CODE END 0 */
 
 /**
@@ -114,7 +115,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   printf("Start init st7789V \r\n");
-
+#if NEW_DISPLAY
   st7789_spi_connected_data_t spi_data = {
       .spi = &hspi1,
       .dc = {TFT_DC_GPIO_Port, TFT_DC_Pin},
@@ -138,23 +139,51 @@ int main(void)
   gfx_fill_screen(GREEN);
   uint32_t elapsed_time = HAL_GetTick() - start_time;
   printf("Green fill time: %lu ms\r\n", elapsed_time);
-  HAL_Delay(3000);
+  HAL_Delay(1000);
 
-  // ST7789_Init();
-  // ST7789_TestColors();
+  start_time = HAL_GetTick();
+  gfx_fill_screen(BLACK);
+  elapsed_time = HAL_GetTick() - start_time;
+  printf("Black fill time: %lu ms\r\n", elapsed_time);
+  HAL_Delay(1000);
+
+  start_time = HAL_GetTick();
+  gfx_fill_screen(BROWN);
+  elapsed_time = HAL_GetTick() - start_time;
+  printf("Brown fill time: %lu ms\r\n", elapsed_time);
+  HAL_Delay(1000);
+
+  printf("START WHILE\r\n");
+#else
+  ST7789_Init();
+  ST7789_TestColors();
 //  ST7789_Fill_Color(BLACK);
+#endif
 
   while (1)
   {
-          // ST7789_Test();
-//      ST7789_TestColors();
-
+#if NEW_DISPLAY
     uint32_t start_time = HAL_GetTick();
     gfx_fill_screen(RED);
     uint32_t elapsed_time = HAL_GetTick() - start_time;
+    printf("-- RED Elapsed time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
+
+    start_time = HAL_GetTick();
+    gfx_fill_screen(GREEN);
+    elapsed_time = HAL_GetTick() - start_time;
     printf("-- Elapsed time: %lu ms\r\n", elapsed_time);
     HAL_Delay(1000);
 
+    start_time = HAL_GetTick();
+    gfx_fill_screen(BLUE);
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("-- BLUE Elapsed time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
+#else
+          // ST7789_Test();
+     ST7789_TestColors();
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
