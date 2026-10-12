@@ -3,7 +3,7 @@
 
 typedef enum {
     LCD_SPI_MEM_INCREMENT = 0,  // draw image, frame buffer, font?
-    LCD_SPI_MEM_FIXED = 1,     // fill window / rect / line
+    LCD_SPI_MEM_DMA_FIXED = 1,  // ONLY FOR DMA, fill window / rect / line
 } lcd_spi_mem_t;
 
 typedef enum {
@@ -16,7 +16,7 @@ void lcd_spi_init(SPI_HandleTypeDef *hspi);
 // SPI data frame format: 8 or 16 bit
 void lcd_spi_set_size(lcd_spi_size_t size);
 
-// SPI DMA config. Also calls lcd_spi_set_size(size)
+// SPI DMA format. p.s. also calls lcd_spi_set_size(size)
 void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size);
 
 void lcd_delay(uint32_t ms);

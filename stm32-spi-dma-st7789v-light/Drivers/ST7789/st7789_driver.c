@@ -58,9 +58,9 @@ static uint8_t st7789_MADCTLConfig(uint8_t orientation) {
 }
 
 void st7789_write_command_data(uint8_t cmd, const uint8_t *data, uint8_t count) {
-    lcd_spi_set_size(LCD_SPI_SIZE_8BIT);
     DC_COMMAND();
     CS_LOW();
+    lcd_spi_set_size(LCD_SPI_SIZE_8BIT);
     lcd_spi_transmit_blocking(&cmd, 1);
     if (data != NULL && count > 0) {
         DC_DATA();
@@ -166,9 +166,9 @@ uint16_t st7789_height(void) {
 void st7789_write_pixels(const uint16_t *pixels, uint32_t count) {
     if (pixels == NULL || count == 0) return;
 
-    // lcd_spi_set_dma(LCD_SPI_MEM_INCREMENT, LCD_SPI_SIZE_16BIT);
     DC_DATA();
     CS_LOW();
+    lcd_spi_set_dma(LCD_SPI_MEM_INCREMENT, LCD_SPI_SIZE_16BIT);
     lcd_spi_transmit_dma((const uint8_t *)pixels, count);
     CS_HIGH();
 }
@@ -177,17 +177,17 @@ void st7789_fill_pixels(uint32_t count, uint16_t color) {
     if (count == 0) return;
 
     s_fill_color = color;
-    lcd_spi_set_dma(LCD_SPI_MEM_FIXED, LCD_SPI_SIZE_16BIT);
     DC_DATA();
     CS_LOW();
+    lcd_spi_set_dma(LCD_SPI_MEM_DMA_FIXED, LCD_SPI_SIZE_16BIT);
     lcd_spi_transmit_dma((const uint8_t *)&s_fill_color, count);
     CS_HIGH();
 }
 
 void st7789_draw_pixel(uint16_t color) {
-    lcd_spi_set_size(LCD_SPI_SIZE_16BIT);
     DC_DATA();
     CS_LOW();
+    lcd_spi_set_size(LCD_SPI_SIZE_16BIT);
     lcd_spi_transmit_blocking((const uint8_t *)&color, 1);
     CS_HIGH();
 }
