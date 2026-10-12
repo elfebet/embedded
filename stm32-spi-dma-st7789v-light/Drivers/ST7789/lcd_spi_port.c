@@ -1,7 +1,5 @@
 #include "lcd_spi_port.h"
 #include "stm32f4xx.h"
-#include <stdint.h>
-#include <stdio.h>
 
 static SPI_HandleTypeDef *s_hspi;
 static int8_t s_spi_size = -1;
@@ -120,7 +118,6 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
         if (dma) {
             HAL_SPI_Transmit_DMA(s_hspi, data, chunk);
             lcd_spi_dma_wait();
-            printf("SPI wait. transit finished! ");
         } else {
             HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
         }
