@@ -148,8 +148,7 @@ int main(void)
 #if NEW_DISPLAY
     gfx_tests();
 #else
-          // ST7789_Test();
-     ST7789_TestColors();
+          ST7789_Test();
 #endif
     /* USER CODE END WHILE */
 
