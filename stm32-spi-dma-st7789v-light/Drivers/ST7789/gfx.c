@@ -91,6 +91,13 @@ void gfx_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
     gfx_draw_line(x2, y1, x2, y2, color);
 }
 
+void gfx_draw_image(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *data) {
+	if (x + w > st7789_width() || y + h > st7789_height()) return;
+
+    st7789_set_window(x, y, x + w - 1, y + h - 1);
+    st7789_write_pixels(data, w * h);
+}
+
 void gfx_tests() {
     uint32_t start_time = HAL_GetTick();
     gfx_fill_screen(COLOR_RED);
@@ -138,19 +145,19 @@ void gfx_tests() {
     gfx_fill_rect(x1, y1, x1 + w, y1 + h, COLOR_BLUE);
     elapsed_time = HAL_GetTick() - start_time;
     printf("RECT time: %lu ms\r\n", elapsed_time);
-    HAL_Delay(1500);
+    HAL_Delay(1000);
 
     gfx_draw_rect(0, 0, st7789_width() - 1, st7789_height() - 1, COLOR_ORANGE);
-    HAL_Delay(2000);
+    HAL_Delay(1000);
 
     gfx_draw_line(0, 0, 0, st7789_height() - 1, COLOR_RED); // left border
-    HAL_Delay(1000);
+    HAL_Delay(500);
     gfx_draw_line(0, 0, st7789_width() - 1, 0, COLOR_GREEN); // top border
-    HAL_Delay(1000);
+    HAL_Delay(500);
     gfx_draw_line(0, st7789_height() - 1, st7789_width() - 1, st7789_height() - 1, COLOR_BLUE); // bottom border
-    HAL_Delay(1000);
+    HAL_Delay(500);
     gfx_draw_line(st7789_width() - 1, 0, st7789_width() - 1, st7789_height() - 1, COLOR_MAGENTA); // right border
-    HAL_Delay(5000);
+    HAL_Delay(1000);
 
     HAL_Delay(1500);
 }
