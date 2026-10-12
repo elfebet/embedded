@@ -13,11 +13,11 @@ uint16_t DMA_MIN_SIZE = 16;
 uint16_t disp_buf[ST7789_WIDTH * HOR_LEN];
 #endif
 
-void memset_16(uint16_t* buf, uint16_t value, uint32_t size) 
+void memset_16(uint16_t* buf, uint16_t value, uint32_t size)
 {
-    uint16_t swapped = (value >> 8) | (value << 8); 
+    uint16_t swapped = (value >> 8) | (value << 8);
     while (size > 0) {
-        *buf = swapped; 
+        *buf = swapped;
         buf++;
         size--;
     }
@@ -70,7 +70,7 @@ static void ST7789_WriteData(uint8_t *buff, size_t buff_size)
 	ST7789_UnSelect();
 }
 
-void SendBuffer(uint16_t *disp_buf, size_t size) 
+void SendBuffer(uint16_t *disp_buf, size_t size)
 {
     // Convert 16-bit data into a byte sequence
     uint8_t *byte_ptr = (uint8_t *)disp_buf; // Cast the pointer to 8-bit
@@ -128,9 +128,9 @@ static void ST7789_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint1
 	ST7789_Select();
 	uint16_t x_start = x0 + X_SHIFT, x_end = x1 + X_SHIFT;
 	uint16_t y_start = y0 + Y_SHIFT, y_end = y1 + Y_SHIFT;
-	
+
 	/* Column Address set */
-	ST7789_WriteCommand(ST7789_CASET); 
+	ST7789_WriteCommand(ST7789_CASET);
 	{
 		uint8_t data[] = {x_start >> 8, x_start & 0xFF, x_end >> 8, x_end & 0xFF};
 		ST7789_WriteData(data, sizeof(data));
@@ -171,13 +171,13 @@ void ST7789_Init(void)
 		ST7789_WriteData(data, sizeof(data));
 	}
 	ST7789_SetRotation(ST7789_ROTATION);	//	MADCTL (Display Rotation)
-	
+
 	/* Internal LCD Voltage generator settings */
     ST7789_WriteCommand(0XB7);				//	Gate Control
     ST7789_WriteSmallData(0x35);			//	Default value
     ST7789_WriteCommand(0xBB);				//	VCOM setting
     ST7789_WriteSmallData(0x19);			//	0.725v (default 0.75v for 0x20)
-    ST7789_WriteCommand(0xC0);				//	LCMCTRL	
+    ST7789_WriteCommand(0xC0);				//	LCMCTRL
     ST7789_WriteSmallData (0x2C);			//	Default value
     ST7789_WriteCommand (0xC2);				//	VDV and VRH command Enable
     ST7789_WriteSmallData (0x01);			//	Default value
@@ -206,7 +206,7 @@ void ST7789_Init(void)
 //    ST7789_WriteCommand (ST7789_INVON);		//	Inversion ON
 	ST7789_WriteCommand (ST7789_SLPOUT);	//	Out of sleep mode
   	ST7789_WriteCommand (ST7789_NORON);		//	Normal Display on
-  	ST7789_WriteCommand (ST7789_DISPON);	//	Main screen turned on	
+  	ST7789_WriteCommand (ST7789_DISPON);	//	Main screen turned on
 
 	//HAL_Delay(50);
   	ST7789_BLK_Set();
@@ -226,14 +226,14 @@ void ST7789_Fill_Color(uint16_t color) {
     #ifdef USE_DMA
 
     for (i = 0; i < (ST7789_HEIGHT * ST7789_WIDTH) / (sizeof(disp_buf) / 2); i++) {
-        memset_16((uint16_t*)disp_buf, color, sizeof(disp_buf) / 2); 
-        SendBuffer((uint16_t*)disp_buf, sizeof(disp_buf) / 2);     
+        memset_16((uint16_t*)disp_buf, color, sizeof(disp_buf) / 2);
+        SendBuffer((uint16_t*)disp_buf, sizeof(disp_buf) / 2);
     }
     #else
     uint16_t j;
     for (i = 0; i < ST7789_HEIGHT; i++) {
         for (j = 0; j < ST7789_WIDTH; j++) {
-            uint8_t data[] = {color >> 8, color & 0xFF}; 
+            uint8_t data[] = {color >> 8, color & 0xFF};
             ST7789_WriteData(data, sizeof(data));
         }
     }
@@ -252,7 +252,7 @@ void ST7789_DrawPixel(uint16_t x, uint16_t y, uint16_t color)
 {
 	if ((x < 0) || (x >= ST7789_WIDTH) ||
 		 (y < 0) || (y >= ST7789_HEIGHT))	return;
-	
+
 	ST7789_SetAddressWindow(x, y, x, y);
 	uint8_t data[] = {color >> 8, color & 0xFF};
 	ST7789_Select();
@@ -376,7 +376,7 @@ void ST7789_DrawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, ui
 }
 
 
-/** 
+/**
  * @brief Draw a circle with single color
  * @param x0&y0 -> coordinate of circle center
  * @param r -> radius of circle
@@ -454,7 +454,7 @@ void ST7789_InvertColors(uint8_t invert)
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Write a char
  * @param  x&y -> cursor of the start point.
  * @param ch -> char to write
@@ -485,8 +485,8 @@ void ST7789_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t co
 	ST7789_UnSelect();
 }
 
-/** 
- * @brief Write a string 
+/**
+ * @brief Write a string
  * @param  x&y -> cursor of the start point.
  * @param str -> string to write
  * @param font -> fontstyle of the string
@@ -518,7 +518,7 @@ void ST7789_WriteString(uint16_t x, uint16_t y, const char *str, FontDef font, u
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Draw a filled Rectangle with single color
  * @param  x&y -> coordinates of the starting point
  * @param w&h -> width & height of the Rectangle
@@ -553,7 +553,7 @@ void ST7789_DrawFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Draw a Triangle with single color
  * @param  xi&yi -> 3 coordinates of 3 top points.
  * @param color ->color of the lines
@@ -569,7 +569,7 @@ void ST7789_DrawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Draw a filled Triangle with single color
  * @param  xi&yi -> 3 coordinates of 3 top points.
  * @param color ->color of the triangle
@@ -637,7 +637,7 @@ void ST7789_DrawFilledTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Draw a Filled circle with single color
  * @param x0&y0 -> coordinate of circle center
  * @param r -> radius of circle
@@ -691,7 +691,7 @@ void ST7789_TearEffect(uint8_t tear)
 	ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief A Simple test function for ST7789
  * @param  none
  * @return  none
@@ -769,22 +769,22 @@ void ST7789_Test(void)
 	HAL_Delay(3000);
 }
 
-/** 
- * @brief Function to check colors 
+/**
+ * @brief Function to check colors
  * @param  none
  * @return  none
  */
-void ST7789_TestColors(void) 
+void ST7789_TestColors(void)
 {
-    ST7789_Fill_Color(RED); 
+    ST7789_Fill_Color(RED);
 	ST7789_WriteString(100, 100, "RED", Font_16x26, WHITE, BLACK);
     HAL_Delay(1000);
 
-    ST7789_Fill_Color(GREEN); 
+    ST7789_Fill_Color(GREEN);
 	ST7789_WriteString(85, 100, "GREEN", Font_16x26, WHITE, BLACK);
     HAL_Delay(1000);
 
-    ST7789_Fill_Color(BLUE); 
+    ST7789_Fill_Color(BLUE);
 	ST7789_WriteString(90, 100, "BLUE", Font_16x26, WHITE, BLACK);
     HAL_Delay(1000);
 }
@@ -799,7 +799,7 @@ void ST7789_TestColors(void)
  * @param color -> Color of the line
  * @return none
  */
-void ST7789_DrawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color) 
+void ST7789_DrawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color)
 {
     if ((x >= ST7789_WIDTH) || (y >= ST7789_HEIGHT)) return;
 
@@ -827,7 +827,7 @@ void ST7789_DrawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color)
  * @param color -> Color of the line
  * @return none
  */
-void ST7789_DrawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color) 
+void ST7789_DrawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color)
 {
     if ((x >= ST7789_WIDTH) || (y >= ST7789_HEIGHT)) return;
 
@@ -836,8 +836,8 @@ void ST7789_DrawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color)
     ST7789_SetAddressWindow(x, y, x + adjusted_width - 1, y);
 
 #ifdef USE_DMA
-     memset_16((uint16_t*)disp_buf, color, sizeof(disp_buf) / 2); 
-    SendBuffer((uint16_t*)disp_buf, sizeof(disp_buf) / 2);     
+     memset_16((uint16_t*)disp_buf, color, sizeof(disp_buf) / 2);
+    SendBuffer((uint16_t*)disp_buf, sizeof(disp_buf) / 2);
 #else
 
     for (uint16_t i = 0; i < adjusted_width; i++) {
@@ -854,7 +854,7 @@ void ST7789_DrawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color)
  * @param color -> color of the Rectangle line
  * @return none
  */
-void ST7789_DrawFastFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) 
+void ST7789_DrawFastFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
     /* Validate input */
     if (x >= ST7789_WIDTH || y >= ST7789_HEIGHT) {
@@ -905,7 +905,7 @@ void ST7789_DrawFastFilledRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t
 
 #define SWAP(a, b) do { int16_t temp = a; a = b; b = temp; } while (0)
 
-void ST7789_DrawFastFilledTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) 
+void ST7789_DrawFastFilledTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color)
 {
     // Sort the vertices by their y-coordinates (y1 <= y2 <= y3)
     if (y1 > y2) { SWAP(x1, x2); SWAP(y1, y2); }
@@ -940,14 +940,14 @@ void ST7789_DrawFastFilledTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16
     ST7789_UnSelect();
 }
 
-/** 
+/**
  * @brief Draw Fast a Filled circle with single color
  * @param x0&y0 -> coordinate of circle center
  * @param r -> radius of circle
  * @param color -> color of circle
  * @return  none
  */
-void ST7789_DrawFastFilledCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) 
+void ST7789_DrawFastFilledCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
     ST7789_Select();
     int16_t f = 1 - r;
@@ -968,17 +968,17 @@ void ST7789_DrawFastFilledCircle(int16_t x0, int16_t y0, int16_t r, uint16_t col
         ddF_x += 2;
         f += ddF_x;
 
-        ST7789_DrawFastHLine(x0 - x, y0 + y, 2 * x + 1, color); 
-        ST7789_DrawFastHLine(x0 - x, y0 - y, 2 * x + 1, color); 
+        ST7789_DrawFastHLine(x0 - x, y0 + y, 2 * x + 1, color);
+        ST7789_DrawFastHLine(x0 - x, y0 - y, 2 * x + 1, color);
 
-        ST7789_DrawFastHLine(x0 - y, y0 + x, 2 * y + 1, color); 
-        ST7789_DrawFastHLine(x0 - y, y0 - x, 2 * y + 1, color); 
+        ST7789_DrawFastHLine(x0 - y, y0 + x, 2 * y + 1, color);
+        ST7789_DrawFastHLine(x0 - y, y0 - x, 2 * y + 1, color);
     }
 
     ST7789_UnSelect();
 }
 
-static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint16_t bgcolor, uint16_t char_buf[font.height][font.width]) 
+static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint16_t bgcolor, uint16_t char_buf[font.height][font.width])
 {
     uint32_t b;
     for (uint16_t i = 0; i < font.height; i++) {
@@ -993,8 +993,8 @@ static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint1
     }
 }
 
-/** 
- * @brief Write fast a string 
+/**
+ * @brief Write fast a string
  * @param  x&y -> cursor of the start point.
  * @param str -> string to write
  * @param font -> fontstyle of the string
@@ -1002,9 +1002,9 @@ static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint1
  * @param bgcolor -> background color of the string
  * @return  none
  */
-void ST7789_WriteFastString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor) 
+void ST7789_WriteFastString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
 {
-    uint16_t char_buf[font.height][font.width]; 
+    uint16_t char_buf[font.height][font.width];
     ST7789_Select();
 
     while (*str) {
