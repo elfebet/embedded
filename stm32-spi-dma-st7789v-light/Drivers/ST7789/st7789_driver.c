@@ -103,10 +103,7 @@ void st7789_init(const st7789_spi_connected_data_t *spi_data, const st7789_windo
     st7789_write_command_data(ST7789_NVGAMCTRL, (const uint8_t[]){ 0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23 }, 14);
 //    st7789_write_command(ST7789_INVON);
     st7789_write_command(ST7789_SLPOUT);
-    // lcd_delay(10);
     st7789_write_command(ST7789_NORON);
-
-    // --- add fill background color? ---
     st7789_write_command(ST7789_DISPON);
     lcd_delay(50);
 

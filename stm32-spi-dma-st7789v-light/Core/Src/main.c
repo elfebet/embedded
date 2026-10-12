@@ -133,24 +133,7 @@ int main(void)
 
   st7789_init(&spi_data, &window_data);
   gfx_init();
-
   printf("End init and set green color \r\n");
-  uint32_t start_time = HAL_GetTick();
-  gfx_fill_screen(GREEN);
-  uint32_t elapsed_time = HAL_GetTick() - start_time;
-  printf("Green fill time: %lu ms\r\n", elapsed_time);
-  HAL_Delay(1000);
-
-  start_time = HAL_GetTick();
-  gfx_fill_screen(BLACK);
-  elapsed_time = HAL_GetTick() - start_time;
-  printf("Black fill time: %lu ms\r\n", elapsed_time);
-  HAL_Delay(1000);
-
-  start_time = HAL_GetTick();
-  gfx_fill_screen(BROWN);
-  elapsed_time = HAL_GetTick() - start_time;
-  printf("Brown fill time: %lu ms\r\n", elapsed_time);
   HAL_Delay(1000);
 
   printf("START WHILE\r\n");
@@ -163,23 +146,7 @@ int main(void)
   while (1)
   {
 #if NEW_DISPLAY
-    uint32_t start_time = HAL_GetTick();
-    gfx_fill_screen(RED);
-    uint32_t elapsed_time = HAL_GetTick() - start_time;
-    printf("-- RED Elapsed time: %lu ms\r\n", elapsed_time);
-    HAL_Delay(1000);
-
-    start_time = HAL_GetTick();
-    gfx_fill_screen(GREEN);
-    elapsed_time = HAL_GetTick() - start_time;
-    printf("-- Elapsed time: %lu ms\r\n", elapsed_time);
-    HAL_Delay(1000);
-
-    start_time = HAL_GetTick();
-    gfx_fill_screen(BLUE);
-    elapsed_time = HAL_GetTick() - start_time;
-    printf("-- BLUE Elapsed time: %lu ms\r\n", elapsed_time);
-    HAL_Delay(1000);
+    gfx_tests();
 #else
           // ST7789_Test();
      ST7789_TestColors();

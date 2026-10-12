@@ -1,9 +1,12 @@
 #include "gfx.h"
 #include "st7789_driver.h"
+#include "colors.h"
+#include <stdio.h>
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 
 void gfx_init(void) {
+      gfx_fill_screen(COLOR_BLACK);
 }
 
 void gfx_draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
@@ -26,12 +29,7 @@ void gfx_fill_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
 
     uint32_t pixels = (x2 - x1 + 1) * (y2 - y1 + 1);
     st7789_set_window(x1, y1, x2, y2);
-
-    // ANTON TODO: DEBUG, not resolved yet.
-    for (uint32_t i = 0; i < pixels; i++) {
-        st7789_draw_pixel(color);
-    }
-//   st7789_fill_pixels(pixels, color);
+    st7789_fill_pixels(pixels, color);
 }
 
 void gfx_fill_screen(uint16_t color) {
@@ -91,4 +89,68 @@ void gfx_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
     gfx_draw_line(x1, y1, x1, y2, color);
     gfx_draw_line(x1, y2, x2, y2, color);
     gfx_draw_line(x2, y1, x2, y2, color);
+}
+
+void gfx_tests() {
+    uint32_t start_time = HAL_GetTick();
+    gfx_fill_screen(COLOR_RED);
+    uint32_t elapsed_time = HAL_GetTick() - start_time;
+    printf("RED time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(500);
+
+    start_time = HAL_GetTick();
+    gfx_fill_screen(COLOR_GREEN);
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("GREEN time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(500);
+
+    start_time = HAL_GetTick();
+    gfx_fill_screen(COLOR_BLUE);
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("BLUE time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
+
+    const int screen_w = st7789_width();
+    const int screen_h = st7789_height();
+
+    start_time = HAL_GetTick();
+    for (int i=0; i < screen_w; i += 5) {
+        gfx_draw_line(i, 0, i, screen_h, COLOR_WHITE);
+    }
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("V lines time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
+
+    start_time = HAL_GetTick();
+    for (int i=0; i < screen_h; i += 5) {
+        gfx_draw_line(0, i, screen_w, i, COLOR_WHITE);
+    }
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("H lines time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1000);
+
+    gfx_fill_screen(COLOR_BLACK);
+
+    int w = 100, h = 100;
+    int x1 = screen_w/2 - w/2;
+    int y1 = screen_h/2 - h/2;
+    start_time = HAL_GetTick();
+    gfx_fill_rect(x1, y1, x1 + w, y1 + h, COLOR_BLUE);
+    elapsed_time = HAL_GetTick() - start_time;
+    printf("RECT time: %lu ms\r\n", elapsed_time);
+    HAL_Delay(1500);
+
+    gfx_draw_rect(0, 0, st7789_width() - 1, st7789_height() - 1, COLOR_ORANGE);
+    HAL_Delay(2000);
+
+    gfx_draw_line(0, 0, 0, st7789_height() - 1, COLOR_RED); // left border
+    HAL_Delay(1000);
+    gfx_draw_line(0, 0, st7789_width() - 1, 0, COLOR_GREEN); // top border
+    HAL_Delay(1000);
+    gfx_draw_line(0, st7789_height() - 1, st7789_width() - 1, st7789_height() - 1, COLOR_BLUE); // bottom border
+    HAL_Delay(1000);
+    gfx_draw_line(st7789_width() - 1, 0, st7789_width() - 1, st7789_height() - 1, COLOR_MAGENTA); // right border
+    HAL_Delay(5000);
+
+    HAL_Delay(1500);
 }
