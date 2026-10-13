@@ -102,7 +102,7 @@ uint8_t lcd_spi_dma_ready() {
 
 void lcd_spi_dma_wait(void) {
     if (s_hspi == NULL || s_hspi->hdmatx == NULL) return;
-
+    // TODO: ТРЕБА ПЕРЕРОБИТИ НА ОЧІКУВАННЯ З ТАЙМАУТОМ
     while (HAL_DMA_GetState(s_hspi->hdmatx) != HAL_DMA_STATE_READY);
 }
 
@@ -119,6 +119,7 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
             HAL_SPI_Transmit_DMA(s_hspi, data, chunk);
             lcd_spi_dma_wait();
         } else {
+            // TODO: ТРЕБА ПЕРЕРОБИТИ НА ОЧІКУВАННЯ З ТАЙМАУТОМ. HAL_MAX_DELAY зло!
             HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
         }
 
