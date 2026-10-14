@@ -1,34 +1,25 @@
 #include "gfx_text.h"
 #include "gfx.h"
+#include "st7789.h"
 #include "st7789_driver.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 uint16_t s_font_buffer[GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT];
 
-static inline uint32_t fetch_row_bits_u8(const uint8_t **b_ptr, uint8_t words_per_line) {
-    const uint8_t *b = *b_ptr;
-    uint32_t row_bits = 0;
-
-    switch (words_per_line) {
-        case 4: // 32bit
-            row_bits = ((uint32_t)b[0] << 24) | ((uint32_t)b[1] << 16) |
-                       ((uint32_t)b[2] << 8)  | b[3];
-            break;
-        case 3: // 24bit
-            row_bits = ((uint32_t)b[0] << 16) | ((uint32_t)b[1] << 8) | b[2];
-            break;
-        case 2: // 16bit
-            row_bits = ((uint32_t)b[0] << 8) | b[1];
-            break;
-        case 1:
-        default: // 8bit
-            row_bits = b[0];
-            break;
+static inline GFX_CharDrawMode gfx_char_draw_mode(uint8_t width, uint8_t height) {
+    if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_WORD && width <= GX_MAX_BUFER_FONT_WIDTH && height <= GX_MAX_BUFER_FONT_HEIGHT) {
+        return GFX_CHAR_DRAW_MODE_WORD;
+    } else if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_LINE && width <= GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT) {
+        return GFX_CHAR_DRAW_MODE_LINE;
+    } else {
+        return GFX_CHAR_DRAW_MODE_PIXEL;
     }
-
-    // set pointer to the next line
-    *b_ptr += words_per_line;
-    return row_bits;
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------
+// ---- UINT16_T FONT ARRAY FORMAT array format ---------
 
 static inline uint64_t fetch_row_bits(const uint16_t **b_ptr, uint8_t words_per_line) {
     const uint16_t *b = *b_ptr;
@@ -54,17 +45,6 @@ static inline uint64_t fetch_row_bits(const uint16_t **b_ptr, uint8_t words_per_
     // set pointer to the next line
     *b_ptr += words_per_line;
     return row_bits;
-}
-
-
-static inline GFX_CharDrawMode gfx_char_draw_mode(uint8_t width, uint8_t height) {
-    if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_WORD && width <= GX_MAX_BUFER_FONT_WIDTH && height <= GX_MAX_BUFER_FONT_HEIGHT) {
-        return GFX_CHAR_DRAW_MODE_WORD;
-    } else if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_LINE && width <= GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT) {
-        return GFX_CHAR_DRAW_MODE_LINE;
-    } else {
-        return GFX_CHAR_DRAW_MODE_PIXEL;
-    }
 }
 
 void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint16_t txcolor, uint16_t bgcolor, GFX_CharDrawMode mode) {
@@ -126,17 +106,181 @@ void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *fo
     GFX_CharDrawMode mode = gfx_char_draw_mode(font->width, font->height);
     const uint16_t max_w = st7789_width();
     const uint16_t max_h = st7789_height();
-
-	while (*str) {
-		if (x + font->width > max_w) {
-			x = 0;
-			y += font->height;
-			if (y + font->height > max_h) {
-				break;
-			}
-		}
+    while (*str) {
+        if (x + font->width > max_w) {
+            x = 0;
+            y += font->height;
+            if (y + font->height > max_h) {
+                break;
+            }
+        }
         gfx_draw_char(x, y, *str, font, txcolor, bgcolor, mode);
         x += font->width;
-		str++;
-	}
+        str++;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------
+// ---- ADAFUIT FONT FORMAT ---------
+
+void gfx_draw_adafruit_char(uint16_t x, uint16_t y, char c, const GFXfont *font, uint16_t txcolor, uint16_t bgcolor, GFX_CharDrawMode mode) {
+    uint8_t c_idx = c - font->first;
+    GFXglyph *g = &((GFXglyph *)font->glyph)[c_idx];
+    uint8_t  w  = g->width;
+    uint8_t  h  = g->height;
+    int8_t   xo = g->xOffset;
+    int8_t   yo = g->yOffset;
+    uint16_t bo = g->bitmapOffset;
+
+    uint8_t *bitmap = font->bitmap;
+
+    uint16_t bit = 0;
+    uint16_t byte = 0;
+
+    // --- WORD MODE: Draw in the buffer ---
+    if (mode == GFX_CHAR_DRAW_MODE_WORD) {
+        for (uint8_t yy = 0; yy < h; yy++) {
+            for (uint8_t xx = 0; xx < w; xx++) {
+                if (!(bit & 0x07)) {
+                    byte = bitmap[bo++];
+                }
+                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
+//                const uint8_t dst_y = h - 1 - yy; // малюємо знизу вверх, а не зверху вниз
+                s_font_buffer[yy * w + xx] = is_on ? txcolor : bgcolor;
+                byte <<= 1;
+                bit++;
+            }
+        }
+        // st7789_set_window(x, y, x + w - 1, y + h - 1);
+        st7789_set_window(x + xo, y + yo, x + xo + w - 1, y + yo + h - 1);
+        st7789_write_pixels_blocking(s_font_buffer, w * h);
+    }
+    // --- LINE MODE: Draw by line in the buffer ---
+    else if (mode == GFX_CHAR_DRAW_MODE_LINE) {
+        st7789_set_window(x + xo, y + yo, x + xo + w - 1, y + yo + h - 1);
+        // st7789_set_window(x, y, x + w - 1, y + h - 1);
+        for (uint8_t yy = 0; yy < h; yy++) {
+            for (uint8_t xx = 0; xx < w; xx++) {
+                if (!(bit & 0x07)) {
+                    byte = bitmap[bo++];
+                }
+                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
+                s_font_buffer[xx] = is_on ? txcolor : bgcolor;
+                byte <<= 1;
+                bit++;
+            }
+            st7789_write_pixels_blocking(s_font_buffer, w);
+        }
+    }
+    // --- PIXEL MODE: Draw by pixel ---
+    else { // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
+        for (uint8_t yy = 0; yy < h; yy++) {
+            for (uint8_t xx = 0; xx < w; xx++) {
+                if (!(bit & 0x07)) {
+                    byte = bitmap[bo++];
+                }
+                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
+                st7789_set_window(x + xo + xx, y + yo + yy, x + xo + xx, y + yo + yy);
+                st7789_draw_pixel(is_on ? txcolor : bgcolor);
+                byte <<= 1;
+                bit++;
+            }
+        }
+    }
+
+}
+
+void gfx_adafruit_draw_text(uint16_t x, uint16_t y, const char *str, const GFXfont *font, uint32_t txcolor, uint32_t bgcolor) {
+    if (!str || !font || !font->glyph) return;
+
+    const int32_t screen_w = st7789_width();
+    const int32_t screen_h = st7789_height();
+    int16_t cursor_x = x;
+    int16_t cursor_y = y;
+
+    GFX_TextBounds bounds;
+    if (gfx_adafruit_get_text_bounds(x, y, str, font, &bounds)) {
+        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
+    }
+
+    while (*str) {
+        unsigned char c = *str++;
+        if (c == '\n') {
+            cursor_x = 0;
+            cursor_y += font->yAdvance;
+            continue;;
+        }
+
+        if (c < font->first || c > font->last) continue;
+
+        GFXglyph *g = &((GFXglyph *)font->glyph)[c - font->first];
+
+        // Враховуємо і правий край гліфа, і крок курсора.
+        int32_t glyph_right = cursor_x + g->xOffset + g->width;
+        int32_t advance_right = cursor_x + g->xAdvance;
+        int32_t right = (glyph_right > advance_right) ? glyph_right : advance_right;
+        // Не переносимо повторно перший символ рядка.
+        if (cursor_x != 0 && right > screen_w) {
+            cursor_x = 0;
+            cursor_y += font->yAdvance;
+        }
+
+        if (cursor_y >= screen_h) break;
+
+        GFX_CharDrawMode mode = gfx_char_draw_mode(g->width, g->height);
+        gfx_draw_adafruit_char(cursor_x, cursor_y, c, font, txcolor, bgcolor, mode);
+        cursor_x += g->xAdvance;
+    }
+}
+
+bool gfx_adafruit_get_text_bounds(uint16_t x, uint16_t y, const char *str, const GFXfont *font, GFX_TextBounds *bounds) {
+    if (!str || !font || !bounds) return false;
+
+    int32_t cursor_x = x;
+    int32_t cursor_y = y;
+    bool found = false;
+
+    while (*str) {
+        uint8_t c = (uint8_t)*str++;
+
+        if (c == '\n') {
+            cursor_x = x;
+            cursor_y += font->yAdvance;
+            continue;
+        }
+
+        if (c < font->first || c > font->last) continue;
+
+        const GFXglyph *g = &font->glyph[c - font->first];
+
+        if (g->width && g->height) {
+            int32_t left   = cursor_x + g->xOffset;
+            int32_t top    = cursor_y + g->yOffset;
+            int32_t right  = left + g->width  - 1;
+            int32_t bottom = top  + g->height - 1;
+
+            if (!found) {
+                bounds->x = left;
+                bounds->y = top;
+                bounds->width = g->width;
+                bounds->height = g->height;
+                found = true;
+            } else {
+                int32_t old_right = bounds->x + bounds->width - 1;
+                int32_t old_bottom = bounds->y + bounds->height - 1;
+
+                if (left < bounds->x) bounds->x = left;
+                if (top < bounds->y) bounds->y = top;
+                if (right > old_right) old_right = right;
+                if (bottom > old_bottom) old_bottom = bottom;
+
+                bounds->width = old_right - bounds->x + 1;
+                bounds->height = old_bottom - bounds->y + 1;
+            }
+        }
+
+        cursor_x += g->xAdvance;
+    }
+
+    return found;
 }
