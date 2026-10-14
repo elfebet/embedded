@@ -10,5 +10,6 @@ typedef struct {
 } font_def_t;
 
 extern font_def_t Font_7x10;
+extern font_def_t Font_8x12;
 extern font_def_t Font_11x18;
 extern font_def_t Font_16x26;
