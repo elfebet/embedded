@@ -44,13 +44,13 @@ static uint8_t st7789_MADCTLConfigConvert(
 
 static uint8_t st7789_MADCTLConfig(uint8_t orientation) {
     switch (orientation) {
-    case LCD_ORIENTATION_PORTRAIT:
+    case GFX_ORIENTATION_PORTRAIT:
         return st7789_MADCTLConfigConvert(0, 0, 0, 0, 0, 0);
-    case LCD_ORIENTATION_PORTRAIT_MIRROR:
+    case GFX_ORIENTATION_PORTRAIT_MIRROR:
         return st7789_MADCTLConfigConvert(1, 1, 0, 0, 1, 1);
-    case LCD_ORIENTATION_LANDSCAPE:
+    case GFX_ORIENTATION_LANDSCAPE:
         return st7789_MADCTLConfigConvert(1, 0, 1, 0, 0, 1);
-    case LCD_ORIENTATION_LANDSCAPE_MIRROR:
+    case GFX_ORIENTATION_LANDSCAPE_MIRROR:
         return st7789_MADCTLConfigConvert(0, 1, 1, 0, 1, 0);
     default:
         return 0; // default portrait mode
@@ -186,5 +186,15 @@ void st7789_draw_pixel(uint16_t color) {
     CS_LOW();
     lcd_spi_set_size(LCD_SPI_SIZE_16BIT);
     lcd_spi_transmit_blocking((const uint8_t *)&color, 1);
+    CS_HIGH();
+}
+
+void st7789_write_pixels_blocking(const uint16_t *pixels, uint32_t count) {
+    if (pixels == NULL || count == 0) return;
+
+    DC_DATA();
+    CS_LOW();
+    lcd_spi_set_size(LCD_SPI_SIZE_16BIT);
+    lcd_spi_transmit_blocking((const uint8_t *)pixels, count);
     CS_HIGH();
 }

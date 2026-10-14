@@ -30,7 +30,7 @@ static inline uint32_t fetch_row_bits_u8(const uint8_t **b_ptr, uint8_t words_pe
     return row_bits;
 }
 
-static inline uint64_t fetch_row_bits_u16(const uint16_t **b_ptr, uint8_t words_per_line) {
+static inline uint64_t fetch_row_bits(const uint16_t **b_ptr, uint8_t words_per_line) {
     const uint16_t *b = *b_ptr;
     uint64_t row_bits = 0;
 
@@ -74,7 +74,7 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
     const uint8_t c = (ch < font->first_char || ch > font->last_char) ? 0 : (ch - font->first_char);
     const uint16_t *b = font->data + (c * words_per_line * font->height);
 
-    // --- РЕЖИМ 1: Повністю в буфер (WORD) ---
+    // --- WORD MODE: Draw in the buffer ---
     if (mode == GFX_CHAR_DRAW_MODE_WORD) {
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
@@ -84,9 +84,9 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
             }
         }
         st7789_set_window(x, y, x + font->width - 1, y + font->height - 1);
-        st7789_write_pixels_blocking16(s_font_buffer, font->width * font->height);
+        st7789_write_pixels_blocking(s_font_buffer, font->width * font->height);
     }
-    // --- РЕЖИМ 2: Порядково (LINE) ---
+    // --- LINE MODE: Draw by line in the buffer ---
     else if (mode == GFX_CHAR_DRAW_MODE_LINE) {
         st7789_set_window(x, y, x + font->width - 1, y + font->height - 1);
         for (uint8_t row = 0; row < font->height; row++) {
@@ -95,10 +95,10 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
                 bool is_on = row_bits & (1UL << (font->width - 1 - col));
                 s_font_buffer[col] = is_on ? txcolor : bgcolor;
             }
-            st7789_write_pixels_blocking16(s_font_buffer, font->width);
+            st7789_write_pixels_blocking(s_font_buffer, font->width);
         }
     }
-    // --- РЕЖИМ 3: Попіксельно (PIXEL) ---
+    // --- PIXEL MODE: Draw by pixel ---
     else { // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
@@ -114,7 +114,6 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
 void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *font, uint32_t txcolor, uint32_t bgcolor) {
     if (!font || !str) return;
 
-    // визначаємо в якому режимі будемо малювати
     GFX_CharDrawMode mode = gfx_char_draw_mode(font->width, font->height);
     const uint16_t max_w = st7789_width();
     const uint16_t max_h = st7789_height();
@@ -132,4 +131,3 @@ void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *fo
 		str++;
 	}
 }
-
