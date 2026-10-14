@@ -140,6 +140,8 @@ void gfx_tests() {
     printf("H lines time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(1000);
 
+    gfx_fill_screen(COLOR_BLACK);
+
     int w = 100, h = 100;
     int x1 = screen_w/2 - w/2;
     int y1 = screen_h/2 - h/2;
@@ -178,26 +180,26 @@ void gfx_tests() {
 
 void gfx_text_tests(void) {
     uint32_t start_time, elapsed_ms;
-    gfx_fill_screen(COLOR_GREEN);
+    gfx_fill_screen(COLOR_BLACK);
     HAL_Delay(500);
 
     start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 10, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_BROWN);
+    gfx_draw_text(10, 10, "In the middle of the room! 0.25 1.37", &Font_7x10, COLOR_WHITE, COLOR_BROWN);
     elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
     printf("text1 time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(500);
 
     start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 40, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_RED);
+    gfx_draw_text(10, 40, "In the middle of the room! 0.25 1.37", &Font_11x18, COLOR_WHITE, COLOR_RED);
     elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
     printf("text2 time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(500);
 
     start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 80, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_YELLOW);
+    gfx_draw_text(10, 80, "In the middle of the room! 0.25 1.37", &Font_16x26, COLOR_WHITE, COLOR_YELLOW);
     elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
     printf("text3 time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(500);
 
-    HAL_Delay(1000);
+    HAL_Delay(5000);
 }
