@@ -1,6 +1,10 @@
 #include "gfx.h"
+#include "gfx_text.h"
 #include "st7789_driver.h"
 #include "colors.h"
+#include "fonts.h"
+
+#include <stdint.h>
 #include <stdio.h>
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))
@@ -91,7 +95,7 @@ void gfx_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
     gfx_draw_line(x2, y1, x2, y2, color);
 }
 
-void gfx_draw_image(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *data) {
+void gfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *data) {
 	if (x + w > st7789_width() || y + h > st7789_height()) return;
 
     st7789_set_window(x, y, x + w - 1, y + h - 1);
@@ -136,8 +140,6 @@ void gfx_tests() {
     printf("H lines time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(1000);
 
-    gfx_fill_screen(COLOR_BLACK);
-
     int w = 100, h = 100;
     int x1 = screen_w/2 - w/2;
     int y1 = screen_h/2 - h/2;
@@ -147,17 +149,55 @@ void gfx_tests() {
     printf("RECT time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(1000);
 
-    gfx_draw_rect(0, 0, st7789_width() - 1, st7789_height() - 1, COLOR_ORANGE);
+    gfx_draw_rect(0, 0, screen_w - 1, screen_h - 1, COLOR_ORANGE);
     HAL_Delay(1000);
 
-    gfx_draw_line(0, 0, 0, st7789_height() - 1, COLOR_RED); // left border
-    HAL_Delay(500);
-    gfx_draw_line(0, 0, st7789_width() - 1, 0, COLOR_GREEN); // top border
-    HAL_Delay(500);
-    gfx_draw_line(0, st7789_height() - 1, st7789_width() - 1, st7789_height() - 1, COLOR_BLUE); // bottom border
-    HAL_Delay(500);
-    gfx_draw_line(st7789_width() - 1, 0, st7789_width() - 1, st7789_height() - 1, COLOR_MAGENTA); // right border
-    HAL_Delay(1000);
+    const uint8_t line_width = 3;
+    if (line_width > 1) {
+        gfx_fill_rect(0, 0, line_width, screen_h-1, COLOR_RED); // left border
+        HAL_Delay(500);
+        gfx_fill_rect(0, 0, screen_w-1, line_width, COLOR_GREEN); // top border
+        HAL_Delay(500);
+        gfx_fill_rect(0, screen_h-line_width-1, screen_w-1, screen_h-1, COLOR_BLUE); // bottom border
+        HAL_Delay(500);
+        gfx_fill_rect(screen_w-line_width-1, 0, screen_w-1, screen_h-1, COLOR_MAGENTA); // right border
+        HAL_Delay(500);
+    } else {
+        gfx_draw_line(0, 0, 0, screen_h-1, COLOR_RED); // left border
+        HAL_Delay(500);
+        gfx_draw_line(0, 0, screen_w-1, 0, COLOR_GREEN); // top border
+        HAL_Delay(500);
+        gfx_draw_line(0, screen_h-1, screen_w-1, screen_h-1, COLOR_BLUE); // bottom border
+        HAL_Delay(500);
+        gfx_draw_line(screen_w-1, 0, screen_w-1, screen_h-1, COLOR_MAGENTA); // right border
+        HAL_Delay(500);
+    }
 
-    HAL_Delay(1500);
+    HAL_Delay(3000);
+}
+
+void gfx_text_tests(void) {
+    uint32_t start_time, elapsed_ms;
+    gfx_fill_screen(COLOR_GREEN);
+    HAL_Delay(500);
+
+    start_time = DWT->CYCCNT;
+    gfx_draw_text(10, 10, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_BROWN);
+    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    printf("text1 time: %lu ms\r\n", elapsed_ms);
+    HAL_Delay(500);
+
+    start_time = DWT->CYCCNT;
+    gfx_draw_text(10, 40, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_RED);
+    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    printf("text2 time: %lu ms\r\n", elapsed_ms);
+    HAL_Delay(500);
+
+    start_time = DWT->CYCCNT;
+    gfx_draw_text(10, 80, "room! 1.37", &Font_16x26, COLOR_WHITE, COLOR_YELLOW);
+    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    printf("text3 time: %lu ms\r\n", elapsed_ms);
+    HAL_Delay(500);
+
+    HAL_Delay(1000);
 }
