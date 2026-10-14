@@ -25,6 +25,7 @@
 #include "st7789.h"
 #include "st7789_driver.h"
 #include "gfx.h"
+#include "gfx_text.h"
 #include "stm32f4xx_hal.h"
 /* USER CODE END Includes */
 
@@ -145,7 +146,8 @@ int main(void)
   while (1)
   {
 #if NEW_DISPLAY
-    gfx_tests();
+    // gfx_tests();
+    gfx_text_tests();
 #else
           ST7789_Test();
 #endif
