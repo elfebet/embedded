@@ -13,5 +13,3 @@ typedef enum {
 #define PREFERED_CHAR_DRAW_MODE  GFX_CHAR_DRAW_MODE_WORD
 
 void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *font, uint32_t txcolor, uint32_t bgcolor);
-
-void gfx_text_tests(void);
