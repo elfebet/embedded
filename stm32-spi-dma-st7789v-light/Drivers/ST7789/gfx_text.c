@@ -4,7 +4,6 @@
 #include "st7789_driver.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 
 uint16_t s_font_buffer[GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT];
 
@@ -68,9 +67,10 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
         }
         st7789_set_window(x, y, x + font->width - 1, y + font->height - 1);
         st7789_write_pixels_blocking(s_font_buffer, font->width * font->height);
+        return;
     }
     // --- LINE MODE: Draw by line in the buffer ---
-    else if (mode == GFX_CHAR_DRAW_MODE_LINE) {
+    if (mode == GFX_CHAR_DRAW_MODE_LINE) {
         st7789_set_window(x, y, x + font->width - 1, y + font->height - 1);
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
@@ -83,19 +83,19 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
             }
             st7789_write_pixels_blocking(s_font_buffer, font->width);
         }
+        return;
     }
     // --- PIXEL MODE: Draw by pixel ---
-    else { // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
-        for (uint8_t row = 0; row < font->height; row++) {
-            uint64_t row_bits = fetch_row_bits(&b, words_per_line);
-            if (font->width <= 16) {
-                row_bits = row_bits >> (16 - font->width);
-            }
-            for (uint8_t col = 0; col < font->width; col++) {
-                bool is_on = row_bits & (1ULL << (font->width - 1 - col));
-                st7789_set_window(x + col, y + row, x + col, y + row);
-                st7789_draw_pixel(is_on ? txcolor : bgcolor);
-            }
+    // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
+    for (uint8_t row = 0; row < font->height; row++) {
+        uint64_t row_bits = fetch_row_bits(&b, words_per_line);
+        if (font->width <= 16) {
+            row_bits = row_bits >> (16 - font->width);
+        }
+        for (uint8_t col = 0; col < font->width; col++) {
+            bool is_on = row_bits & (1ULL << (font->width - 1 - col));
+            st7789_set_window(x + col, y + row, x + col, y + row);
+            st7789_draw_pixel(is_on ? txcolor : bgcolor);
         }
     }
 }
@@ -193,11 +193,6 @@ void gfx_adafruit_draw_text(uint16_t x, uint16_t y, const char *str, const GFXfo
     const int32_t screen_h = st7789_height();
     int16_t cursor_x = x;
     int16_t cursor_y = y;
-
-    GFX_TextBounds bounds;
-    if (gfx_adafruit_get_text_bounds(x, y, str, font, &bounds)) {
-        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
-    }
 
     while (*str) {
         unsigned char c = *str++;

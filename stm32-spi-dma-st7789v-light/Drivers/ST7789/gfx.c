@@ -4,10 +4,7 @@
 #include "colors.h"
 #include "fonts.h"
 
-
-#include "ARIALBD19pt7b.h"
-#include "RobotoBold20pt.h"
-#include "FreeSerifItalic20pt7b.h"
+#include "af_fonts.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -220,8 +217,40 @@ void gfx_tests_ascii_chars(void) {
     HAL_Delay(5000);
 }
 
+void gfx_test_af_fonts() {
+    uint32_t start_time, elapsed_ms;
+    GFX_TextBounds bounds;
+    const char* ascii_string = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    const GFXfont *font = &RobotoMonoBold9pt7b;
+    gfx_fill_screen(COLOR_BLACK);
+
+    gfx_adafruit_draw_text(10, 50, "RobotoMonoBold9pt7b", font, COLOR_RED, COLOR_BLACK);
+    char *txt = "In room! W j y 0,95";
+
+    if (gfx_adafruit_get_text_bounds(10, 100, txt, font, &bounds)) {
+        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
+    }
+    start_time = DWT->CYCCNT;
+    gfx_adafruit_draw_text(10, 100, txt, font, COLOR_WHITE, COLOR_BLACK);
+    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    printf("text3 time: %lu ms\r\n", elapsed_ms);
+    HAL_Delay(5000);
+
+    font = &RobotoMonoBold9pt7b;
+    gfx_fill_screen(COLOR_BLACK);
+    gfx_adafruit_draw_text(10, 30, "RobotoMonoBold9pt7b", font, COLOR_WHITE, COLOR_BLACK);
+    if (gfx_adafruit_get_text_bounds(10, 100, txt, font, &bounds)) {
+        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
+    }
+    start_time = DWT->CYCCNT;
+    gfx_adafruit_draw_text(10, 100, ascii_string, font, COLOR_WHITE, COLOR_BLACK);
+    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    printf("text3 time: %lu ms\r\n", elapsed_ms);
+    HAL_Delay(5000);
+}
+
 void gfx_text_tests(void) {
-    gfx_tests_ascii_chars();
+    gfx_test_af_fonts();
     return;
 
     uint32_t start_time, elapsed_ms;
