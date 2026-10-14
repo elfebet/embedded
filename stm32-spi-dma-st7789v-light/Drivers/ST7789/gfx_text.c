@@ -123,71 +123,67 @@ void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *fo
 //---------------------------------------------------------------------------------------------------------------------------------
 // ---- ADAFUIT FONT FORMAT ---------
 
-void gfx_draw_adafruit_char(uint16_t x, uint16_t y, char c, const GFXfont *font, uint16_t txcolor, uint16_t bgcolor, GFX_CharDrawMode mode) {
-    uint8_t c_idx = c - font->first;
-    GFXglyph *g = &((GFXglyph *)font->glyph)[c_idx];
-    uint8_t  w  = g->width;
-    uint8_t  h  = g->height;
-    int8_t   xo = g->xOffset;
-    int8_t   yo = g->yOffset;
-    uint16_t bo = g->bitmapOffset;
-
-    uint8_t *bitmap = font->bitmap;
-
-    uint16_t bit = 0;
-    uint16_t byte = 0;
+void gfx_draw_adafruit_char(uint16_t x, uint16_t y, char ch, const GFXfont *font, uint16_t txcolor, uint16_t bgcolor, GFX_CharDrawMode mode) {
+    const uint8_t code = (ch < font->first || ch > font->last) ? 0 : (ch - font->first);
+    const GFXglyph *g = &((GFXglyph *)font->glyph)[code];
+    const uint8_t w = g->width;
+    const uint8_t h = g->height;
+    const uint16_t x0 = x + g->xOffset;
+    const uint16_t y0 = y + g->yOffset;
+    const uint8_t *src = font->bitmap + g->bitmapOffset;
+    uint8_t bits = 0;
+    uint8_t bits_left = 0;
 
     // --- WORD MODE: Draw in the buffer ---
     if (mode == GFX_CHAR_DRAW_MODE_WORD) {
-        for (uint8_t yy = 0; yy < h; yy++) {
-            for (uint8_t xx = 0; xx < w; xx++) {
-                if (!(bit & 0x07)) {
-                    byte = bitmap[bo++];
-                }
-                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
-//                const uint8_t dst_y = h - 1 - yy; // малюємо знизу вверх, а не зверху вниз
-                s_font_buffer[yy * w + xx] = is_on ? txcolor : bgcolor;
-                byte <<= 1;
-                bit++;
+        const uint32_t glyph_pixels = (uint32_t)w * h;
+        for (uint32_t i = 0; i < glyph_pixels; i++) {
+            if (bits_left == 0) {
+                bits = *src++;
+                bits_left = 8;
             }
+            s_font_buffer[i] = (bits & 0x80u) ? txcolor : bgcolor;
+            bits <<= 1;
+            bits_left--;
         }
-        // st7789_set_window(x, y, x + w - 1, y + h - 1);
-        st7789_set_window(x + xo, y + yo, x + xo + w - 1, y + yo + h - 1);
-        st7789_write_pixels_blocking(s_font_buffer, w * h);
+
+        st7789_set_window(x0, y0, x0 + w - 1, y0 + h - 1);
+        st7789_write_pixels_blocking(s_font_buffer, glyph_pixels);
+        return;
     }
+
     // --- LINE MODE: Draw by line in the buffer ---
-    else if (mode == GFX_CHAR_DRAW_MODE_LINE) {
-        st7789_set_window(x + xo, y + yo, x + xo + w - 1, y + yo + h - 1);
-        // st7789_set_window(x, y, x + w - 1, y + h - 1);
-        for (uint8_t yy = 0; yy < h; yy++) {
-            for (uint8_t xx = 0; xx < w; xx++) {
-                if (!(bit & 0x07)) {
-                    byte = bitmap[bo++];
+    if (mode == GFX_CHAR_DRAW_MODE_LINE) {
+        st7789_set_window(x0, y0, x0 + w - 1, y0 + h - 1);
+        for (uint8_t row = 0; row < h; row++) {
+            for (uint8_t col = 0; col < w; col++) {
+                if (bits_left == 0) {
+                    bits = *src++;
+                    bits_left = 8;
                 }
-                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
-                s_font_buffer[xx] = is_on ? txcolor : bgcolor;
-                byte <<= 1;
-                bit++;
+                s_font_buffer[col] = (bits & 0x80) ? txcolor : bgcolor;
+                bits <<= 1;
+                bits_left--;
             }
             st7789_write_pixels_blocking(s_font_buffer, w);
         }
-    }
-    // --- PIXEL MODE: Draw by pixel ---
-    else { // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
-        for (uint8_t yy = 0; yy < h; yy++) {
-            for (uint8_t xx = 0; xx < w; xx++) {
-                if (!(bit & 0x07)) {
-                    byte = bitmap[bo++];
-                }
-                bool is_on = byte & 0x80; // Перевіряємо старший біт поточного байти
-                st7789_set_window(x + xo + xx, y + yo + yy, x + xo + xx, y + yo + yy);
-                st7789_draw_pixel(is_on ? txcolor : bgcolor);
-                byte <<= 1;
-                bit++;
-            }
-        }
+        return;
     }
 
+    // --- PIXEL MODE: Draw by pixel ---
+    // mode == GFX_CHAR_DRAW_MODE_PIXEL
+    for (uint8_t row = 0; row < h; row++) {
+        for (uint8_t col = 0; col < w; col++) {
+            if (bits_left == 0) {
+                bits = *src++;
+                bits_left = 8;
+            }
+            st7789_set_window(x0 + col, y0 + row, x0 + col, y0 + row);
+            st7789_draw_pixel((bits & 0x80) ? txcolor : bgcolor);
+            bits <<= 1;
+            bits_left--;
+        }
+    }
 }
 
 void gfx_adafruit_draw_text(uint16_t x, uint16_t y, const char *str, const GFXfont *font, uint32_t txcolor, uint32_t bgcolor) {

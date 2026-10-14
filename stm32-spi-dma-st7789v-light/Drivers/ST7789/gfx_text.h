@@ -12,7 +12,7 @@ typedef enum {
 
 #define GX_MAX_BUFER_FONT_WIDTH  20
 #define GX_MAX_BUFER_FONT_HEIGHT 28
-#define PREFERED_CHAR_DRAW_MODE  GFX_CHAR_DRAW_MODE_WORD
+#define PREFERED_CHAR_DRAW_MODE  GFX_CHAR_DRAW_MODE_PIXEL
 
 typedef struct {
     int32_t x;
