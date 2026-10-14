@@ -78,6 +78,9 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
     if (mode == GFX_CHAR_DRAW_MODE_WORD) {
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
+            if (font->width <= 16) {
+                row_bits = row_bits >> (16 - font->width);
+            }
             for (uint8_t col = 0; col < font->width; col++) {
                 bool is_on = row_bits & (1UL << (font->width - 1 - col));
                 s_font_buffer[row * font->width + col] = is_on ? txcolor : bgcolor;
@@ -91,6 +94,9 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
         st7789_set_window(x, y, x + font->width - 1, y + font->height - 1);
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
+            if (font->width <= 16) {
+                row_bits = row_bits >> (16 - font->width);
+            }
             for (uint8_t col = 0; col < font->width; col++) {
                 bool is_on = row_bits & (1UL << (font->width - 1 - col));
                 s_font_buffer[col] = is_on ? txcolor : bgcolor;
@@ -102,6 +108,9 @@ void gfx_draw_char(uint16_t x, uint16_t y, char ch, const font_def_t *font, uint
     else { // (mode == GFX_CHAR_DRAW_MODE_PIXEL)
         for (uint8_t row = 0; row < font->height; row++) {
             uint64_t row_bits = fetch_row_bits(&b, words_per_line);
+            if (font->width <= 16) {
+                row_bits = row_bits >> (16 - font->width);
+            }
             for (uint8_t col = 0; col < font->width; col++) {
                 bool is_on = row_bits & (1ULL << (font->width - 1 - col));
                 st7789_set_window(x + col, y + row, x + col, y + row);
