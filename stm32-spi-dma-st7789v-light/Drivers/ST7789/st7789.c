@@ -463,7 +463,7 @@ void ST7789_InvertColors(uint8_t invert)
  * @param bgcolor -> background color of the char
  * @return  none
  */
-void ST7789_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor)
+void ST7789_WriteChar(uint16_t x, uint16_t y, char ch, font_def_t font, uint16_t color, uint16_t bgcolor)
 {
 	uint32_t i, b, j;
 	ST7789_Select();
@@ -494,7 +494,7 @@ void ST7789_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t co
  * @param bgcolor -> background color of the string
  * @return  none
  */
-void ST7789_WriteString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
+void ST7789_WriteString(uint16_t x, uint16_t y, const char *str, font_def_t font, uint16_t color, uint16_t bgcolor)
 {
 	ST7789_Select();
 	while (*str) {
@@ -763,9 +763,6 @@ void ST7789_Test(void)
 	ST7789_DrawFilledTriangle(30, 30, 30, 70, 60, 40, WHITE);
 	HAL_Delay(1000);
 
-	//	If FLASH cannot storage anymore datas, please delete codes below.
-	ST7789_Fill_Color(WHITE);
-	ST7789_DrawImage(0, 0, 128, 128, (uint16_t *)saber);
 	HAL_Delay(3000);
 }
 
@@ -978,7 +975,7 @@ void ST7789_DrawFastFilledCircle(int16_t x0, int16_t y0, int16_t r, uint16_t col
     ST7789_UnSelect();
 }
 
-static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint16_t bgcolor, uint16_t char_buf[font.height][font.width])
+static void ST7789_PrepareCharBuffer(char c, font_def_t font, uint16_t color, uint16_t bgcolor, uint16_t char_buf[font.height][font.width])
 {
     uint32_t b;
     for (uint16_t i = 0; i < font.height; i++) {
@@ -1002,7 +999,7 @@ static void ST7789_PrepareCharBuffer(char c, FontDef font, uint16_t color, uint1
  * @param bgcolor -> background color of the string
  * @return  none
  */
-void ST7789_WriteFastString(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor)
+void ST7789_WriteFastString(uint16_t x, uint16_t y, const char *str, font_def_t font, uint16_t color, uint16_t bgcolor)
 {
     uint16_t char_buf[font.height][font.width];
     ST7789_Select();
