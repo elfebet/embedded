@@ -126,7 +126,7 @@ void gfx_tests() {
     const int screen_h = st7789_height();
 
     start_time = DWT->CYCCNT;
-    for (int i=0; i < screen_w; i += 5) {
+    for (int i=0; i < screen_w; i += 10) {
         gfx_draw_line(i, 0, i, screen_h, COLOR_WHITE);
     }
     elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
@@ -134,7 +134,7 @@ void gfx_tests() {
     HAL_Delay(1000);
 
     start_time = DWT->CYCCNT;
-    for (int i=0; i < screen_h; i += 5) {
+    for (int i=0; i < screen_h; i += 10) {
         gfx_draw_line(0, i, screen_w, i, COLOR_WHITE);
     }
     elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);

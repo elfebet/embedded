@@ -131,11 +131,6 @@ void st7789_backlight(bool on) {
     HAL_GPIO_WritePin(s_spi_data.blk.port, s_spi_data.blk.pin, on ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-void st7789_set_orientation(uint8_t orientation) {
-    const uint8_t madctl = st7789_MADCTLConfig(orientation);
-    st7789_write_command_data(ST7789_MADCTL, &madctl, 1);
-}
-
 void st7789_invert_colors(bool invert) {
     st7789_write_command(invert ? ST7789_INVON : ST7789_INVOFF);
 }

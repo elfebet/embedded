@@ -27,7 +27,6 @@ void st7789_init(const st7789_spi_connected_data_t *spi_data, const st7789_windo
 void st7789_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void st7789_backlight(bool on);
 
-void st7789_set_orientation(uint8_t orientation);
 void st7789_invert_colors(bool invert);
 void st7789_tear_effect(bool on);
 void st7789_set_power(bool on);

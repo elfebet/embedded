@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
 #include <stdio.h>
 #include "st7789.h"
 #include "st7789_driver.h"
@@ -128,7 +129,7 @@ int main(void)
       .height = 320,
       // .x_offset = 0,
       // .y_offset = 0,
-      // .orientation = LCD_ORIENTATION_PORTRAIT,
+      .orientation = GFX_ORIENTATION_PORTRAIT,
   };
 
   st7789_init(&spi_data, &window_data);
@@ -146,8 +147,8 @@ int main(void)
   while (1)
   {
 #if NEW_DISPLAY
-    // gfx_tests();
-    gfx_text_tests();
+    gfx_tests();
+    // gfx_text_tests();
 #else
           ST7789_Test();
 #endif
