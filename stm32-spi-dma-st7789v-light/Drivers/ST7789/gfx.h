@@ -1,4 +1,5 @@
 #pragma once
+#include "config.h"
 #include <stdint.h>
 
 typedef enum {
@@ -18,6 +19,6 @@ void gfx_draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
 void gfx_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
 void gfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t *data);
 
+#if LCD_ENABLE_TESTS
 void gfx_tests(void);
-void gfx_tests_ascii_chars(void);
-void gfx_text_tests(void);
+#endif

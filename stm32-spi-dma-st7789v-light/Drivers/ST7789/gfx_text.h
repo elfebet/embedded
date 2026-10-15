@@ -1,4 +1,5 @@
 #pragma once
+#include "config.h"
 #include "fonts.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -25,3 +26,8 @@ void gfx_draw_text(uint16_t x, uint16_t y, const char *str, const font_def_t *fo
 
 void gfx_adafruit_draw_text(uint16_t x, uint16_t y, const char *str, const GFXfont *font, uint32_t txcolor, uint32_t bgcolor);
 bool gfx_adafruit_get_text_bounds(uint16_t x, uint16_t y, const char *str, const GFXfont *font, GFX_TextBounds *bounds);
+
+#if LCD_ENABLE_TESTS
+void gfx_tests_ascii_chars(void);
+void gfx_text_tests(void);
+#endif

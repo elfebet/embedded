@@ -2,12 +2,9 @@
 #include "gfx_text.h"
 #include "st7789_driver.h"
 #include "colors.h"
-#include "fonts.h"
-
-#include "af_fonts.h"
-
-#include <stdint.h>
+#if LCD_ENABLE_TESTS
 #include <stdio.h>
+#endif
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 
@@ -104,6 +101,8 @@ void gfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint1
     st7789_write_pixels(data, w * h);
 }
 
+#if LCD_ENABLE_TESTS
+
 void gfx_tests() {
     uint32_t start_time = DWT->CYCCNT;
     gfx_fill_screen(COLOR_RED);
@@ -180,119 +179,4 @@ void gfx_tests() {
     HAL_Delay(3000);
 }
 
-void gfx_tests_ascii_chars(void) {
-    uint32_t start_time, elapsed_ms;
-    const char* ascii_string = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-
-    gfx_fill_screen(COLOR_BLACK);
-    gfx_draw_text(50, 20, "Font_7x10", &Font_16x26, COLOR_RED, COLOR_BLACK);
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 60, ascii_string, &Font_7x10, COLOR_WHITE, COLOR_BROWN);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text1 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-
-    gfx_fill_screen(COLOR_BLACK);
-    gfx_draw_text(50, 20, "Font_8x12", &Font_16x26, COLOR_RED, COLOR_BLACK);
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 60, ascii_string, &Font_8x12, COLOR_WHITE, COLOR_RED);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text2 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-
-    gfx_fill_screen(COLOR_BLACK);
-    gfx_draw_text(50, 20, "Font_11x18", &Font_16x26, COLOR_RED, COLOR_BLACK);
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 60, ascii_string, &Font_11x18, COLOR_WHITE, COLOR_BROWN);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text2 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-
-    gfx_fill_screen(COLOR_BLACK);
-    gfx_draw_text(50, 20, "Font_16x26", &Font_16x26, COLOR_RED, COLOR_BLACK);
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 60, ascii_string, &Font_16x26, COLOR_WHITE, COLOR_RED);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text3 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-}
-
-void gfx_test_af_fonts() {
-    uint32_t start_time, elapsed_ms;
-    GFX_TextBounds bounds;
-    const char* ascii_string = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-    const GFXfont *font = &RobotoMonoBold9pt7b;
-    gfx_fill_screen(COLOR_BLACK);
-
-    gfx_adafruit_draw_text(10, 50, "RobotoMonoBold9pt7b", font, COLOR_RED, COLOR_BLACK);
-    char *txt = "In room! W j y 0,95";
-
-    if (gfx_adafruit_get_text_bounds(10, 100, txt, font, &bounds)) {
-        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
-    }
-    start_time = DWT->CYCCNT;
-    gfx_adafruit_draw_text(10, 100, txt, font, COLOR_WHITE, COLOR_BLACK);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text3 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-
-    font = &RobotoMonoBold9pt7b;
-    gfx_fill_screen(COLOR_BLACK);
-    gfx_adafruit_draw_text(10, 30, "RobotoMonoBold9pt7b", font, COLOR_WHITE, COLOR_BLACK);
-    if (gfx_adafruit_get_text_bounds(10, 100, txt, font, &bounds)) {
-        gfx_fill_rect(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, 0x001F);
-    }
-    start_time = DWT->CYCCNT;
-    gfx_adafruit_draw_text(10, 100, ascii_string, font, COLOR_WHITE, COLOR_BLACK);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text3 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-}
-
-void gfx_text_tests(void) {
-    gfx_test_af_fonts();
-    return;
-
-    uint32_t start_time, elapsed_ms;
-    gfx_fill_screen(COLOR_BLACK);
-    HAL_Delay(500);
-
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 10, "In the middle of the room! 0.25 1.37", &Font_7x10, COLOR_WHITE, COLOR_BROWN);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text1 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(500);
-
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 40, "In the middle of the room! 0.25 1.37", &Font_11x18, COLOR_WHITE, COLOR_RED);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text2 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(500);
-
-    start_time = DWT->CYCCNT;
-    gfx_draw_text(10, 80, "In the middle of the room! 0.25 1.37", &Font_16x26, COLOR_WHITE, COLOR_YELLOW);
-    elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    printf("text3 time: %lu ms\r\n", elapsed_ms);
-    HAL_Delay(5000);
-
-    // start_time = DWT->CYCCNT;
-    // gfx_adafruit_draw_text(0, 50, "In W @ y g of the room!", &ARIALBD19pt7b, COLOR_WHITE, COLOR_BROWN);
-    // elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    // printf("text1 time: %lu ms\r\n", elapsed_ms);
-    // HAL_Delay(500);
-
-    // start_time = DWT->CYCCNT;
-    // gfx_adafruit_draw_text(10, 160, "0.25 W @ y g", &FreeSerifItalic20pt7b, COLOR_WHITE, COLOR_BROWN);
-    // elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    // printf("text2 time: %lu ms\r\n", elapsed_ms);
-    // HAL_Delay(500);
-
-    // start_time = DWT->CYCCNT;
-    // gfx_adafruit_draw_text(10, 200, "the W @ r y g!", &RobotoBold20pt, COLOR_WHITE, COLOR_BROWN);
-    // elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
-    // printf("text3 time: %lu ms\r\n", elapsed_ms);
-    // HAL_Delay(500);
-
-
-    HAL_Delay(5000);
-}
+#endif
