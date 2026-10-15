@@ -125,8 +125,7 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
             HAL_SPI_Transmit_DMA(s_hspi, data, chunk);
             lcd_spi_dma_wait();
         } else {
-            // TODO: ТРЕБА ПЕРЕРОБИТИ НА ОЧІКУВАННЯ З ТАЙМАУТОМ. HAL_MAX_DELAY зло!
-            HAL_SPI_Transmit(s_hspi, data, chunk, HAL_MAX_DELAY);
+            HAL_SPI_Transmit(s_hspi, data, chunk, 100);
         }
 
         if (!mem_fixed) {
