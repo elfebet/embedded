@@ -296,7 +296,7 @@ void gfx_test_font(const font_def_t *font, const char *name) {
     gfx_draw_text(10, 110, "V(arg) = 0.25", font, fgcolor, bgcolor);
     gfx_draw_text(10, 140, "V(rest) = 0,33", font, fgcolor, bgcolor);
     gfx_draw_text(10, 180, ascii_string, font, fgcolor, bgcolor);
-    uint32_t elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    uint32_t elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000U) / SystemCoreClock);
     printf("text1 time: %lu ms\r\n", elapsed_ms);
     HAL_Delay(1000);
 }
@@ -319,7 +319,7 @@ void gfx_test_af_font(const GFXfont *font, const char *name) {
     gfx_adafruit_draw_text(10, 120, "gymnastic", font, fgcolor, bgcolor);
     gfx_adafruit_draw_text(10, 160, "V(arg) = 0.25", font, fgcolor, bgcolor);
     gfx_adafruit_draw_text(10, 200, "V(rest) = 0,33", font, fgcolor, bgcolor);
-    uint32_t elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000000U) / SystemCoreClock);
+    uint32_t elapsed_ms = (uint32_t)(((uint64_t)(DWT->CYCCNT - start_time) * 1000U) / SystemCoreClock);
     printf("[%s] time: %lu ms\r\n", name, elapsed_ms);
     HAL_Delay(1000);
 }
