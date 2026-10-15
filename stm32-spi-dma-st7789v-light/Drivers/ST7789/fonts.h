@@ -1,34 +1,32 @@
-#ifndef __FONT_H
-#define __FONT_H
-
+#pragma once
 #include "stdint.h"
 
 typedef struct {
     const uint8_t width;
-    uint8_t height;
+    const uint8_t height;
     const uint16_t *data;
-} FontDef;
+    const uint8_t first_char;
+    const uint8_t last_char;
+} font_def_t;
 
-//Font lib.
-extern FontDef Font_7x10;
-extern FontDef Font_11x18;
-extern FontDef Font_16x26;
+// AdafruitGFX glyph format
+typedef struct {
+    uint16_t bitmapOffset; // offset into bitmap[]
+    uint8_t width, height; // bitmap size in pixels
+    uint8_t xAdvance;      // cursor advance after the glyph
+    int8_t xOffset, yOffset; // bitmap UL corner relative to cursor (y = baseline)
+} GFXglyph;
 
-//16-bit(RGB565) Image lib.
-/*******************************************
- *             CAUTION:
- *   If the MCU onchip flash cannot
- *  store such huge image data,please
- *           do not use it.
- * These pics are for test purpose only.
- *******************************************/
+// AdafruitGFX font format
+typedef struct {
+    uint8_t  *bitmap;     // packed 1 bpp glyph bitmaps, MSB first
+    GFXglyph *glyph;      // glyphs array
+    uint16_t first, last; // first/last ASCII code in the font
+    uint8_t yAdvance;     // font row height by default
+} GFXfont;
 
-/* 128x128 pixel RGB565 image */
-extern const uint16_t saber[][128];
 
-/* 240x240 pixel RGB565 image 
-extern const uint16_t knky[][240];
-extern const uint16_t tek[][240];
-extern const uint16_t adi1[][240];
-*/
-#endif
+extern font_def_t Font_7x10;
+extern font_def_t Font_8x12;
+extern font_def_t Font_11x18;
+extern font_def_t Font_16x26;

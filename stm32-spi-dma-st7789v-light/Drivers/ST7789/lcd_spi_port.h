@@ -1,50 +1,29 @@
 #pragma once
-#include <stdbool.h>
-#include "main.h"
-
-#define LCD_SPI_PORT hspi1
-extern SPI_HandleTypeDef LCD_SPI_PORT;
-
-#define LCD_USE_DMA 0
-#define LCD_DMA_MIN_SIZE  16
-
-#define LCD_RST_PORT TFT_RST_GPIO_Port
-#define LCD_RST_PIN  TFT_RST_Pin
-#define LCD_DC_PORT  TFT_DC_GPIO_Port
-#define LCD_DC_PIN   TFT_DC_Pin
-// comment below if unused
-#define LCD_CS_PORT  TFT_CS_GPIO_Port
-#define LCD_CS_PIN   TFT_CS_Pin
-// comment below if unused
-#define LCD_BLK_PORT TFT_BLK_GPIO_Port
-#define LCD_BLK_PIN  TFT_BLK_Pin
+#include "stm32f4xx_hal.h"
 
 typedef enum {
-    LCD_TYPE_PIXEL,            // Малювання одного пікселя (8 біт, без DMA)
-    LCD_TYPE_FILL,             // Заливка кольором/прямокутник (16 біт, DMA без інкременту)
-    LCD_TYPE_IMAGE,            // Масив/Картинка з пам'яті (16 біт, DMA з інкрементом)
-    LCD_TYPE_FONT,             // Шрифт/Текст (зазвичай 8 або 16 біт залежно від вашого рендерера)
-    LCD_TYPE_FRAMEBUFFER_8BIT,
-    LCD_TYPE_FRAMEBUFFER_16BIT,
-} LCD_DataType;
+    LCD_SPI_MEM_INCREMENT = 0,  // draw image, frame buffer, font?
+    LCD_SPI_MEM_DMA_FIXED = 1,  // ONLY FOR DMA, fill window / rect / line
+} lcd_spi_mem_t;
 
-void lcd_port_init(void);
-void lcd_port_reset(void);
-void lcd_port_backlight(bool on);
-void lcd_port_delay(uint32_t ms);
+typedef enum {
+    LCD_SPI_SIZE_8BIT  = 0, // commands, draw 1 pixel, 8-bit frame buffer
+    LCD_SPI_SIZE_16BIT = 1, // image, fill rect, fill v/h lines, 16-bit frame buffer, font?
+} lcd_spi_size_t;
 
-void lcd_port_lock(void);
-void lcd_port_unlock(void);
+void lcd_spi_init(SPI_HandleTypeDef *hspi);
 
-void lcd_port_writeCommand(uint8_t cmd, const uint8_t *args, uint8_t arg_count);
-void lcd_port_writeData(const uint8_t *buff, size_t buff_size, LCD_DataType dataType);
+void lcd_delay(uint32_t ms);
+uint8_t lcd_spi_dma_ready();
+void lcd_spi_dma_wait(void);
 
+// Transmit `count` SPI data units of the current size
+// 8-bit: count is bytes
+// 16-bit: count is half-words
 
-//// перемикати потрібно ТІЛЬКИ ПІСЛЯ переводу DC і СS
-//// 1. перемикнули DC + CS
-//// 2. виставили режим
-//// 3. передали данні
-//// 4. підняли СS
-//// 5. повернули в 8 бітний режим, default mode
-//// default mode should be: mem_increase, mode_8bit
-//void lcd_port_memMode(uint8_t memInc, uint8_t modeSz);
+// The blocking function reads consecutive units from `data`.
+void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count, lcd_spi_size_t size);
+
+// DMA uses `mem` to either advance through consecutive units or repeatedly read the first unit.
+// With LCD_SPI_MEM_DMA_FIXED, `data` must point to one unit (e.g. one 16-bit color).
+void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count, lcd_spi_size_t size, lcd_spi_mem_t mem);
