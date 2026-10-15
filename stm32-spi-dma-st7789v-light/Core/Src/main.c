@@ -148,7 +148,7 @@ int main(void)
   {
 #if NEW_DISPLAY
     gfx_tests();
-    // gfx_text_tests();
+    gfx_text_tests();
 #else
           ST7789_Test();
 #endif

@@ -130,9 +130,12 @@ static void transmit(const uint8_t *data, uint32_t count, uint8_t use_dma) {
     }
 }
 
-void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count)  {
+void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count, lcd_spi_size_t size) {
+    lcd_spi_set_size(size);
     transmit(data, count, 0);
 }
-void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count) {
+
+void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count, lcd_spi_size_t size, lcd_spi_mem_t mem) {
+    lcd_spi_set_dma(mem, size);
     transmit(data, count, 1);
 }

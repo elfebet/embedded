@@ -35,8 +35,8 @@ void st7789_sleep_in(bool in);
 uint16_t st7789_width(void);
 uint16_t st7789_height(void);
 
-void st7789_fill_pixels(uint32_t count, uint16_t color);
 void st7789_draw_pixel(uint16_t color);
+void st7789_fill_pixels(uint16_t color, uint32_t count);
 
 void st7789_write_pixels(const uint16_t *pixels, uint32_t count);
 void st7789_write_pixels_blocking(const uint16_t *pixels, uint32_t count);

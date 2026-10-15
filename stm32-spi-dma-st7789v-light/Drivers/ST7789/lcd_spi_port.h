@@ -13,12 +13,6 @@ typedef enum {
 
 void lcd_spi_init(SPI_HandleTypeDef *hspi);
 
-// SPI data frame format: 8 or 16 bit
-void lcd_spi_set_size(lcd_spi_size_t size);
-
-// SPI DMA format. p.s. also calls lcd_spi_set_size(size)
-void lcd_spi_set_dma(lcd_spi_mem_t mem, lcd_spi_size_t size);
-
 void lcd_delay(uint32_t ms);
 uint8_t lcd_spi_dma_ready();
 void lcd_spi_dma_wait(void);
@@ -26,5 +20,10 @@ void lcd_spi_dma_wait(void);
 // Transmit `count` SPI data units of the current size
 // 8-bit: count is bytes
 // 16-bit: count is half-words
-void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count);
-void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count);
+
+// The blocking function reads consecutive units from `data`.
+void lcd_spi_transmit_blocking(const uint8_t *data, uint32_t count, lcd_spi_size_t size);
+
+// DMA uses `mem` to either advance through consecutive units or repeatedly read the first unit.
+// With LCD_SPI_MEM_DMA_FIXED, `data` must point to one unit (e.g. one 16-bit color).
+void lcd_spi_transmit_dma(const uint8_t *data, uint32_t count, lcd_spi_size_t size, lcd_spi_mem_t mem);

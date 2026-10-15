@@ -32,7 +32,7 @@ void gfx_fill_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t 
 
     uint32_t pixels = (x2 - x1 + 1) * (y2 - y1 + 1);
     st7789_set_window(x1, y1, x2, y2);
-    st7789_fill_pixels(pixels, color);
+    st7789_fill_pixels(color, pixels);
 }
 
 void gfx_fill_screen(uint16_t color) {
