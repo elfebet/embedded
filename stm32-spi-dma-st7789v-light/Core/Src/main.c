@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include <stdio.h>
-#include "st7789.h"
 #include "st7789_driver.h"
 #include "gfx.h"
 #include "gfx_text.h"
@@ -71,7 +70,6 @@ int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
-#define NEW_DISPLAY 1
 
 /* USER CODE END 0 */
 
@@ -116,7 +114,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   printf("Start init st7789V \r\n");
-#if NEW_DISPLAY
+
   st7789_spi_connected_data_t spi_data = {
       .spi = &hspi1,
       .dc = {TFT_DC_GPIO_Port, TFT_DC_Pin},
@@ -127,8 +125,6 @@ int main(void)
   st7789_window_data_t window_data = {
       .width = 240,
       .height = 320,
-      // .x_offset = 0,
-      // .y_offset = 0,
       .orientation = GFX_ORIENTATION_PORTRAIT,
   };
 
@@ -136,22 +132,12 @@ int main(void)
   gfx_init();
   printf("End init and set green color \r\n");
   HAL_Delay(1000);
-
   printf("START WHILE\r\n");
-#else
-  ST7789_Init();
-  ST7789_TestColors();
-//  ST7789_Fill_Color(BLACK);
-#endif
 
   while (1)
   {
-#if NEW_DISPLAY
     gfx_tests();
     gfx_text_tests();
-#else
-          ST7789_Test();
-#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
