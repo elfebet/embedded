@@ -5,7 +5,7 @@
 
 static st7789_spi_connected_data_t s_spi_data;
 static st7789_window_data_t s_window_data;
-static uint16_t s_fill_color; // TODO: check it, seems can be removed, because lcd_spi_transmit_dma uses pointer to color, not value
+static uint16_t s_fill_color; // It's need for async DMA
 
 #define CS_LOW()         if (s_spi_data.cs.port) { s_spi_data.cs.port->BSRR = (uint32_t)s_spi_data.cs.pin << 16U; }
 #define CS_HIGH()        if (s_spi_data.cs.port) { s_spi_data.cs.port->BSRR = s_spi_data.cs.pin; }
