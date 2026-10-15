@@ -8,7 +8,7 @@
 #include <stdio.h>
 #endif
 
-uint16_t s_font_buffer[GXF_MAX_BUFER_FONT_WIDTH * GXF_MAX_BUFER_FONT_HEIGHT];
+static uint16_t s_font_buffer[GXF_MAX_BUFER_FONT_WIDTH * GXF_MAX_BUFER_FONT_HEIGHT];
 
 static inline GFX_CharDrawMode gfx_char_draw_mode(uint8_t width, uint8_t height) {
     if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_WORD && width <= GXF_MAX_BUFER_FONT_WIDTH && height <= GXF_MAX_BUFER_FONT_HEIGHT) {
