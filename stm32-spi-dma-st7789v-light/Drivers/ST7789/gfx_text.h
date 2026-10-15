@@ -3,7 +3,6 @@
 #include "fonts.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include "af_fonts.h"
 
 typedef enum {
 	GFX_CHAR_DRAW_MODE_PIXEL = 0,  // very slow, draw by pixel
@@ -11,8 +10,6 @@ typedef enum {
     GFX_CHAR_DRAW_MODE_WORD = 2,   // faster, draw the whole char in buffer. if the buffer is small to draw  —> draw in line mode
 } GFX_CharDrawMode;
 
-#define GX_MAX_BUFER_FONT_WIDTH  20
-#define GX_MAX_BUFER_FONT_HEIGHT 28
 #define PREFERED_CHAR_DRAW_MODE  GFX_CHAR_DRAW_MODE_WORD
 
 typedef struct {

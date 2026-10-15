@@ -1,18 +1,19 @@
 #include "gfx_text.h"
-#include "fonts.h"
+#include "config.h"
 #include "gfx.h"
 #include "st7789_driver.h"
 #if LCD_ENABLE_TESTS
+#include "af_fonts.h"
 #include "colors.h"
 #include <stdio.h>
 #endif
 
-uint16_t s_font_buffer[GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT];
+uint16_t s_font_buffer[GXF_MAX_BUFER_FONT_WIDTH * GXF_MAX_BUFER_FONT_HEIGHT];
 
 static inline GFX_CharDrawMode gfx_char_draw_mode(uint8_t width, uint8_t height) {
-    if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_WORD && width <= GX_MAX_BUFER_FONT_WIDTH && height <= GX_MAX_BUFER_FONT_HEIGHT) {
+    if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_WORD && width <= GXF_MAX_BUFER_FONT_WIDTH && height <= GXF_MAX_BUFER_FONT_HEIGHT) {
         return GFX_CHAR_DRAW_MODE_WORD;
-    } else if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_LINE && width <= GX_MAX_BUFER_FONT_WIDTH * GX_MAX_BUFER_FONT_HEIGHT) {
+    } else if (PREFERED_CHAR_DRAW_MODE >= GFX_CHAR_DRAW_MODE_LINE && width <= GXF_MAX_BUFER_FONT_WIDTH * GXF_MAX_BUFER_FONT_HEIGHT) {
         return GFX_CHAR_DRAW_MODE_LINE;
     } else {
         return GFX_CHAR_DRAW_MODE_PIXEL;

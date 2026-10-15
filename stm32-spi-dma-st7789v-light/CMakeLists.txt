@@ -62,6 +62,7 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 
 # Підключаємо кастомні папки драйверів
 add_subdirectory("Drivers/ST7789" "ST7789_Build")
+add_subdirectory("Drivers/ST7789/fonts" "ST7789_FONTS_Build")
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
