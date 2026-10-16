@@ -69,7 +69,10 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int __io_putchar(int ch) {
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+    return ch;
+}
 /* USER CODE END 0 */
 
 /**
@@ -80,6 +83,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
+  // for debug
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Enable DWT
+  DWT->CYCCNT = 0;                                // Clear counter
+  DWT->CTRL = DWT_CTRL_CYCCNTENA_Msk;             // Enable counter
 
   /* USER CODE END 1 */
 

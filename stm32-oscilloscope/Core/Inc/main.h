@@ -41,6 +41,15 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_adc1;
+
+extern SPI_HandleTypeDef hspi1;
+extern DMA_HandleTypeDef hdma_spi1_tx;
+
+extern TIM_HandleTypeDef htim2;
+
+extern UART_HandleTypeDef huart1;
 
 /* USER CODE END EC */
 
