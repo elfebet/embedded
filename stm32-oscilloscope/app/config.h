@@ -1,7 +1,8 @@
 #pragma once
 
-#define LCD_USE_DMA      1
-#define LCD_ENABLE_TESTS 1
+#define LCD_USE_DMA          1
+#define LCD_ENABLE_TESTS     1
+#define LCD_ENABLE_UART_LOGS 1
 
 #if !LCD_USE_DMA
 // Blocking fallback buffer capacity in bytes for fixed-source transfers.
