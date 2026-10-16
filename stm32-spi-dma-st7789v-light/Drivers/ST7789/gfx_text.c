@@ -131,6 +131,7 @@ void gfx_draw_adafruit_char(uint16_t x, uint16_t y, char ch, const GFXfont *font
     const GFXglyph *g = &((GFXglyph *)font->glyph)[code];
     const uint8_t w = g->width;
     const uint8_t h = g->height;
+    if (w == 0 || h == 0) return;
     const uint16_t x0 = x + g->xOffset;
     const uint16_t y0 = y + g->yOffset;
     const uint8_t *src = font->bitmap + g->bitmapOffset;
@@ -302,10 +303,29 @@ void gfx_test_font(const font_def_t *font, const char *name) {
 }
 
 void gfx_test_fonts() {
+    gfx_test_font(&Font_5x7, "Classic 5x7");
     gfx_test_font(&Font_7x10, "7x10");
-    gfx_test_font(&Font_8x12, "8x12");
-    gfx_test_font(&Font_11x18, "11x18");
-    gfx_test_font(&Font_16x26, "16x26");
+    // gfx_test_font(&Font_8x12, "8x12");
+    // gfx_test_font(&Font_11x18, "11x18");
+    // gfx_test_font(&Font_16x26, "16x26");
+
+    // gfx_test_font(&Font_NotoSansMono_8pt, "Noto Sans Mono 8pt");
+    // gfx_test_font(&Font_NotoSansMono_9pt, "Noto Sans Mono 9pt");
+    // gfx_test_font(&Font_NotoSansMono_10pt, "Noto Sans Mono 10pt");
+    // gfx_test_font(&Font_NotoSansMono_11pt, "Noto Sans Mono 11pt");
+    // gfx_test_font(&Font_NotoSansMono_12pt, "Noto Sans Mono 12pt");
+
+    // gfx_test_font(&Font_IBMCodeMono_8pt, "IBM Code Mono 8pt");
+    // gfx_test_font(&Font_IBMCodeMono_9pt, "IBM Code Mono 9pt");
+    // gfx_test_font(&Font_IBMCodeMono_10pt, "IBM Code Mono 10pt");
+    // gfx_test_font(&Font_IBMCodeMono_11pt, "IBM Code Mono 11pt");
+    // gfx_test_font(&Font_IBMCodeMono_12pt, "IBM Code Mono 12pt");
+
+    // gfx_test_font(&Font_JetBrainsMono_8pt, "JetBrains Mono 8pt");
+    // gfx_test_font(&Font_JetBrainsMono_9pt, "JetBrains Mono 9pt");
+    // gfx_test_font(&Font_JetBrainsMono_10pt, "JetBrains Mono 10pt");
+    // gfx_test_font(&Font_JetBrainsMono_11pt, "JetBrains Mono 11pt");
+    // gfx_test_font(&Font_JetBrainsMono_12pt, "JetBrains Mono 12pt");
 }
 
 void gfx_test_af_font(const GFXfont *font, const char *name) {
@@ -342,9 +362,34 @@ void gfx_test_af_fonts(void) {
     gfx_test_af_font(&RobotoMonoRegular12pt7b, "Regular12pt7b");
 }
 
+void gfx_test_recommended_af_fonts(void) {
+    gfx_test_af_font(&FreeMono9pt7b, "FreeMono9pt7b");
+    gfx_test_af_font(&FreeMonoBold9pt7b, "FreeMonoBold9pt7b");
+    gfx_test_af_font(&FreeSans9pt7b, "FreeSans9pt7b");
+    gfx_test_af_font(&FreeSansBold9pt7b, "FreeSansBold9pt7b");
+    // gfx_test_af_font(&FreeSerif9pt7b, "FreeSerif9pt7b");
+    // gfx_test_af_font(&FreeSerifBold9pt7b, "FreeSerifBold9pt7b");
+
+
+    gfx_test_af_font(&FreeMono12pt7b, "FreeMono12pt7b");
+    gfx_test_af_font(&FreeMonoBold12pt7b, "FreeMonoBold12pt7b");
+    gfx_test_af_font(&FreeSans12pt7b, "FreeSans12pt7b");
+    gfx_test_af_font(&FreeSansBold12pt7b, "FreeSansBold12pt7b");
+    // gfx_test_af_font(&FreeSerif12pt7b, "FreeSerif12pt7b");
+    // gfx_test_af_font(&FreeSerifBold12pt7b, "FreeSerifBold12pt7b");
+
+
+// extern const GFXfont FreeMono18pt7b;
+// extern const GFXfont FreeMonoBold18pt7b;
+// extern const GFXfont FreeSans18pt7b;
+// extern const GFXfont FreeSansBold18pt7b;
+// extern const GFXfont FreeSerif18pt7b;
+// extern const GFXfont FreeSerifBold18pt7b;
+}
+
 void gfx_text_tests(void) {
     gfx_test_fonts();
-    // gfx_test_af_fonts();
+    gfx_test_recommended_af_fonts();
 }
 
 #endif

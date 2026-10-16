@@ -26,6 +26,7 @@ typedef struct {
 } GFXfont;
 
 
+extern font_def_t Font_5x7;
 extern font_def_t Font_7x10;
 extern font_def_t Font_8x12;
 extern font_def_t Font_11x18;

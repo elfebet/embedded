@@ -136,7 +136,7 @@ int main(void)
 
   while (1)
   {
-    gfx_tests();
+    // gfx_tests();
     gfx_text_tests();
     /* USER CODE END WHILE */
 

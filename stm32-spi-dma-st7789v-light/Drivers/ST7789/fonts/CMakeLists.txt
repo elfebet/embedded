@@ -1,5 +1,5 @@
 # Автоматично шукаємо абсолютно всі .c файли всередині цієї папки
-file(GLOB ST7789_FONTS_SOURCES "*.c")
+file(GLOB ST7789_FONTS_SOURCES CONFIGURE_DEPENDS "*.c")
 
 # Додаємо їх до загальної бібліотеки мікроконтролера
 target_sources(STM32_Drivers PRIVATE ${ST7789_FONTS_SOURCES})
