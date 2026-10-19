@@ -66,6 +66,22 @@ HAL_StatusTypeDef scope_adc_stop(void) {
     return HAL_OK;
 }
 
+HAL_StatusTypeDef scope_adc_copy_latest(uint16_t *destination, uint32_t sample_count) {
+    if (destination == NULL || sample_count == 0U || sample_count >= ADC_DMA_BUFFER_SIZE) return HAL_ERROR;
+
+    const uint32_t dma_remaining = __HAL_DMA_GET_COUNTER(s_adc_data.adc->DMA_Handle);
+    if (dma_remaining > ADC_DMA_BUFFER_SIZE) return HAL_ERROR;
+
+    const uint32_t write_index = (ADC_DMA_BUFFER_SIZE - dma_remaining) % ADC_DMA_BUFFER_SIZE;
+    const uint32_t first_sample = (write_index + ADC_DMA_BUFFER_SIZE - sample_count) % ADC_DMA_BUFFER_SIZE;
+
+    for (uint32_t i = 0U; i < sample_count; ++i) {
+        destination[i] = s_adc_buffer[(first_sample + i) % ADC_DMA_BUFFER_SIZE];
+    }
+
+    return HAL_OK;
+}
+
 uint32_t scope_adc_sample_rate(void) {
     return s_sample_rate_hz;
 }
