@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app.h"
-
+#include "logger.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,12 +83,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
-  // for debug
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Enable DWT
-  DWT->CYCCNT = 0;                                // Clear counter
-  DWT->CTRL = DWT_CTRL_CYCCNTENA_Msk;             // Enable counter
-
+  logger_reset_timer();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
