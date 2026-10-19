@@ -28,7 +28,7 @@ void logger_reset_timer() {
     DWT->CTRL = DWT_CTRL_CYCCNTENA_Msk;             // Enable counter
 }
 
-uint32_t logger_start_time() {
+uint32_t logger_get_time() {
     return DWT->CYCCNT;
 }
 
