@@ -113,17 +113,53 @@ static uint16_t sample_to_y(uint16_t sample) {
     return SCOPE_GRID_Y + SCOPE_GRID_HEIGHT - 1 - (uint32_t)sample * (SCOPE_GRID_HEIGHT - 1) / 4095;
 }
 
-void scope_renderer_draw_wave(const uint16_t *samples) {
-    if (samples == NULL) return;
+void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, bool preserve_peaks) {
+    if (samples == NULL || sample_count == 0) return;
 
     const uint16_t graph_width = SCOPE_GRID_WIDTH;
+    const uint32_t sample_index_step = sample_count / graph_width;
+    const uint32_t sample_index_remainder = sample_count % graph_width;
+    uint32_t sample_index = 0;
+    uint32_t remainder_accumulator = 0;
     uint16_t previous_y = 0;
 
     for (uint16_t x = 0; x < graph_width; ++x) {
-        const uint16_t sample_y = sample_to_y(samples[x]);
-        const uint16_t new_top = x > 0 && previous_y < sample_y ? previous_y : sample_y;
-        const uint16_t new_bottom = x > 0 && previous_y > sample_y ? previous_y : sample_y;
-        previous_y = sample_y;
+        uint16_t new_top;
+        uint16_t new_bottom;
+
+        if (preserve_peaks && sample_count > graph_width) {
+            const uint32_t start = sample_index;
+            sample_index += sample_index_step;
+            remainder_accumulator += sample_index_remainder;
+            if (remainder_accumulator >= graph_width) {
+                ++sample_index;
+                remainder_accumulator -= graph_width;
+            }
+
+            uint16_t sample_min = UINT16_MAX;
+            uint16_t sample_max = 0U;
+            for (uint32_t i = start; i < sample_index; ++i) {
+                if (samples[i] < sample_min) sample_min = samples[i];
+                if (samples[i] > sample_max) sample_max = samples[i];
+            }
+
+            new_top = sample_to_y(sample_max);
+            new_bottom = sample_to_y(sample_min);
+        } else {
+            const uint16_t sample_y = sample_to_y(samples[sample_index]);
+            new_top = x > 0 && previous_y < sample_y ? previous_y : sample_y;
+            new_bottom = x > 0 && previous_y > sample_y ? previous_y : sample_y;
+            previous_y = sample_y;
+
+            if (x + 1 < graph_width) {
+                sample_index += sample_index_step;
+                remainder_accumulator += sample_index_remainder;
+                if (remainder_accumulator >= graph_width) {
+                    ++sample_index;
+                    remainder_accumulator -= graph_width;
+                }
+            }
+        }
 
         if (s_wave_has_previous && new_top == s_previous_top[x] && new_bottom == s_previous_bottom[x]) {
             continue;
