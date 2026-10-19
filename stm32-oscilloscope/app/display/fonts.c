@@ -491,7 +491,7 @@ const uint16_t Font16x26 [] = {
 };
 
 font_def_t Font_5x7 = { 6, 8, Font5x7, 32, 126 };
-font_def_t Font_7x10 = { 7, 10, Font7x10, 32, 127 };
-font_def_t Font_8x12 = { 8, 12, Font8x12, 32, 127 };
-font_def_t Font_11x18 = { 11, 18, Font11x18, 32, 127 };
-font_def_t Font_16x26 = { 16, 26, Font16x26, 32, 127 };
+font_def_t Font_7x10 = { 7, 10, Font7x10, 32, 126 };
+font_def_t Font_8x12 = { 8, 12, Font8x12, 32, 126 };
+font_def_t Font_11x18 = { 11, 18, Font11x18, 32, 126 };
+font_def_t Font_16x26 = { 16, 26, Font16x26, 32, 126 };
