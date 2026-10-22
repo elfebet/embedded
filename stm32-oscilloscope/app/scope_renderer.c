@@ -109,8 +109,8 @@ void scope_renderer_draw_grid_test(void) {
 }
 
 static uint16_t sample_to_y(uint16_t sample) {
-    if (sample > 4095) sample = 4095;
-    return SCOPE_GRID_Y + SCOPE_GRID_HEIGHT - 1 - (uint32_t)sample * (SCOPE_GRID_HEIGHT - 1) / 4095;
+    if (sample > ADC_MAX_CODE) sample = ADC_MAX_CODE;
+    return SCOPE_GRID_Y + SCOPE_GRID_HEIGHT - 1 - (uint32_t)sample * (SCOPE_GRID_HEIGHT - 1) / ADC_MAX_CODE;
 }
 
 void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, bool preserve_peaks) {
