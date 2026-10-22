@@ -1,5 +1,6 @@
 #include "scope_adc.h"
 #include "config.h"
+#include "stm32f4xx_ll_adc.h"
 
 static volatile uint16_t s_adc_buffer[ADC_DMA_BUFFER_SIZE];
 static uint32_t s_sample_rate_hz = 0;
@@ -108,5 +109,67 @@ HAL_StatusTypeDef scope_adc_set_sample_rate(uint32_t rate_hz) {
     }
 
     s_sample_rate_hz = rate_hz;
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef scope_adc_measure_vdda_mv(uint32_t *vdda_mv) {
+    if (vdda_mv == NULL || s_sample_rate_hz == 0 ||
+        (s_adc_data.tim->Instance->CR1 & TIM_CR1_CEN) != 0 ||
+        (s_adc_data.adc->Instance->CR2 & ADC_CR2_DMA) != 0) {
+        return HAL_ERROR;
+    }
+
+    const uint32_t trigger_edges = s_adc_data.adc->Instance->CR2 & ADC_CR2_EXTEN;
+    ADC_ChannelConfTypeDef channel_config = {
+        .Channel = ADC_CHANNEL_VREFINT,
+        .Rank = 1,
+        .SamplingTime = ADC_SAMPLETIME_480CYCLES,
+    };
+    HAL_StatusTypeDef status = HAL_ADC_ConfigChannel(s_adc_data.adc, &channel_config);
+    uint32_t raw_sum = 0;
+    const uint32_t measurement_count = 16;
+
+    if (status == HAL_OK) {
+        MODIFY_REG(s_adc_data.adc->Instance->CR2, ADC_CR2_EXTEN, 0);
+        HAL_Delay(1);
+
+        for (uint32_t i = 0; i < measurement_count; ++i) {
+            status = HAL_ADC_Start(s_adc_data.adc);
+            if (status != HAL_OK) {
+                break;
+            }
+
+            status = HAL_ADC_PollForConversion(s_adc_data.adc, 10);
+            if (status == HAL_OK) {
+                raw_sum += HAL_ADC_GetValue(s_adc_data.adc);
+            }
+
+            const HAL_StatusTypeDef stop_status = HAL_ADC_Stop(s_adc_data.adc);
+            if (status == HAL_OK && stop_status != HAL_OK) {
+                status = stop_status;
+            }
+            if (status != HAL_OK) {
+                break;
+            }
+        }
+    }
+
+    const HAL_StatusTypeDef stop_status = HAL_ADC_Stop(s_adc_data.adc);
+    if (status == HAL_OK && stop_status != HAL_OK) {
+        status = stop_status;
+    }
+
+    channel_config.Channel = ADC_CHANNEL_0;
+    channel_config.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+    const HAL_StatusTypeDef restore_status = HAL_ADC_ConfigChannel(s_adc_data.adc, &channel_config);
+    MODIFY_REG(s_adc_data.adc->Instance->CR2, ADC_CR2_EXTEN, trigger_edges);
+
+    if (status != HAL_OK) return status;
+    if (restore_status != HAL_OK) return restore_status;
+
+    const uint32_t vrefint_raw = (raw_sum + measurement_count / 2) / measurement_count;
+    if (vrefint_raw == 0) return HAL_ERROR;
+
+    *vdda_mv = ((uint32_t)(*VREFINT_CAL_ADDR) * VREFINT_CAL_VREF + vrefint_raw / 2) / vrefint_raw;
     return HAL_OK;
 }

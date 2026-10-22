@@ -14,3 +14,6 @@ HAL_StatusTypeDef scope_adc_copy_latest(uint16_t *destination, uint32_t sample_c
 
 uint32_t scope_adc_sample_rate(void);
 HAL_StatusTypeDef scope_adc_set_sample_rate(uint32_t rate_hz);
+
+// Call before scope_adc_start()! measures VDDA from the factory-calibrated Vrefint.
+HAL_StatusTypeDef scope_adc_measure_vdda_mv(uint32_t *vdda_mv);
