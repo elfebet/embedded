@@ -19,6 +19,7 @@
 #define ADC_MIN_SAMPLE_RATE_HZ     10U
 #define ADC_MAX_SAMPLE_RATE_HZ     500000U
 #define ADC_DEFAULT_SAMPLE_RATE_HZ 1000U
+#define SCOPE_INPUT_MAX_MV         5000U
 
 /*
 =========== USB ===========

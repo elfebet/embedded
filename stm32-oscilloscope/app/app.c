@@ -21,7 +21,7 @@
 #define ADC_SNAPSHOT_SIZE  512U
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static uint32_t adc_vdda_mv;
-static const scope_wave_display_mode_t wave_display_mode = SCOPE_WAVE_DISPLAY_HI_RES;
+static const scope_wave_display_mode_t wave_display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;
 
 static void draw_status(uint32_t fps, uint32_t adc_avg) {
     char status_text[32];
@@ -80,6 +80,7 @@ void app_start(void) {
         Error_Handler();
     }
     logger("Measured VDDA: %lumV", adc_vdda_mv);
+    scope_renderer_set_vdda_mv(adc_vdda_mv);
 
     if (ADC_SNAPSHOT_SIZE >= ADC_DMA_BUFFER_SIZE) {
         logger("ADC_SNAPSHOT_SIZE must be less than ADC_DMA_BUFFER_SIZE");
@@ -117,8 +118,8 @@ void app_start(void) {
         }
 
         uint32_t stage_start_cycles = logger_get_time();
-        scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
-        // scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
+        //scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
+        scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
         wave_render_cycles += logger_get_time() - stage_start_cycles;
 
         ++frames_in_window;

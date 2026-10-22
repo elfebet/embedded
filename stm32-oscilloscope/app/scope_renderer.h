@@ -17,6 +17,7 @@ typedef enum {
 } scope_wave_display_mode_t;
 
 void scope_renderer_fill_background(void);
+void scope_renderer_set_vdda_mv(uint32_t vdda_mv);
 void scope_renderer_draw_grid(void); // must be called befor draw waves
 void scope_renderer_draw_grid_test(void);
 

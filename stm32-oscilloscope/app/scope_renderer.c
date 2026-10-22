@@ -34,6 +34,8 @@ static uint16_t s_group_sample_y[SCOPE_GRID_WIDTH];
 static uint16_t s_group_pixels[SCOPE_GROUP_MAX_WIDTH * SCOPE_GRID_HEIGHT];
 static bool s_group_has_previous;
 
+static uint32_t s_vdda_mv;
+
 static inline uint16_t rounded_average(uint32_t sum, uint32_t count) {
     return (uint16_t)((sum + count / 2) / count);
 }
@@ -56,6 +58,10 @@ void scope_renderer_clear_buffers(void) {
 void scope_renderer_fill_background(void) {
     scope_renderer_clear_buffers();
     gfx_fill_screen(SCOPE_BG_COLOR);
+}
+
+void scope_renderer_set_vdda_mv(uint32_t vdda_mv) {
+    s_vdda_mv = vdda_mv;
 }
 
 void scope_renderer_draw_grid(void) {
@@ -115,7 +121,15 @@ void scope_renderer_draw_grid_test(void) {
 
 static uint16_t sample_to_y(uint16_t sample) {
     if (sample > ADC_MAX_CODE) sample = ADC_MAX_CODE;
-    return SCOPE_GRID_Y + SCOPE_GRID_HEIGHT - 1 - (uint32_t)sample * (SCOPE_GRID_HEIGHT - 1) / ADC_MAX_CODE;
+
+    const float sample_mv = (float)sample * (float)s_vdda_mv / ADC_MAX_CODE;
+    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)s_vdda_mv - sample_mv) / FRONTEND_GAIN;
+    const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
+    float y = center_y - vin_mv * (SCOPE_GRID_HEIGHT - 1) / (2.0f * SCOPE_INPUT_MAX_MV);
+
+    if (y < 0.0f) y = 0.0f;
+    if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
+    return SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
 }
 
 void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
@@ -146,8 +160,8 @@ void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, sc
                 if (samples[i] < sample_min) sample_min = samples[i];
                 if (samples[i] > sample_max) sample_max = samples[i];
             }
-            new_top = sample_to_y(sample_max);
-            new_bottom = sample_to_y(sample_min);
+            new_top = sample_to_y(sample_min);
+            new_bottom = sample_to_y(sample_max);
         } else {
             uint16_t sample = samples[sample_index];
             if (mode == SCOPE_WAVE_DISPLAY_HI_RES && sample_count > graph_width) {
@@ -251,8 +265,8 @@ static void prepare_grouped_wave(const uint16_t *samples, uint32_t sample_count,
             if (samples[i] < sample_min) sample_min = samples[i];
             if (samples[i] > sample_max) sample_max = samples[i];
         }
-        s_group_current_top[x] = sample_to_y(sample_max);
-        s_group_current_bottom[x] = sample_to_y(sample_min);
+        s_group_current_top[x] = sample_to_y(sample_min);
+        s_group_current_bottom[x] = sample_to_y(sample_max);
     }
 }
 
