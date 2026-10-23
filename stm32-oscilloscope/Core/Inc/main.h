@@ -48,6 +48,8 @@ extern SPI_HandleTypeDef hspi1;
 extern DMA_HandleTypeDef hdma_spi1_tx;
 
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
 extern UART_HandleTypeDef huart1;
 
@@ -78,6 +80,26 @@ void Error_Handler(void);
 #define TFT_BLK_GPIO_Port GPIOA
 #define TFT_SDA_Pin GPIO_PIN_7
 #define TFT_SDA_GPIO_Port GPIOA
+#define BTN_1_Pin GPIO_PIN_12
+#define BTN_1_GPIO_Port GPIOB
+#define BTN_2_Pin GPIO_PIN_13
+#define BTN_2_GPIO_Port GPIOB
+#define BTN_3_Pin GPIO_PIN_14
+#define BTN_3_GPIO_Port GPIOB
+#define BTN_4_Pin GPIO_PIN_15
+#define BTN_4_GPIO_Port GPIOB
+#define ENC_SW1_Pin GPIO_PIN_11
+#define ENC_SW1_GPIO_Port GPIOA
+#define ENC_SW2_Pin GPIO_PIN_12
+#define ENC_SW2_GPIO_Port GPIOA
+#define ENC1_A_Pin GPIO_PIN_4
+#define ENC1_A_GPIO_Port GPIOB
+#define ENC1_B_Pin GPIO_PIN_5
+#define ENC1_B_GPIO_Port GPIOB
+#define ENC2_A_Pin GPIO_PIN_6
+#define ENC2_A_GPIO_Port GPIOB
+#define ENC2_B_Pin GPIO_PIN_7
+#define ENC2_B_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
