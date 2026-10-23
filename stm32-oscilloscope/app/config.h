@@ -13,6 +13,10 @@
 #define GFX_MAX_BUFFER_FONT_WIDTH  20U
 #define GFX_MAX_BUFFER_FONT_HEIGHT 28U
 
+// Inputs (buttons, encoders, etc.)
+#define APP_INPUT_MAX_BUTTONS   8U
+#define APP_INPUT_MAX_ENCODERS  4U
+
 // ADC configuration parameters
 #define ADC_MAX_CODE               4095U
 #define ADC_DMA_BUFFER_SIZE        2048U // units for uint16_t
