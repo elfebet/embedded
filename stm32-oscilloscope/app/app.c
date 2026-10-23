@@ -4,13 +4,14 @@
 #include "fonts.h"
 #include "gfx.h"
 #include "gfx_text.h"
+#include "input_events.h"
 #include "main.h"
 #include "logger.h"
-#include "scope_renderer.h"
 #include "st7789_driver.h"
 #include "scope_adc.h"
-#include "stm32f4xx_hal.h"
-#include <assert.h>
+#include "scope_renderer.h"
+#include "app_controls.h"
+#include "app_input.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,13 +20,15 @@
 #define STATUS_HEIGHT 24
 
 #define ADC_SNAPSHOT_SIZE  512U
+
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static uint32_t adc_vdda_mv;
-static const scope_wave_display_mode_t wave_display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;
+static scope_settings_t settings;
 
 static void draw_status(uint32_t fps, uint32_t adc_avg) {
     char status_text[32];
-    snprintf(status_text, sizeof(status_text), "FPS:%lu SR:%luHz", fps, scope_adc_sample_rate());
+    snprintf(status_text, sizeof(status_text), "FPS:%lu SR:%luHz %s", fps, scope_adc_sample_rate(),
+             app_controls_vertical_knob_label(&settings));
     gfx_fill_rect(0, 0, st7789_width() - 1, STATUS_HEIGHT - 1, COLOR_BLACK);
     gfx_draw_text(0, 0, status_text, &Font_7x10, COLOR_WHITE, COLOR_BLACK);
 
@@ -69,11 +72,6 @@ void adc_init() {
         .tim = &htim2,
     };
     scope_adc_init(&adc_data, ADC_DEFAULT_SAMPLE_RATE_HZ);
-}
-
-void app_start(void) {
-    adc_init();
-    display_init();
 
     if (scope_adc_measure_vdda_mv(&adc_vdda_mv) != HAL_OK) {
         logger("Failed to measure VDDA using Vrefint");
@@ -86,6 +84,41 @@ void app_start(void) {
         logger("ADC_SNAPSHOT_SIZE must be less than ADC_DMA_BUFFER_SIZE");
         Error_Handler();
     }
+}
+
+void controls_init(void) {
+    const button_input_data_t buttons[] = {
+        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_ENC_BTN_1, INPUT_ACTION_ENC_BTN_1_LONG_PRESS },
+        { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_ENC_BTN_2, INPUT_ACTION_ENC_BTN_2_LONG_PRESS },
+        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_BTN_1, INPUT_ACTION_BTN_1_LONG_PRESS },
+        { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_BTN_2, INPUT_ACTION_BTN_2_LONG_PRESS },
+        { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3, INPUT_ACTION_BTN_3_LONG_PRESS },
+        { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_BTN_4, INPUT_ACTION_BTN_4_LONG_PRESS },
+    };
+
+    const uint32_t num_buttons = sizeof(buttons) / sizeof(buttons[0]);
+    if (app_input_buttons_init(buttons, num_buttons) != HAL_OK) {
+        logger("Failed to init buttons");
+        Error_Handler();
+    }
+
+    const encoder_input_data_t s_encoders[] = {
+        { &htim3, INPUT_VALUE_HORIZONTAL_KNOB },
+        { &htim4, INPUT_VALUE_VERTICAL_KNOB },
+    };
+    const uint32_t num_encoders = sizeof(s_encoders) / sizeof(s_encoders[0]);
+    if (app_input_encoders_init(s_encoders, num_encoders) != HAL_OK) {
+        logger("Failed to init encoders");
+        Error_Handler();
+    }
+
+    app_controls_init(&settings);
+}
+
+void app_start(void) {
+    display_init();
+    controls_init();
+    adc_init();
 
     scope_renderer_fill_background();
     scope_renderer_draw_grid();
@@ -111,16 +144,28 @@ void app_start(void) {
         }
         last_frame_cycles = now_cycles;
 
-        const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
-        if (copy_status != HAL_OK) {
-            logger("Failed to copy adc buffer");
-            Error_Handler();
+        input_events_t input_events;
+        app_input_poll();
+        app_input_take_events(&input_events);
+
+        const vertical_knob_mode_t previous_vertical_mode = settings.vertical_knob_mode;
+        app_controls_handle(&settings, &input_events);
+
+        if (settings.vertical_knob_mode != previous_vertical_mode) {
+            draw_status(current_fps, adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
         }
 
-        uint32_t stage_start_cycles = logger_get_time();
-        //scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
-        scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, wave_display_mode);
-        wave_render_cycles += logger_get_time() - stage_start_cycles;
+        if (settings.running) {
+            const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
+            if (copy_status != HAL_OK) {
+                logger("Failed to copy adc buffer");
+                Error_Handler();
+            }
+
+            uint32_t stage_start_cycles = logger_get_time();
+            scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, settings.display_mode);
+            wave_render_cycles += logger_get_time() - stage_start_cycles;
+        }
 
         ++frames_in_window;
 
