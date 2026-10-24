@@ -345,36 +345,36 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
     s_group_has_previous = true;
 }
 
-void scope_renderer_draw_display_mode(app_state_t *app_state) {
-    if (app_state == NULL) return;
-    if (app_state->display_mode == app_state->last_display_mode && !app_state->needs_update) return;
-    app_state->last_display_mode = app_state->display_mode;
+void scope_renderer_draw_display_mode(app_state_t *state) {
+    if (state == NULL) return;
+    if (state->display_mode == state->last_display_mode && !state->needs_update) return;
+    state->last_display_mode = state->display_mode;
 
-    const char *mode = app_state_display_mode_label(app_state);
+    const char *mode = app_state_display_mode_label(state);
 
     char text[16];
     snprintf(text, sizeof(text), "Mode:%-10s", mode);
     gfx_draw_text(0, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
-void scope_renderer_draw_sample_rate(app_state_t *app_state) {
-    if (app_state == NULL) return;
-    if (app_state->sample_rate_hz == app_state->last_sample_rate_hz && !app_state->needs_update) return;
-    app_state->last_sample_rate_hz = app_state->sample_rate_hz;
+void scope_renderer_draw_sample_rate(app_state_t *state) {
+    if (state == NULL) return;
+    if (state->sample_rate_hz == state->last_sample_rate_hz && !state->needs_update) return;
+    state->last_sample_rate_hz = state->sample_rate_hz;
 
     char temp[10];
-    snprintf(temp, sizeof(temp), "%luHz", app_state->sample_rate_hz);
+    snprintf(temp, sizeof(temp), "%luHz", state->sample_rate_hz);
     char text[16];
     snprintf(text, sizeof(text), "SR:%-12s", temp);
     gfx_draw_text(st7789_width()/2, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
-void scope_renderer_draw_fps(app_state_t *app_state) {
-    if (app_state == NULL) return;
-    if (app_state->fps == app_state->last_fps && !app_state->needs_update) return;
-    app_state->last_fps = app_state->fps;
+void scope_renderer_draw_fps(app_state_t *state) {
+    if (state == NULL) return;
+    if (state->fps == state->last_fps && !state->needs_update) return;
+    state->last_fps = state->fps;
 
     char fps_text[10];
-    snprintf(fps_text, sizeof(fps_text), "FPS:%-4d", app_state->fps);
+    snprintf(fps_text, sizeof(fps_text), "FPS:%-4d", state->fps);
     gfx_draw_text(0, st7789_height()-10, fps_text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
