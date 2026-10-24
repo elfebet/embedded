@@ -1,5 +1,6 @@
 #include "scope_renderer.h"
 
+#include "app_state.h"
 #include "colors.h"
 #include "config.h"
 #include "fonts.h"
@@ -342,6 +343,30 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
 
     // позначаємо що є попередній кадр
     s_group_has_previous = true;
+}
+
+void scope_renderer_draw_display_mode(app_state_t *app_state) {
+    if (app_state == NULL) return;
+    if (app_state->display_mode == app_state->last_display_mode && !app_state->needs_update) return;
+    app_state->last_display_mode = app_state->display_mode;
+
+    const char *mode = app_state_display_mode_label(app_state);
+
+    char text[16];
+    snprintf(text, sizeof(text), "Mode:%-10s", mode);
+    gfx_draw_text(0, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+}
+
+void scope_renderer_draw_sample_rate(app_state_t *app_state) {
+    if (app_state == NULL) return;
+    if (app_state->sample_rate_hz == app_state->last_sample_rate_hz && !app_state->needs_update) return;
+    app_state->last_sample_rate_hz = app_state->sample_rate_hz;
+
+    char temp[10];
+    snprintf(temp, sizeof(temp), "%luHz", app_state->sample_rate_hz);
+    char text[16];
+    snprintf(text, sizeof(text), "SR:%-12s", temp);
+    gfx_draw_text(st7789_width()/2, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
 void scope_renderer_draw_fps(app_state_t *app_state) {
