@@ -19,6 +19,7 @@ void scope_renderer_draw_grid_test(void);
 void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode);
 void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode);
 
+void scope_renderer_draw_run_stop(app_state_t *state);
 void scope_renderer_draw_display_mode(app_state_t *state);
 void scope_renderer_draw_sample_rate(app_state_t *state);
 void scope_renderer_draw_fps(app_state_t *state);

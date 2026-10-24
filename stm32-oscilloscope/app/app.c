@@ -85,10 +85,10 @@ void controls_init(void) {
     const button_input_data_t buttons[] = {
         { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_ENC_BTN_1, INPUT_ACTION_ENC_BTN_1_LONG_PRESS },
         { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_ENC_BTN_2, INPUT_ACTION_ENC_BTN_2_LONG_PRESS },
-        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_BTN_1, INPUT_ACTION_BTN_1_LONG_PRESS },
-        { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_BTN_2, INPUT_ACTION_BTN_2_LONG_PRESS },
-        { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3, INPUT_ACTION_BTN_3_LONG_PRESS },
-        { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_BTN_4, INPUT_ACTION_BTN_4_LONG_PRESS },
+        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_BTN_1 },
+        { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },
+        { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3 },
+        { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_DISPLAY_MODE_NEXT },
     };
 
     const uint32_t num_buttons = sizeof(buttons) / sizeof(buttons[0]);
@@ -148,6 +148,7 @@ void app_start(void) {
         //     draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
         // }
 
+        scope_renderer_draw_run_stop(&app_state);
         scope_renderer_draw_display_mode(&app_state);
         scope_renderer_draw_sample_rate(&app_state);
 

@@ -345,6 +345,29 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
     s_group_has_previous = true;
 }
 
+void scope_renderer_draw_run_stop(app_state_t *state) {
+    if (state == NULL) return;
+    if (state->running == state->last_running && !state->needs_update) return;
+    state->last_running = state->running;
+
+
+    const font_def_t *font = &Font_7x10;
+    const uint16_t color = state->running ? COLOR_GREEN : COLOR_RED;
+    const uint16_t width = font->width * 5;
+    const uint16_t height = 14;
+    const uint16_t x = st7789_width() - width;
+    const uint16_t ty = (height - font->height) / 2 + 1;
+
+    gfx_fill_rect(x, 0, x + width - 1, height, color);
+    if (state->running) {
+        const uint16_t tx = x + (width - (font->width * 3)) / 2;
+        gfx_draw_text(tx, ty, "RUN", font, COLOR_BLACK, color);
+    } else {
+        const uint16_t tx = x + (width - (font->width * 4)) / 2;
+        gfx_draw_text(tx, ty, "STOP", font, COLOR_WHITE, color);
+    }
+}
+
 void scope_renderer_draw_display_mode(app_state_t *state) {
     if (state == NULL) return;
     if (state->display_mode == state->last_display_mode && !state->needs_update) return;
