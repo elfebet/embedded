@@ -12,17 +12,17 @@ static int32_t clamp_i32(int32_t value, int32_t min, int32_t max) {
     return value < min ? min : (value > max ? max : value);
 }
 
-void app_controls_init(scope_settings_t *settings) {
-    settings->display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;
-    settings->horizontal_knob_mode = HORIZONTAL_KNOB_TIME_DIV;
-    settings->vertical_knob_mode = VERTICAL_KNOB_VOLTS_DIV;
-    settings->time_div_index = DEFAULT_TIME_DIV_INDEX;
-    settings->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
-    settings->offset_y = 0;
-    settings->running = true;
-}
+// void app_controls_init(scope_settings_t *settings) {
+//     settings->display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;
+//     settings->horizontal_knob_mode = HORIZONTAL_KNOB_TIME_DIV;
+//     settings->vertical_knob_mode = VERTICAL_KNOB_VOLTS_DIV;
+//     settings->time_div_index = DEFAULT_TIME_DIV_INDEX;
+//     settings->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
+//     settings->offset_y = 0;
+//     settings->running = true;
+// }
 
-void app_controls_handle(scope_settings_t *settings, const input_events_t *events) {
+void app_controls_handle(app_state_t *state, const input_events_t *events) {
     if (events->action_triggered[INPUT_ACTION_BTN_1]) {
         logger("BTN_1 pressed");
     }
@@ -72,48 +72,44 @@ void app_controls_handle(scope_settings_t *settings, const input_events_t *event
 
 /*
     if (events->action_triggered[INPUT_ACTION_RUN_STOP_TOGGLE]) {
-        settings->running = !settings->running;
+        state->running = !state->running;
     }
     if (events->action_triggered[INPUT_ACTION_DISPLAY_MODE_NEXT]) {
-        settings->display_mode = settings->display_mode == SCOPE_WAVE_DISPLAY_HI_RES
+        state->display_mode = state->display_mode == SCOPE_WAVE_DISPLAY_HI_RES
                                      ? SCOPE_WAVE_DISPLAY_SAMPLE
-                                     : (scope_wave_display_mode_t)(settings->display_mode + 1);
+                                     : (scope_wave_display_mode_t)(state->display_mode + 1);
     }
     if (events->action_triggered[INPUT_ACTION_HORIZONTAL_KNOB_CLICK]) {
-        settings->horizontal_knob_mode =
-            (horizontal_knob_mode_t)((settings->horizontal_knob_mode + 1) % HORIZONTAL_KNOB_MODE_COUNT);
+        state->horizontal_knob_mode =
+            (horizontal_knob_mode_t)((state->horizontal_knob_mode + 1) % HORIZONTAL_KNOB_MODE_COUNT);
     }
     if (events->action_triggered[INPUT_ACTION_VERTICAL_KNOB_CLICK]) {
-        settings->vertical_knob_mode =
-            (vertical_knob_mode_t)((settings->vertical_knob_mode + 1) % VERTICAL_KNOB_MODE_COUNT);
+        state->vertical_knob_mode =
+            (vertical_knob_mode_t)((state->vertical_knob_mode + 1) % VERTICAL_KNOB_MODE_COUNT);
     }
 
     const int32_t horizontal_delta = events->value_delta[INPUT_VALUE_HORIZONTAL_KNOB];
-    switch (settings->horizontal_knob_mode) {
+    switch (state->horizontal_knob_mode) {
     case HORIZONTAL_KNOB_TIME_DIV:
-        settings->time_div_index = (uint8_t)clamp_i32(
-            (int32_t)settings->time_div_index + horizontal_delta, 0, TIME_DIV_STEPS - 1);
+        state->time_div_index = (uint8_t)clamp_i32(
+            (int32_t)state->time_div_index + horizontal_delta, 0, TIME_DIV_STEPS - 1);
         break;
     default:
         break;
     }
 
     const int32_t vertical_delta = events->value_delta[INPUT_VALUE_VERTICAL_KNOB];
-    switch (settings->vertical_knob_mode) {
+    switch (state->vertical_knob_mode) {
     case VERTICAL_KNOB_VOLTS_DIV:
-        settings->volts_div_index = (uint8_t)clamp_i32(
-            (int32_t)settings->volts_div_index + vertical_delta, 0, VOLTS_DIV_STEPS - 1);
+        state->volts_div_index = (uint8_t)clamp_i32(
+            (int32_t)state->volts_div_index + vertical_delta, 0, VOLTS_DIV_STEPS - 1);
         break;
     case VERTICAL_KNOB_OFFSET_Y:
-        settings->offset_y = (int16_t)clamp_i32(
-            (int32_t)settings->offset_y + vertical_delta, -OFFSET_Y_LIMIT, OFFSET_Y_LIMIT);
+        state->offset_y = (int16_t)clamp_i32(
+            (int32_t)state->offset_y + vertical_delta, -OFFSET_Y_LIMIT, OFFSET_Y_LIMIT);
         break;
     default:
         break;
     }
 */
-}
-
-const char *app_controls_vertical_knob_label(const scope_settings_t *settings) {
-    return settings->vertical_knob_mode == VERTICAL_KNOB_OFFSET_Y ? "Y-pos" : "V/div";
 }
