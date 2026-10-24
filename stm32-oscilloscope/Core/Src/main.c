@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app.h"
-#include "logger.h"
+#include "dwt_timer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,7 +87,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  logger_reset_timer();
+  dwt_reset_timer();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/

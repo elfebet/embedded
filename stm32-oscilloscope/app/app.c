@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "dwt_timer.h"
 
 #define TARGET_FPS 120
 #define STATUS_HEIGHT 24
@@ -128,17 +129,17 @@ void app_start(void) {
     }
 
     // To limit the rendering time to TARGET_FPS
-    uint32_t last_frame_cycles = logger_get_time(); // for calculate curent FPS
+    uint32_t last_frame_cycles = dwt_get_time(); // for calculate curent FPS
     const uint32_t frame_interval_cycles = SystemCoreClock / TARGET_FPS; // preferred fPS
 
     // FPS
     uint32_t current_fps = 0;
     uint32_t frames_in_window = 0; // for measuring and displaying FPS
-    uint32_t fps_window_start_cycles = logger_get_time(); // time interval for displaying the FPS label: once per second
+    uint32_t fps_window_start_cycles = dwt_get_time(); // time interval for displaying the FPS label: once per second
     uint64_t wave_render_cycles = 0;
 
     while (1) {
-        const uint32_t now_cycles = logger_get_time();
+        const uint32_t now_cycles = dwt_get_time();
         if (now_cycles - last_frame_cycles < frame_interval_cycles) {
             continue;
         }
@@ -162,20 +163,20 @@ void app_start(void) {
                 Error_Handler();
             }
 
-            uint32_t stage_start_cycles = logger_get_time();
+            uint32_t stage_start_cycles = dwt_get_time();
             scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, settings.display_mode);
-            wave_render_cycles += logger_get_time() - stage_start_cycles;
+            wave_render_cycles += dwt_get_time() - stage_start_cycles;
         }
 
         ++frames_in_window;
 
-        const uint32_t fps_now_cycles = logger_get_time();
+        const uint32_t fps_now_cycles = dwt_get_time();
         const uint32_t elapsed_cycles = fps_now_cycles - fps_window_start_cycles;
         if (elapsed_cycles >= SystemCoreClock) {
             current_fps = (uint32_t)(((uint64_t)frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
             draw_status(current_fps, adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
 
-            const uint32_t avg_wave_redner_us = cycles_to_us(wave_render_cycles / frames_in_window);
+            const uint32_t avg_wave_redner_us = dwt_cycles_to_us(wave_render_cycles / frames_in_window);
             logger("FPS:%lu Render:%lu us", current_fps, avg_wave_redner_us);
 
             frames_in_window = 0;
