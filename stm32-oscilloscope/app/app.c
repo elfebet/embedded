@@ -23,24 +23,17 @@
 
 #define ADC_SNAPSHOT_SIZE  512U
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
-
 static app_state_t app_state;
-static scope_settings_t settings;
 
 static void draw_status(uint32_t adc_avg) {
     char status_text[32];
-    snprintf(status_text, sizeof(status_text), "SR:%luHz %s", scope_adc_sample_rate(),
-             app_controls_vertical_knob_label(&settings));
-    gfx_fill_rect(0, 0, st7789_width() - 1, STATUS_HEIGHT - 1, COLOR_BLACK);
-    gfx_draw_text(0, 0, status_text, &Font_7x10, COLOR_WHITE, COLOR_BLACK);
-
     const float pin7_mv = (float)adc_avg * (float)app_state.adc_vdda_mv / ADC_MAX_CODE;
     const float vin_mv = (FRONTEND_ZERO_RATIO * (float)app_state.adc_vdda_mv - pin7_mv) / FRONTEND_GAIN;
     const int32_t vin = (int32_t)(vin_mv >= 0.0f ? vin_mv + 0.5f : vin_mv - 0.5f);
     const int32_t vin_abs = vin < 0 ? -vin : vin;
     snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
              adc_avg, (long)pin7_mv, vin < 0 ? '-' : '+', (long)(vin_abs / 1000), (long)(vin_abs % 1000));
-    gfx_draw_text(0, 11, status_text, &Font_7x10, COLOR_WHITE, COLOR_BLACK);
+    gfx_draw_text(0, 20, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
 }
 
 static uint32_t adc_average(const uint16_t *samples, uint32_t count) {
@@ -73,7 +66,7 @@ void adc_init() {
         .adc = &hadc1,
         .tim = &htim2,
     };
-    scope_adc_init(&adc_data, ADC_DEFAULT_SAMPLE_RATE_HZ);
+    scope_adc_init(&adc_data, app_state.sample_rate_hz);
 
     if (scope_adc_measure_vdda_mv(&app_state.adc_vdda_mv) != HAL_OK) {
         logger("Failed to measure VDDA using Vrefint");
@@ -113,11 +106,10 @@ void controls_init(void) {
         logger("Failed to init encoders");
         Error_Handler();
     }
-
-    app_controls_init(&settings);
 }
 
 void app_start(void) {
+    app_state_init(&app_state);
     display_init();
     controls_init();
     adc_init();
@@ -149,14 +141,18 @@ void app_start(void) {
         app_input_poll();
         app_input_take_events(&input_events);
 
-        const vertical_knob_mode_t previous_vertical_mode = settings.vertical_knob_mode;
-        app_controls_handle(&settings, &input_events);
+        // const vertical_knob_mode_t previous_vertical_mode = settings.vertical_knob_mode;
+        app_controls_handle(&app_state, &input_events);
 
-        if (settings.vertical_knob_mode != previous_vertical_mode) {
-            draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
-        }
+        // if (settings.vertical_knob_mode != previous_vertical_mode) {
+        //     draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
+        // }
 
-        if (settings.running) {
+        scope_renderer_draw_display_mode(&app_state);
+        scope_renderer_draw_sample_rate(&app_state);
+
+
+        if (app_state.running) {
             const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
             if (copy_status != HAL_OK) {
                 logger("Failed to copy adc buffer");
@@ -164,7 +160,7 @@ void app_start(void) {
             }
 
             uint32_t stage_start_cycles = dwt_get_time();
-            scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, settings.display_mode);
+            scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             wave_render_cycles += dwt_get_time() - stage_start_cycles;
         }
 
@@ -184,5 +180,7 @@ void app_start(void) {
             wave_render_cycles = 0;
             fps_window_start_cycles = fps_now_cycles;
         }
+
+        app_state.needs_update = 0;
     }
 }
