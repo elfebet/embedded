@@ -16,25 +16,26 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "dwt_timer.h"
+#include "app_state.h"
 
 #define TARGET_FPS 120
 #define STATUS_HEIGHT 24
 
 #define ADC_SNAPSHOT_SIZE  512U
-
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
-static uint32_t adc_vdda_mv;
+
+static app_state_t app_state;
 static scope_settings_t settings;
 
-static void draw_status(uint32_t fps, uint32_t adc_avg) {
+static void draw_status(uint32_t adc_avg) {
     char status_text[32];
-    snprintf(status_text, sizeof(status_text), "FPS:%lu SR:%luHz %s", fps, scope_adc_sample_rate(),
+    snprintf(status_text, sizeof(status_text), "SR:%luHz %s", scope_adc_sample_rate(),
              app_controls_vertical_knob_label(&settings));
     gfx_fill_rect(0, 0, st7789_width() - 1, STATUS_HEIGHT - 1, COLOR_BLACK);
     gfx_draw_text(0, 0, status_text, &Font_7x10, COLOR_WHITE, COLOR_BLACK);
 
-    const float pin7_mv = (float)adc_avg * (float)adc_vdda_mv / ADC_MAX_CODE;
-    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)adc_vdda_mv - pin7_mv) / FRONTEND_GAIN;
+    const float pin7_mv = (float)adc_avg * (float)app_state.adc_vdda_mv / ADC_MAX_CODE;
+    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)app_state.adc_vdda_mv - pin7_mv) / FRONTEND_GAIN;
     const int32_t vin = (int32_t)(vin_mv >= 0.0f ? vin_mv + 0.5f : vin_mv - 0.5f);
     const int32_t vin_abs = vin < 0 ? -vin : vin;
     snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
@@ -74,12 +75,12 @@ void adc_init() {
     };
     scope_adc_init(&adc_data, ADC_DEFAULT_SAMPLE_RATE_HZ);
 
-    if (scope_adc_measure_vdda_mv(&adc_vdda_mv) != HAL_OK) {
+    if (scope_adc_measure_vdda_mv(&app_state.adc_vdda_mv) != HAL_OK) {
         logger("Failed to measure VDDA using Vrefint");
         Error_Handler();
     }
-    logger("Measured VDDA: %lumV", adc_vdda_mv);
-    scope_renderer_set_vdda_mv(adc_vdda_mv);
+    logger("Measured VDDA: %lumV", app_state.adc_vdda_mv);
+    scope_renderer_set_vdda_mv(app_state.adc_vdda_mv);
 
     if (ADC_SNAPSHOT_SIZE >= ADC_DMA_BUFFER_SIZE) {
         logger("ADC_SNAPSHOT_SIZE must be less than ADC_DMA_BUFFER_SIZE");
@@ -133,7 +134,6 @@ void app_start(void) {
     const uint32_t frame_interval_cycles = SystemCoreClock / TARGET_FPS; // preferred fPS
 
     // FPS
-    uint32_t current_fps = 0;
     uint32_t frames_in_window = 0; // for measuring and displaying FPS
     uint32_t fps_window_start_cycles = dwt_get_time(); // time interval for displaying the FPS label: once per second
     uint64_t wave_render_cycles = 0;
@@ -153,7 +153,7 @@ void app_start(void) {
         app_controls_handle(&settings, &input_events);
 
         if (settings.vertical_knob_mode != previous_vertical_mode) {
-            draw_status(current_fps, adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
+            draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
         }
 
         if (settings.running) {
@@ -173,11 +173,12 @@ void app_start(void) {
         const uint32_t fps_now_cycles = dwt_get_time();
         const uint32_t elapsed_cycles = fps_now_cycles - fps_window_start_cycles;
         if (elapsed_cycles >= SystemCoreClock) {
-            current_fps = (uint32_t)(((uint64_t)frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
-            draw_status(current_fps, adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
+            app_state.fps = (uint32_t)(((uint64_t)frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
+            scope_renderer_draw_fps(&app_state);
+            draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
 
             const uint32_t avg_wave_redner_us = dwt_cycles_to_us(wave_render_cycles / frames_in_window);
-            logger("FPS:%lu Render:%lu us", current_fps, avg_wave_redner_us);
+            logger("FPS:%lu Render:%lu us", app_state.fps, avg_wave_redner_us);
 
             frames_in_window = 0;
             wave_render_cycles = 0;

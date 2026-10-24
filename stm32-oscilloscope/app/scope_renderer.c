@@ -2,16 +2,20 @@
 
 #include "colors.h"
 #include "config.h"
+#include "fonts.h"
 #include "gfx.h"
+#include "gfx_text.h"
 #include "st7789_driver.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #define SCOPE_GRID_COLOR       0x39E7 // 60, 60, 60
 #define SCOPE_GRID_AXIS_COLOR  COLOR_WHITE
 #define SCOPE_WAVE_COLOR       COLOR_GREEN
 #define SCOPE_BG_COLOR         COLOR_BLACK
+#define SCOPE_TEXT_COLOR       COLOR_WHITE
 #define SCOPE_GROUP_MAX_WIDTH  4U
 
 // For detect the grid position and redraw to right color (wave or grid color)
@@ -338,4 +342,14 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
 
     // позначаємо що є попередній кадр
     s_group_has_previous = true;
+}
+
+void scope_renderer_draw_fps(app_state_t *app_state) {
+    if (app_state == NULL) return;
+    if (app_state->fps == app_state->last_fps && !app_state->needs_update) return;
+    app_state->last_fps = app_state->fps;
+
+    char fps_text[10];
+    snprintf(fps_text, sizeof(fps_text), "FPS:%-4d", app_state->fps);
+    gfx_draw_text(0, st7789_height()-10, fps_text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
