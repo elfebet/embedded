@@ -18,10 +18,6 @@
 #include "dwt_timer.h"
 #include "app_state.h"
 
-#define TARGET_FPS 120
-#define STATUS_HEIGHT 24
-
-#define ADC_SNAPSHOT_SIZE  1000U
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static app_state_t app_state;
 
@@ -33,7 +29,7 @@ static void draw_status(uint32_t adc_avg) {
     const int32_t vin_abs = vin < 0 ? -vin : vin;
     snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
              adc_avg, (long)pin7_mv, vin < 0 ? '-' : '+', (long)(vin_abs / 1000), (long)(vin_abs % 1000));
-    gfx_draw_text(0, 20, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
+    gfx_draw_text(0, 25, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
 }
 
 static uint32_t adc_average(const uint16_t *samples, uint32_t count) {
@@ -150,8 +146,8 @@ void app_start(void) {
 
         scope_renderer_draw_run_stop(&app_state);
         scope_renderer_draw_display_mode(&app_state);
+        scope_renderer_draw_time_div(&app_state);
         scope_renderer_draw_sample_rate(&app_state);
-
 
         if (app_state.running) {
             const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);

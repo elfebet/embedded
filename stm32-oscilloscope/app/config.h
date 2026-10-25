@@ -13,17 +13,23 @@
 #define GFX_MAX_BUFFER_FONT_WIDTH  20U
 #define GFX_MAX_BUFFER_FONT_HEIGHT 28U
 
+#define TARGET_FPS 120
+
 // Inputs (buttons, encoders, etc.)
 #define APP_INPUT_MAX_BUTTONS   8U
 #define APP_INPUT_MAX_ENCODERS  4U
 
 // ADC configuration parameters
-#define ADC_MAX_CODE               4095U
-#define ADC_DMA_BUFFER_SIZE        4096U // units for uint16_t
-#define ADC_MIN_SAMPLE_RATE_HZ     10U
-#define ADC_MAX_SAMPLE_RATE_HZ     500000U
-#define ADC_DEFAULT_SAMPLE_RATE_HZ 1000U
-#define SCOPE_INPUT_MAX_MV         5000U
+#define ADC_MAX_CODE         4095U
+#define ADC_DMA_BUFFER_SIZE  4096U // units for uint16_t
+#define ADC_SNAPSHOT_SIZE    1000U
+#define ADC_GRID_H_DIVS      10U
+#define ADC_GRID_V_DIVS      8U
+
+#define ADC_MIN_SAMPLE_RATE_HZ       10U
+#define ADC_MAX_SAMPLE_RATE_HZ       500000U
+#define ADC_PREFERRED_SAMPLE_RATE_HZ 5000U
+#define SCOPE_INPUT_MAX_MV           5000U
 
 /*
 =========== USB ===========

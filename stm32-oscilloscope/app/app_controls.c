@@ -1,18 +1,17 @@
 #include "app_controls.h"
+#include "app_state.h"
 #include "input_events.h"
 #include "logger.h"
 #include <stddef.h>
 
 // Placeholder ranges: time/div and V/div are not applied to the scope yet.
-#define TIME_DIV_STEPS 12
 #define VOLTS_DIV_STEPS 6
-#define DEFAULT_TIME_DIV_INDEX 6
 #define DEFAULT_VOLTS_DIV_INDEX 3
 #define OFFSET_Y_LIMIT 100
 
-static int32_t clamp_i32(int32_t value, int32_t min, int32_t max) {
-    return value < min ? min : (value > max ? max : value);
-}
+// static int32_t clamp_i32(int32_t value, int32_t min, int32_t max) {
+//     return value < min ? min : (value > max ? max : value);
+// }
 
 // void app_controls_init(scope_settings_t *settings) {
 //     settings->horizontal_knob_mode = HORIZONTAL_KNOB_TIME_DIV;
@@ -55,7 +54,7 @@ void app_controls_handle(app_state_t *state, const input_events_t *events) {
 
     const int32_t horizontal_delta = events->value_delta[INPUT_VALUE_HORIZONTAL_KNOB];
     if (horizontal_delta != 0) {
-        logger("HORIZONTAL_KNOB moved: %ld", (long)horizontal_delta);
+        state->time_div_index = app_state_next_time_div(state, horizontal_delta);
     }
     const int32_t vertical_delta = events->value_delta[INPUT_VALUE_VERTICAL_KNOB];
     if (vertical_delta != 0) {
