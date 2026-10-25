@@ -39,9 +39,18 @@ static uint16_t s_group_sample_y[SCOPE_GRID_WIDTH];
 static uint16_t s_group_pixels[SCOPE_GROUP_MAX_WIDTH * SCOPE_GRID_HEIGHT];
 static bool s_group_has_previous;
 
+typedef struct {
+    uint8_t fps;
+    uint32_t sample_rate_hz;
+    scope_wave_display_mode_t display_mode;
+    uint8_t time_div_index;
+    bool running;
+} drawn_values_t;
+
 static uint32_t s_vdda_mv;
 static char s_text_buf[32];
 static char s_subtext_buf[16];
+static drawn_values_t s_drawn_values;
 
 static inline uint16_t rounded_average(uint32_t sum, uint32_t count) {
     return (uint16_t)((sum + count / 2) / count);
@@ -347,10 +356,10 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
     s_group_has_previous = true;
 }
 
-void scope_renderer_draw_run_stop(app_state_t *state) {
+void scope_renderer_draw_run_stop(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->running == state->last_running && !state->needs_update) return;
-    state->last_running = state->running;
+    if (state->running == s_drawn_values.running && !state->needs_update) return;
+    s_drawn_values.running = state->running;
 
     const font_def_t *font = &Font_7x10;
     const uint16_t color = state->running ? COLOR_GREEN : COLOR_RED;
@@ -369,30 +378,40 @@ void scope_renderer_draw_run_stop(app_state_t *state) {
     }
 }
 
-void scope_renderer_draw_display_mode(app_state_t *state) {
+void scope_renderer_draw_display_mode(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->display_mode == state->last_display_mode && !state->needs_update) return;
-    state->last_display_mode = state->display_mode;
+    if (state->display_mode == s_drawn_values.display_mode && !state->needs_update) return;
+    s_drawn_values.display_mode = state->display_mode;
 
     const char *mode = app_state_display_mode_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Mode:%-10s", mode);
     gfx_draw_text(0, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
-void scope_renderer_draw_sample_rate(app_state_t *state) {
+void scope_renderer_draw_time_div(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->sample_rate_hz == state->last_sample_rate_hz && !state->needs_update) return;
-    state->last_sample_rate_hz = state->sample_rate_hz;
+    if (state->time_div_index == s_drawn_values.time_div_index && !state->needs_update) return;
+    s_drawn_values.time_div_index = state->time_div_index;
+
+    const char *time_div = app_state_time_div_label(state);
+    snprintf(s_text_buf, sizeof(s_text_buf), "Time/div:%-10s", time_div);
+    gfx_draw_text(0, 12, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+}
+
+void scope_renderer_draw_sample_rate(const app_state_t *state) {
+    if (state == NULL) return;
+    if (state->sample_rate_hz == s_drawn_values.sample_rate_hz && !state->needs_update) return;
+    s_drawn_values.sample_rate_hz = state->sample_rate_hz;
 
     snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%luHz", state->sample_rate_hz);
     snprintf(s_text_buf, sizeof(s_text_buf), "SR:%-12s", s_subtext_buf);
     gfx_draw_text(st7789_width()/2, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
-void scope_renderer_draw_fps(app_state_t *state) {
+void scope_renderer_draw_fps(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->fps == state->last_fps && !state->needs_update) return;
-    state->last_fps = state->fps;
+    if (state->fps == s_drawn_values.fps && !state->needs_update) return;
+    s_drawn_values.fps = state->fps;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", state->fps);
     gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
