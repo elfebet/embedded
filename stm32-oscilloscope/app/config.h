@@ -19,10 +19,11 @@
 
 // ADC configuration parameters
 #define ADC_MAX_CODE               4095U
-#define ADC_DMA_BUFFER_SIZE        2048U // units for uint16_t
+#define ADC_DMA_BUFFER_SIZE        4096U // units for uint16_t
 #define ADC_MIN_SAMPLE_RATE_HZ     10U
 #define ADC_MAX_SAMPLE_RATE_HZ     500000U
 #define ADC_DEFAULT_SAMPLE_RATE_HZ 1000U
+// #define ADC_DEFAULT_SAMPLE_RATE_HZ 280U
 #define SCOPE_INPUT_MAX_MV         5000U
 
 /*

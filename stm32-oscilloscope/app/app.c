@@ -21,7 +21,7 @@
 #define TARGET_FPS 120
 #define STATUS_HEIGHT 24
 
-#define ADC_SNAPSHOT_SIZE  512U
+#define ADC_SNAPSHOT_SIZE  1000U
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static app_state_t app_state;
 

@@ -350,7 +350,6 @@ void scope_renderer_draw_run_stop(app_state_t *state) {
     if (state->running == state->last_running && !state->needs_update) return;
     state->last_running = state->running;
 
-
     const font_def_t *font = &Font_7x10;
     const uint16_t color = state->running ? COLOR_GREEN : COLOR_RED;
     const uint16_t width = font->width * 5;
