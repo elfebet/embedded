@@ -30,10 +30,6 @@ typedef struct {
         int16_t offset_y;
     bool running;
 
-
-    // previous values
-    uint32_t last_sample_rate_hz; // for switch in app
-
         // // todo
         // vertical_knob_mode_t last_vertical_knob_mode;
 
@@ -48,3 +44,4 @@ const char *app_state_vertical_knob_label(const app_state_t *state);
 
 uint8_t app_state_next_time_div(const app_state_t *state, int8_t delta); // -1 or +1
 const char *app_state_time_div_label(const app_state_t *state);
+uint32_t app_state_time_div_sample_rate_hz(const app_state_t *state);

@@ -92,3 +92,10 @@ const char *app_state_time_div_label(const app_state_t *state) {
     }
     return "";
 }
+
+uint32_t app_state_time_div_sample_rate_hz(const app_state_t *state) {
+    if (state->time_div_index < TIME_DIV_MODES_COUNT) {
+        return time_div_table[state->time_div_index].sample_rate_hz;
+    }
+    return state->sample_rate_hz;
+}

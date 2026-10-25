@@ -80,7 +80,7 @@ void adc_init() {
 void controls_init(void) {
     const button_input_data_t buttons[] = {
         { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_ENC_BTN_1, INPUT_ACTION_ENC_BTN_1_LONG_PRESS },
-        { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_ENC_BTN_2, INPUT_ACTION_ENC_BTN_2_LONG_PRESS },
+        { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_NONE },
         { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_BTN_1 },
         { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },
         { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3 },
@@ -94,12 +94,21 @@ void controls_init(void) {
     }
 
     const encoder_input_data_t s_encoders[] = {
-        { &htim3, INPUT_VALUE_HORIZONTAL_KNOB },
-        { &htim4, INPUT_VALUE_VERTICAL_KNOB },
+        { &htim3, INPUT_VALUE_VERTICAL_KNOB },
+        { &htim4, INPUT_VALUE_HORIZONTAL_KNOB },
     };
     const uint32_t num_encoders = sizeof(s_encoders) / sizeof(s_encoders[0]);
     if (app_input_encoders_init(s_encoders, num_encoders) != HAL_OK) {
         logger("Failed to init encoders");
+        Error_Handler();
+    }
+}
+
+void update_sample_rate_if_needed(void) {
+    if (app_state.sample_rate_hz == scope_adc_sample_rate()) return;
+
+    if (scope_adc_set_sample_rate(app_state.sample_rate_hz) != HAL_OK) {
+        logger("Failed to set sample rate");
         Error_Handler();
     }
 }
@@ -139,6 +148,7 @@ void app_start(void) {
 
         // const vertical_knob_mode_t previous_vertical_mode = settings.vertical_knob_mode;
         app_controls_handle(&app_state, &input_events);
+        update_sample_rate_if_needed();
 
         // if (settings.vertical_knob_mode != previous_vertical_mode) {
         //     draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));

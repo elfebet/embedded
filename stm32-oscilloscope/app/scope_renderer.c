@@ -117,24 +117,6 @@ static uint16_t grid_background_color(uint16_t screen_x, uint16_t screen_y) {
     }
 }
 
-void scope_renderer_draw_grid_test(void) {
-    uint16_t iter=0;
-    for (int i=0; i < SCOPE_GRID_WIDTH; i += 2) {
-        gfx_draw_line(SCOPE_GRID_X+i, SCOPE_GRID_Y, SCOPE_GRID_X+i, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT, SCOPE_GRID_COLOR);
-        ++iter;
-    }
-    for (int i=0; i < SCOPE_GRID_HEIGHT; i +=2) {
-        gfx_draw_line(SCOPE_GRID_X, SCOPE_GRID_Y+i, SCOPE_GRID_X+SCOPE_GRID_WIDTH, SCOPE_GRID_Y+i, SCOPE_GRID_COLOR);
-        ++iter;
-    }
-    //  55 ітерацій = 118 FPS
-    //  74 ітерацій = 89 FPS
-    // 110 ітерацій = 60 FPS
-    // 150 ітерацій = 42 FPS
-    // 180 ітерацій = 38 FPS
-    // 220 ітерацій = 30 FPS
-}
-
 static uint16_t sample_to_y(uint16_t sample) {
     if (sample > ADC_MAX_CODE) sample = ADC_MAX_CODE;
 
