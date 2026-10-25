@@ -40,6 +40,8 @@ static uint16_t s_group_pixels[SCOPE_GROUP_MAX_WIDTH * SCOPE_GRID_HEIGHT];
 static bool s_group_has_previous;
 
 static uint32_t s_vdda_mv;
+static char s_text_buf[32];
+static char s_subtext_buf[16];
 
 static inline uint16_t rounded_average(uint32_t sum, uint32_t count) {
     return (uint16_t)((sum + count / 2) / count);
@@ -373,10 +375,8 @@ void scope_renderer_draw_display_mode(app_state_t *state) {
     state->last_display_mode = state->display_mode;
 
     const char *mode = app_state_display_mode_label(state);
-
-    char text[16];
-    snprintf(text, sizeof(text), "Mode:%-10s", mode);
-    gfx_draw_text(0, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    snprintf(s_text_buf, sizeof(s_text_buf), "Mode:%-10s", mode);
+    gfx_draw_text(0, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
 void scope_renderer_draw_sample_rate(app_state_t *state) {
@@ -384,11 +384,9 @@ void scope_renderer_draw_sample_rate(app_state_t *state) {
     if (state->sample_rate_hz == state->last_sample_rate_hz && !state->needs_update) return;
     state->last_sample_rate_hz = state->sample_rate_hz;
 
-    char temp[10];
-    snprintf(temp, sizeof(temp), "%luHz", state->sample_rate_hz);
-    char text[16];
-    snprintf(text, sizeof(text), "SR:%-12s", temp);
-    gfx_draw_text(st7789_width()/2, 0, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%luHz", state->sample_rate_hz);
+    snprintf(s_text_buf, sizeof(s_text_buf), "SR:%-12s", s_subtext_buf);
+    gfx_draw_text(st7789_width()/2, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
 void scope_renderer_draw_fps(app_state_t *state) {
@@ -396,7 +394,6 @@ void scope_renderer_draw_fps(app_state_t *state) {
     if (state->fps == state->last_fps && !state->needs_update) return;
     state->last_fps = state->fps;
 
-    char fps_text[10];
-    snprintf(fps_text, sizeof(fps_text), "FPS:%-4d", state->fps);
-    gfx_draw_text(0, st7789_height()-10, fps_text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", state->fps);
+    gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
