@@ -167,6 +167,7 @@ void app_start(void) {
             }
 
             uint32_t stage_start_cycles = dwt_get_time();
+            // scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             wave_render_cycles += dwt_get_time() - stage_start_cycles;
         }

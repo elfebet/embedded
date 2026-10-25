@@ -385,7 +385,19 @@ void scope_renderer_draw_sample_rate(const app_state_t *state) {
     if (state->sample_rate_hz == s_drawn_values.sample_rate_hz && !state->needs_update) return;
     s_drawn_values.sample_rate_hz = state->sample_rate_hz;
 
-    snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%luHz", state->sample_rate_hz);
+    const uint32_t hz = state->sample_rate_hz;
+    if (hz >= 1000000) {
+        snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%.1fMHz", (double)hz / 1000000.0);
+    } else if (hz >= 1000) {
+        if (hz % 1000 == 0) {
+            snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%lukHz", hz / 1000);
+        } else {
+            snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%.1fkHz", (double)hz / 1000.0);
+        }
+    } else {
+        snprintf(s_subtext_buf, sizeof(s_subtext_buf), "%luHz", hz);
+    }
+
     snprintf(s_text_buf, sizeof(s_text_buf), "SR:%-12s", s_subtext_buf);
     gfx_draw_text(st7789_width()/2, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
