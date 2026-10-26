@@ -29,7 +29,7 @@ static void draw_status(uint32_t adc_avg) {
     const int32_t vin_abs = vin < 0 ? -vin : vin;
     snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
              adc_avg, (long)pin7_mv, vin < 0 ? '-' : '+', (long)(vin_abs / 1000), (long)(vin_abs % 1000));
-    gfx_draw_text(0, 25, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
+    gfx_draw_text(70, st7789_height() - 12, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
 }
 
 static uint32_t adc_average(const uint16_t *samples, uint32_t count) {
@@ -79,9 +79,9 @@ void adc_init() {
 
 void controls_init(void) {
     const button_input_data_t buttons[] = {
-        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_ENC_BTN_1, INPUT_ACTION_ENC_BTN_1_LONG_PRESS },
+        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_VERTICAL_KNOB_MODE, INPUT_ACTION_RESET_OFFSET_Y },
         { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_NONE },
-        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_BTN_1 },
+        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_RESET },
         { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },
         { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3 },
         { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_DISPLAY_MODE_NEXT },
@@ -146,24 +146,23 @@ void app_start(void) {
         app_input_poll();
         app_input_take_events(&input_events);
 
-        // const vertical_knob_mode_t previous_vertical_mode = settings.vertical_knob_mode;
         app_controls_handle(&app_state, &input_events);
         update_sample_rate_if_needed();
 
-        // if (settings.vertical_knob_mode != previous_vertical_mode) {
-        //     draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
-        // }
-
         scope_renderer_draw_run_stop(&app_state);
-        scope_renderer_draw_display_mode(&app_state);
+        const bool display_mode_changed = scope_renderer_draw_display_mode(&app_state);
         scope_renderer_draw_time_div(&app_state);
         scope_renderer_draw_sample_rate(&app_state);
+        scope_renderer_draw_vertical(&app_state);
+        const bool vertical_changed = scope_renderer_update_vertical(&app_state);
 
-        if (app_state.running) {
-            const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
-            if (copy_status != HAL_OK) {
-                logger("Failed to copy adc buffer");
-                Error_Handler();
+        if (app_state.running || vertical_changed || display_mode_changed) {
+            if (app_state.running) {
+                const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
+                if (copy_status != HAL_OK) {
+                    logger("Failed to copy adc buffer");
+                    Error_Handler();
+                }
             }
 
             uint32_t stage_start_cycles = dwt_get_time();
