@@ -69,7 +69,6 @@ void adc_init() {
         Error_Handler();
     }
     logger("Measured VDDA: %lumV", app_state.adc_vdda_mv);
-    scope_renderer_set_vdda_mv(app_state.adc_vdda_mv);
 
     if (ADC_SNAPSHOT_SIZE >= ADC_DMA_BUFFER_SIZE) {
         logger("ADC_SNAPSHOT_SIZE must be less than ADC_DMA_BUFFER_SIZE");
@@ -119,8 +118,7 @@ void app_start(void) {
     controls_init();
     adc_init();
 
-    scope_renderer_fill_background();
-    scope_renderer_draw_grid();
+    scope_renderer_reinit(app_state.adc_vdda_mv);
     if (scope_adc_start() != HAL_OK) {
         logger("Failed to start adc");
         Error_Handler();

@@ -53,21 +53,28 @@ typedef struct {
     bool running;
 } drawn_labels_t;
 
-static uint32_t s_vdda_mv;
-
-static uint32_t s_volts_div_mv = 1000;
-static int32_t s_offset_y_mv;
-static bool s_vertical_applied;
+typedef struct {
+    uint32_t vdda_mv;
+    uint32_t volts_div_mv;
+    int32_t offset_y_mv;
+    bool vertical_applied;
+} scope_renderer_config_t;
 
 static char s_text_buf[32];
 static char s_subtext_buf[16];
 static drawn_labels_t s_drawn_labels;
+static scope_renderer_config_t s_config;
 
 static inline uint16_t rounded_average(uint32_t sum, uint32_t count) {
     return (uint16_t)((sum + count / 2) / count);
 }
 
 void scope_renderer_clear_buffers(void) {
+    memset(s_grid_columns, 0, sizeof(s_grid_columns));
+    memset(s_grid_rows, 0, sizeof(s_grid_rows));
+    s_axis_x = 0;
+    s_axis_y = 0;
+
     memset(s_previous_top, 0, sizeof(s_previous_top));
     memset(s_previous_bottom, 0, sizeof(s_previous_bottom));
     memset(s_column_pixels, 0, sizeof(s_column_pixels));
@@ -82,18 +89,7 @@ void scope_renderer_clear_buffers(void) {
     s_group_has_previous = false;
 }
 
-void scope_renderer_fill_background(void) {
-    scope_renderer_clear_buffers();
-    gfx_fill_screen(SCOPE_BG_COLOR);
-}
-
-void scope_renderer_set_vdda_mv(uint32_t vdda_mv) {
-    s_vdda_mv = vdda_mv;
-}
-
 void scope_renderer_draw_grid(void) {
-    scope_renderer_clear_buffers();
-
     const uint16_t right = SCOPE_GRID_X + SCOPE_GRID_WIDTH - 1;
     const uint16_t bottom = SCOPE_GRID_Y + SCOPE_GRID_HEIGHT - 1;
 
@@ -131,14 +127,26 @@ static uint16_t grid_background_color(uint16_t screen_x, uint16_t screen_y) {
 static uint16_t sample_to_y(uint16_t sample) {
     if (sample > ADC_MAX_CODE) sample = ADC_MAX_CODE;
 
-    const float sample_mv = (float)sample * (float)s_vdda_mv / ADC_MAX_CODE;
-    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)s_vdda_mv - sample_mv) / FRONTEND_GAIN;
+    const float sample_mv = (float)sample * (float)s_config.vdda_mv / ADC_MAX_CODE;
+    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)s_config.vdda_mv - sample_mv) / FRONTEND_GAIN;
     const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - (vin_mv + (float)s_offset_y_mv) * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
+    float y = center_y - (vin_mv + (float)s_config.offset_y_mv) * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_config.volts_div_mv);
 
     if (y < 0.0f) y = 0.0f;
     if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
     return SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
+}
+
+void scope_renderer_reinit(uint32_t vdda_mv) {
+    scope_renderer_clear_buffers();
+    memset(&s_text_buf, 0, sizeof(s_text_buf));
+    memset(&s_subtext_buf, 0, sizeof(s_subtext_buf));
+    memset(&s_drawn_labels, 0, sizeof(s_drawn_labels));
+    memset(&s_config, 0, sizeof(s_config));
+
+    s_config.vdda_mv = vdda_mv;
+    gfx_fill_screen(SCOPE_BG_COLOR);
+    scope_renderer_draw_grid();
 }
 
 // ----------------- DRAW WAVE -----------------
@@ -393,7 +401,7 @@ static void draw_ground_marker(void) {
     gfx_fill_rect(x1, SCOPE_GRID_Y - 4, x2, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT-1 + 4, SCOPE_BG_COLOR);
 
     const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - (float)s_offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
+    float y = center_y - (float)s_config.offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_config.volts_div_mv);
     if (y < 0.0f) y = 0.0f;
     if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
     const uint16_t posY = SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
@@ -409,11 +417,11 @@ static void draw_ground_marker(void) {
 bool scope_renderer_update_vertical(const app_state_t *state) {
     if (state == NULL) return false;
     const uint32_t volts_div_mv = app_state_volts_div_mv(state);
-    if (s_vertical_applied && volts_div_mv == s_volts_div_mv && state->offset_y_mv == s_offset_y_mv) return false;
+    if (s_config.vertical_applied && volts_div_mv == s_config.volts_div_mv && state->offset_y_mv == s_config.offset_y_mv) return false;
 
-    s_vertical_applied = true;
-    s_volts_div_mv = volts_div_mv;
-    s_offset_y_mv = state->offset_y_mv;
+    s_config.vertical_applied = true;
+    s_config.volts_div_mv = volts_div_mv;
+    s_config.offset_y_mv = state->offset_y_mv;
 
     scope_renderer_erase_wave();
     scope_renderer_erase_wave_grouped();
