@@ -19,6 +19,9 @@
 #define SCOPE_TEXT_COLOR       COLOR_WHITE
 #define SCOPE_GROUP_MAX_WIDTH  4U
 
+#define SCOPE_MARKER_COLOR     COLOR_RED
+#define SCOPE_MARKER_WIDTH     10U
+
 // For detect the grid position and redraw to right color (wave or grid color)
 // This is faster than calculating the grid position mathematically
 static bool s_grid_columns[SCOPE_GRID_WIDTH];
@@ -129,6 +132,55 @@ static uint16_t sample_to_y(uint16_t sample) {
     return SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
 }
 
+static void draw_ground_marker(void) {
+    const uint16_t x1 = SCOPE_GRID_X - SCOPE_MARKER_WIDTH;
+    const uint16_t x2 = SCOPE_GRID_X - 2;
+    gfx_fill_rect(x1, SCOPE_GRID_Y - 4, x2, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT-1 + 4, SCOPE_BG_COLOR);
+
+    const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
+    float y = center_y - (float)s_offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
+    if (y < 0.0f) y = 0.0f;
+    if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
+    const uint16_t posY = SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
+
+    for (uint16_t i = 0; i < 4; ++i) {
+        gfx_draw_line(x1 + i, posY - (3 - i), x1 + i, posY + (3 - i), SCOPE_MARKER_COLOR);
+    }
+    gfx_draw_line(x1 + 4, posY, x2, posY, SCOPE_MARKER_COLOR);
+}
+
+bool scope_renderer_update_vertical(const app_state_t *state) {
+    if (state == NULL) return false;
+    const uint32_t volts_div_mv = app_state_volts_div_mv(state);
+    if (s_vertical_applied && volts_div_mv == s_volts_div_mv && state->offset_y_mv == s_offset_y_mv) return false;
+
+    s_vertical_applied = true;
+    s_volts_div_mv = volts_div_mv;
+    s_offset_y_mv = state->offset_y_mv;
+
+    scope_renderer_erase_wave();
+    scope_renderer_erase_wave_grouped();
+    draw_ground_marker();
+
+    return true;
+}
+
+void scope_renderer_erase_wave(void) {
+    if (!s_wave_has_previous) return;
+
+    for (uint16_t x = 0; x < SCOPE_GRID_WIDTH; ++x) {
+        const uint16_t top = s_previous_top[x];
+        const uint16_t bottom = s_previous_bottom[x];
+        const uint16_t screen_x = SCOPE_GRID_X + x;
+        for (uint16_t y = top; y <= bottom; ++y) {
+            s_column_pixels[y - top] = grid_background_color(screen_x, y);
+        }
+        st7789_set_window(screen_x, top, screen_x, bottom);
+        st7789_write_pixels(s_column_pixels, (uint32_t)bottom - top + 1);
+    }
+    s_wave_has_previous = false;
+}
+
 void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
     if (samples == NULL || sample_count == 0U) return;
 
@@ -205,6 +257,22 @@ void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, sc
     }
 
     s_wave_has_previous = true;
+}
+
+void scope_renderer_erase_wave_grouped(void) {
+    if (!s_group_has_previous) return;
+
+    for (uint16_t x = 0; x < SCOPE_GRID_WIDTH; ++x) {
+        const uint16_t top = s_group_previous_top[x];
+        const uint16_t bottom = s_group_previous_bottom[x];
+        const uint16_t screen_x = SCOPE_GRID_X + x;
+        for (uint16_t y = top; y <= bottom; ++y) {
+            s_group_pixels[y - top] = grid_background_color(screen_x, y);
+        }
+        st7789_set_window(screen_x, top, screen_x, bottom);
+        st7789_write_pixels(s_group_pixels, (uint32_t)bottom - top + 1);
+    }
+    s_group_has_previous = false;
 }
 
 static void prepare_grouped_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
