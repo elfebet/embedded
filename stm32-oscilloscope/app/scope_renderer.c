@@ -40,17 +40,16 @@ static uint16_t s_group_pixels[SCOPE_GROUP_MAX_WIDTH * SCOPE_GRID_HEIGHT];
 static bool s_group_has_previous;
 
 typedef struct {
-    uint8_t fps;
     uint32_t sample_rate_hz;
     scope_wave_display_mode_t display_mode;
     uint8_t time_div_index;
     bool running;
-} drawn_values_t;
+} drawn_labels_t;
 
 static uint32_t s_vdda_mv;
 static char s_text_buf[32];
 static char s_subtext_buf[16];
-static drawn_values_t s_drawn_values;
+static drawn_labels_t s_drawn_labels;
 
 static inline uint16_t rounded_average(uint32_t sum, uint32_t count) {
     return (uint16_t)((sum + count / 2) / count);
@@ -340,8 +339,8 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
 
 void scope_renderer_draw_run_stop(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->running == s_drawn_values.running && !state->needs_update) return;
-    s_drawn_values.running = state->running;
+    if (state->running == s_drawn_labels.running && !state->needs_update) return;
+    s_drawn_labels.running = state->running;
 
     const font_def_t *font = &Font_7x10;
     const uint16_t color = state->running ? COLOR_GREEN : COLOR_RED;
@@ -360,20 +359,21 @@ void scope_renderer_draw_run_stop(const app_state_t *state) {
     }
 }
 
-void scope_renderer_draw_display_mode(const app_state_t *state) {
-    if (state == NULL) return;
-    if (state->display_mode == s_drawn_values.display_mode && !state->needs_update) return;
-    s_drawn_values.display_mode = state->display_mode;
+bool scope_renderer_draw_display_mode(const app_state_t *state) {
+    if (state == NULL) return false;
+    if (state->display_mode == s_drawn_labels.display_mode && !state->needs_update) return false;
+    s_drawn_labels.display_mode = state->display_mode;
 
     const char *mode = app_state_display_mode_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Mode:%-10s", mode);
     gfx_draw_text(0, 0, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    return true;
 }
 
 void scope_renderer_draw_time_div(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->time_div_index == s_drawn_values.time_div_index && !state->needs_update) return;
-    s_drawn_values.time_div_index = state->time_div_index;
+    if (state->time_div_index == s_drawn_labels.time_div_index && !state->needs_update) return;
+    s_drawn_labels.time_div_index = state->time_div_index;
 
     const char *time_div = app_state_time_div_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Time/div:%-10s", time_div);
@@ -382,8 +382,8 @@ void scope_renderer_draw_time_div(const app_state_t *state) {
 
 void scope_renderer_draw_sample_rate(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->sample_rate_hz == s_drawn_values.sample_rate_hz && !state->needs_update) return;
-    s_drawn_values.sample_rate_hz = state->sample_rate_hz;
+    if (state->sample_rate_hz == s_drawn_labels.sample_rate_hz && !state->needs_update) return;
+    s_drawn_labels.sample_rate_hz = state->sample_rate_hz;
 
     const uint32_t hz = state->sample_rate_hz;
     if (hz >= 1000000) {
@@ -404,8 +404,8 @@ void scope_renderer_draw_sample_rate(const app_state_t *state) {
 
 void scope_renderer_draw_fps(const app_state_t *state) {
     if (state == NULL) return;
-    if (state->fps == s_drawn_values.fps && !state->needs_update) return;
-    s_drawn_values.fps = state->fps;
+    if (state->fps == s_drawn_labels.fps && !state->needs_update) return;
+    s_drawn_labels.fps = state->fps;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", state->fps);
     gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
