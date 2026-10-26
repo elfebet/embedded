@@ -24,24 +24,23 @@ typedef struct {
     scope_wave_display_mode_t display_mode;
     uint8_t time_div_index;
 
-        // todo
-        vertical_knob_mode_t vertical_knob_mode;
-        uint8_t volts_div_index;
-        int16_t offset_y;
+    vertical_knob_mode_t vertical_knob_mode;
+    uint8_t volts_div_index;
+    int32_t offset_y_mv; // vertical position of the trace in mV
+
     bool running;
-
-        // // todo
-        // vertical_knob_mode_t last_vertical_knob_mode;
-
-    // flag indicating that all values need to be updated
-    uint8_t needs_update;
+    uint8_t needs_update; // flag indicating that all values need to be updated
 } app_state_t;
 
 void app_state_init(app_state_t *state);
 
 const char *app_state_display_mode_label(const app_state_t *state);
-const char *app_state_vertical_knob_label(const app_state_t *state);
 
 uint8_t app_state_next_time_div(const app_state_t *state, int8_t delta); // -1 or +1
 const char *app_state_time_div_label(const app_state_t *state);
 uint32_t app_state_time_div_sample_rate_hz(const app_state_t *state);
+
+uint8_t app_state_next_volts_div(const app_state_t *state, int8_t delta); // -1 or +1
+const char *app_state_volts_div_label(const app_state_t *state);
+uint32_t app_state_volts_div_mv(const app_state_t *state);
+int32_t app_state_next_offset_mv(const app_state_t *state, int8_t delta); // -1 or +1
