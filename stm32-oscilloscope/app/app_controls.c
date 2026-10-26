@@ -32,10 +32,12 @@ void app_controls_handle(app_state_t *state, const input_events_t *events) {
         state->offset_y_mv = 0;
     }
 
-    const int32_t horizontal_delta = events->value_delta[INPUT_VALUE_HORIZONTAL_KNOB];
-    if (horizontal_delta != 0) {
-        state->time_div_index = app_state_next_time_div(state, horizontal_delta);
-        state->sample_rate_hz = app_state_time_div_sample_rate_hz(state);
+    if (state->running) {
+        const int32_t horizontal_delta = events->value_delta[INPUT_VALUE_HORIZONTAL_KNOB];
+        if (horizontal_delta != 0) {
+            state->time_div_index = app_state_next_time_div(state, horizontal_delta);
+            state->sample_rate_hz = app_state_time_div_sample_rate_hz(state);
+        }
     }
     const int32_t vertical_delta = events->value_delta[INPUT_VALUE_VERTICAL_KNOB];
     if (vertical_delta != 0) {
