@@ -113,7 +113,7 @@ int32_t app_state_next_offset_mv(const app_state_t *state, int8_t delta) {
 
 uint8_t app_state_next_time_div(const app_state_t *state, int8_t delta) {
     uint8_t index = state->time_div_index;
-    uint8_t next_index = (uint8_t)clamp_i32((int32_t)index + delta, 0, TIME_DIV_MODES_COUNT - 1);
+    uint8_t next_index = (uint8_t)clamp_i32((int32_t)index - delta, 0, TIME_DIV_MODES_COUNT - 1);
     uint32_t sample_rate = time_div_table[next_index].sample_rate_hz;
     if (sample_rate >= ADC_MIN_SAMPLE_RATE_HZ && sample_rate <= ADC_MAX_SAMPLE_RATE_HZ) {
         return next_index;
