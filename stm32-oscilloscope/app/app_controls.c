@@ -7,20 +7,19 @@
 void app_controls_handle(app_state_t *state, const input_events_t *events) {
     if (state == NULL || events == NULL) return;
 
+    if (events->action_triggered[INPUT_ACTION_RESET]) {
+        state->reseting = true;
+    }
     if (events->action_triggered[INPUT_ACTION_RUN_STOP_TOGGLE]) {
         // run/stop toggle
         state->running = !state->running;
     }
+    if (events->action_triggered[INPUT_ACTION_BTN_3]) {
+        logger("BTN_3 pressed");
+    }
     if (events->action_triggered[INPUT_ACTION_DISPLAY_MODE_NEXT]) {
         // switch display mode
         state->display_mode = (state->display_mode + 1) % SCOPE_WAVE_DISPLAY_MODE_COUNT;
-    }
-
-    if (events->action_triggered[INPUT_ACTION_BTN_1]) {
-        logger("BTN_1 pressed");
-    }
-    if (events->action_triggered[INPUT_ACTION_BTN_3]) {
-        logger("BTN_3 pressed");
     }
 
     if (events->action_triggered[INPUT_ACTION_VERTICAL_KNOB_MODE]) {

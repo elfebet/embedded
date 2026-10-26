@@ -66,6 +66,7 @@ uint8_t find_time_div_index_by_sample_rate(uint32_t target_rate_hz) {
 void app_state_init(app_state_t *state) {
     state->needs_update = 1;
     state->running = true;
+    state->reseting = false;
     state->fps = 0;
     state->adc_vdda_mv = 0;
     state->display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;

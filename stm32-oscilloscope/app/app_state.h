@@ -28,6 +28,7 @@ typedef struct {
     uint8_t volts_div_index;
     int32_t offset_y_mv; // vertical position of the trace in mV
 
+    bool reseting;
     bool running;
     uint8_t needs_update; // flag indicating that all values need to be updated
 } app_state_t;
