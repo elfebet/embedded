@@ -45,11 +45,20 @@ static bool s_group_has_previous;
 typedef struct {
     uint32_t sample_rate_hz;
     scope_wave_display_mode_t display_mode;
+    vertical_knob_mode_t vertical_knob_mode;
+    int32_t offset_y_mv;
+    uint8_t volts_div_index;
     uint8_t time_div_index;
+    uint8_t fps;
     bool running;
 } drawn_labels_t;
 
 static uint32_t s_vdda_mv;
+
+static uint32_t s_volts_div_mv = 1000;
+static int32_t s_offset_y_mv;
+static bool s_vertical_applied;
+
 static char s_text_buf[32];
 static char s_subtext_buf[16];
 static drawn_labels_t s_drawn_labels;
@@ -125,45 +134,14 @@ static uint16_t sample_to_y(uint16_t sample) {
     const float sample_mv = (float)sample * (float)s_vdda_mv / ADC_MAX_CODE;
     const float vin_mv = (FRONTEND_ZERO_RATIO * (float)s_vdda_mv - sample_mv) / FRONTEND_GAIN;
     const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - vin_mv * (SCOPE_GRID_HEIGHT - 1) / (2.0f * SCOPE_INPUT_MAX_MV);
+    float y = center_y - (vin_mv + (float)s_offset_y_mv) * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
 
     if (y < 0.0f) y = 0.0f;
     if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
     return SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
 }
 
-static void draw_ground_marker(void) {
-    const uint16_t x1 = SCOPE_GRID_X - SCOPE_MARKER_WIDTH;
-    const uint16_t x2 = SCOPE_GRID_X - 2;
-    gfx_fill_rect(x1, SCOPE_GRID_Y - 4, x2, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT-1 + 4, SCOPE_BG_COLOR);
-
-    const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - (float)s_offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
-    if (y < 0.0f) y = 0.0f;
-    if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
-    const uint16_t posY = SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
-
-    for (uint16_t i = 0; i < 4; ++i) {
-        gfx_draw_line(x1 + i, posY - (3 - i), x1 + i, posY + (3 - i), SCOPE_MARKER_COLOR);
-    }
-    gfx_draw_line(x1 + 4, posY, x2, posY, SCOPE_MARKER_COLOR);
-}
-
-bool scope_renderer_update_vertical(const app_state_t *state) {
-    if (state == NULL) return false;
-    const uint32_t volts_div_mv = app_state_volts_div_mv(state);
-    if (s_vertical_applied && volts_div_mv == s_volts_div_mv && state->offset_y_mv == s_offset_y_mv) return false;
-
-    s_vertical_applied = true;
-    s_volts_div_mv = volts_div_mv;
-    s_offset_y_mv = state->offset_y_mv;
-
-    scope_renderer_erase_wave();
-    scope_renderer_erase_wave_grouped();
-    draw_ground_marker();
-
-    return true;
-}
+// ----------------- DRAW WAVE -----------------
 
 void scope_renderer_erase_wave(void) {
     if (!s_wave_has_previous) return;
@@ -258,6 +236,8 @@ void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, sc
 
     s_wave_has_previous = true;
 }
+
+// ----------------- DRAW GROUPED WAVE -----------------
 
 void scope_renderer_erase_wave_grouped(void) {
     if (!s_group_has_previous) return;
@@ -405,6 +385,45 @@ void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_c
     s_group_has_previous = true;
 }
 
+// ----------------- DRAW GROUND MARKER -----------------
+
+static void draw_ground_marker(void) {
+    const uint16_t x1 = SCOPE_GRID_X - SCOPE_MARKER_WIDTH;
+    const uint16_t x2 = SCOPE_GRID_X - 2;
+    gfx_fill_rect(x1, SCOPE_GRID_Y - 4, x2, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT-1 + 4, SCOPE_BG_COLOR);
+
+    const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
+    float y = center_y - (float)s_offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_volts_div_mv);
+    if (y < 0.0f) y = 0.0f;
+    if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
+    const uint16_t posY = SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
+
+    for (uint16_t i = 0; i < 4; ++i) {
+        gfx_draw_line(x1 + i, posY - (3 - i), x1 + i, posY + (3 - i), SCOPE_MARKER_COLOR);
+    }
+    gfx_draw_line(x1 + 4, posY, x2, posY, SCOPE_MARKER_COLOR);
+}
+
+// ----------------- UPDATE VERTICAL DIV AND OFFSET  -----------------
+
+bool scope_renderer_update_vertical(const app_state_t *state) {
+    if (state == NULL) return false;
+    const uint32_t volts_div_mv = app_state_volts_div_mv(state);
+    if (s_vertical_applied && volts_div_mv == s_volts_div_mv && state->offset_y_mv == s_offset_y_mv) return false;
+
+    s_vertical_applied = true;
+    s_volts_div_mv = volts_div_mv;
+    s_offset_y_mv = state->offset_y_mv;
+
+    scope_renderer_erase_wave();
+    scope_renderer_erase_wave_grouped();
+    draw_ground_marker();
+
+    return true;
+}
+
+// ----------------- DRAW LABELS -----------------
+
 void scope_renderer_draw_run_stop(const app_state_t *state) {
     if (state == NULL) return;
     if (state->running == s_drawn_labels.running && !state->needs_update) return;
@@ -446,6 +465,11 @@ void scope_renderer_draw_time_div(const app_state_t *state) {
     const char *time_div = app_state_time_div_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Time/div:%-10s", time_div);
     gfx_draw_text(0, 12, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+
+    gfx_draw_text(0, 24, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    gfx_draw_text(0, 36, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+    gfx_draw_text(0, 48, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+
 }
 
 void scope_renderer_draw_sample_rate(const app_state_t *state) {
@@ -477,4 +501,28 @@ void scope_renderer_draw_fps(const app_state_t *state) {
 
     snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", state->fps);
     gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+}
+
+void scope_renderer_draw_vertical(const app_state_t *state) {
+    if (state == NULL) return;
+    if (state->volts_div_index == s_drawn_labels.volts_div_index
+        && state->offset_y_mv == s_drawn_labels.offset_y_mv
+        && state->vertical_knob_mode == s_drawn_labels.vertical_knob_mode
+        && !state->needs_update) return;
+    s_drawn_labels.volts_div_index = state->volts_div_index;
+    s_drawn_labels.offset_y_mv = state->offset_y_mv;
+    s_drawn_labels.vertical_knob_mode = state->vertical_knob_mode;
+
+    // the parameter controlled by the knob is highlighted
+    const bool volts_active = state->vertical_knob_mode == VERTICAL_KNOB_VOLTS_DIV;
+    snprintf(s_text_buf, sizeof(s_text_buf), "V/div:%-6s", app_state_volts_div_label(state));
+    gfx_draw_text(st7789_width() / 2, 12, s_text_buf, &Font_7x10,
+                  volts_active ? COLOR_YELLOW : SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
+
+    const int32_t offset = state->offset_y_mv;
+    const int32_t offset_abs = offset < 0 ? -offset : offset;
+    snprintf(s_text_buf, sizeof(s_text_buf), "Y:%c%ld.%02ldV ", offset < 0 ? '-' : '+',
+             (long)(offset_abs / 1000), (long)((offset_abs % 1000) / 10));
+    gfx_draw_text(st7789_width() / 2 + 77, 12, s_text_buf, &Font_7x10,
+                  volts_active ? SCOPE_TEXT_COLOR : COLOR_YELLOW, SCOPE_BG_COLOR);
 }

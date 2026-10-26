@@ -21,8 +21,11 @@ void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, sc
 void scope_renderer_erase_wave_grouped(void);
 void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode);
 
+bool scope_renderer_update_vertical(const app_state_t *state); // true if the grid was reset and the wave must be redrawn
+
 void scope_renderer_draw_run_stop(const app_state_t *state);
 bool scope_renderer_draw_display_mode(const app_state_t *state); // true if mode changed and the wave must be redrawn
 void scope_renderer_draw_time_div(const app_state_t *state);
 void scope_renderer_draw_sample_rate(const app_state_t *state);
 void scope_renderer_draw_fps(const app_state_t *state);
+void scope_renderer_draw_vertical(const app_state_t *state);
