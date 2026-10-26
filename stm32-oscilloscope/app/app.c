@@ -78,7 +78,7 @@ void adc_init() {
 
 void controls_init(void) {
     const button_input_data_t buttons[] = {
-        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_VERTICAL_KNOB_MODE, INPUT_ACTION_RESET_OFFSET_Y },
+        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_VERTICAL_KNOB_MODE, INPUT_ACTION_RESET_VERTICAL_POSITION },
         { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_NONE },
         { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_RESET },
         { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },

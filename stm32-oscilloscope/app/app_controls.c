@@ -28,9 +28,9 @@ void app_controls_handle(app_state_t *state, const input_events_t *events) {
         // switch knob mode: V/div <-> Y-pos
         state->vertical_knob_mode = (state->vertical_knob_mode + 1) % VERTICAL_KNOB_MODE_COUNT;
     }
-    if (events->action_triggered[INPUT_ACTION_RESET_OFFSET_Y]) {
-        // zero the vertical offset
-        state->offset_y_mv = 0;
+    if (events->action_triggered[INPUT_ACTION_RESET_VERTICAL_POSITION]) {
+        // zero the vertical position
+        state->v_position_cdiv = 0;
     }
 
     if (state->running) {
@@ -43,9 +43,10 @@ void app_controls_handle(app_state_t *state, const input_events_t *events) {
     const int32_t vertical_delta = events->value_delta[INPUT_VALUE_VERTICAL_KNOB];
     if (vertical_delta != 0) {
         if (state->vertical_knob_mode == VERTICAL_KNOB_VOLTS_DIV) {
+            // the 0V marker keeps its screen position, only the scale changes around it
             state->volts_div_index = app_state_next_volts_div(state, vertical_delta);
         } else {
-            state->offset_y_mv = app_state_next_offset_mv(state, vertical_delta);
+            state->v_position_cdiv = app_state_next_v_position_cdiv(state, vertical_delta);
         }
     }
 }

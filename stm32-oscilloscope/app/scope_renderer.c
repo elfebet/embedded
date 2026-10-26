@@ -54,7 +54,7 @@ typedef struct {
     uint32_t sample_rate_hz;
     scope_wave_display_mode_t display_mode;
     vertical_knob_mode_t vertical_knob_mode;
-    int32_t offset_y_mv;
+    int32_t v_position_cdiv;
     uint8_t volts_div_index;
     uint8_t time_div_index;
     uint8_t fps;
@@ -65,7 +65,7 @@ typedef struct {
 typedef struct {
     uint32_t vdda_mv;
     uint32_t volts_div_mv;
-    int32_t offset_y_mv;
+    int32_t v_position_cdiv;
     bool vertical_applied;
 } scope_renderer_config_t;
 
@@ -136,7 +136,8 @@ static uint16_t sample_to_y(uint16_t sample) {
     const float sample_mv = (float)sample * (float)s_config.vdda_mv / ADC_MAX_CODE;
     const float vin_mv = (FRONTEND_ZERO_RATIO * (float)s_config.vdda_mv - sample_mv) / FRONTEND_GAIN;
     const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - (vin_mv + (float)s_config.offset_y_mv) * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_config.volts_div_mv);
+    const float px_per_div = (float)(SCOPE_GRID_HEIGHT - 1) / (float)SCOPE_GRID_V_DIVS;
+    float y = center_y - px_per_div * ((float)vin_mv / s_config.volts_div_mv +  (float)s_config.v_position_cdiv / V_POSITION_DIV_SCALE);
 
     if (y < 0.0f) y = 0.0f;
     if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
@@ -407,7 +408,8 @@ static void draw_ground_marker(void) {
     gfx_fill_rect(x1, SCOPE_GRID_Y - 4, x2, SCOPE_GRID_Y+SCOPE_GRID_HEIGHT-1 + 4, SCOPE_BG_COLOR);
 
     const float center_y = (float)(SCOPE_GRID_HEIGHT / 2 - 1);
-    float y = center_y - (float)s_config.offset_y_mv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * (float)s_config.volts_div_mv);
+    float y = center_y - (float)s_config.v_position_cdiv * (SCOPE_GRID_HEIGHT - 1) / ((float)SCOPE_GRID_V_DIVS * V_POSITION_DIV_SCALE);
+
     if (y < 0.0f) y = 0.0f;
     if (y > SCOPE_GRID_HEIGHT - 1) y = SCOPE_GRID_HEIGHT - 1;
     const uint16_t posY = SCOPE_GRID_Y + (uint16_t)(y + 0.5f);
@@ -423,11 +425,11 @@ static void draw_ground_marker(void) {
 bool scope_renderer_update_vertical(const app_state_t *state) {
     if (state == NULL) return false;
     const uint32_t volts_div_mv = app_state_volts_div_mv(state);
-    if (s_config.vertical_applied && volts_div_mv == s_config.volts_div_mv && state->offset_y_mv == s_config.offset_y_mv) return false;
+    if (s_config.vertical_applied && volts_div_mv == s_config.volts_div_mv && state->v_position_cdiv == s_config.v_position_cdiv) return false;
 
     s_config.vertical_applied = true;
     s_config.volts_div_mv = volts_div_mv;
-    s_config.offset_y_mv = state->offset_y_mv;
+    s_config.v_position_cdiv = state->v_position_cdiv;
 
     scope_renderer_erase_wave();
     scope_renderer_erase_wave_grouped();
@@ -484,11 +486,11 @@ void scope_renderer_draw_time_div(const app_state_t *state) {
 void scope_renderer_draw_vertical(const app_state_t *state) {
     if (state == NULL) return;
     if (state->volts_div_index == s_drawn_labels.volts_div_index
-        && state->offset_y_mv == s_drawn_labels.offset_y_mv
+        && state->v_position_cdiv == s_drawn_labels.v_position_cdiv
         && state->vertical_knob_mode == s_drawn_labels.vertical_knob_mode
         && !state->needs_update) return;
     s_drawn_labels.volts_div_index = state->volts_div_index;
-    s_drawn_labels.offset_y_mv = state->offset_y_mv;
+    s_drawn_labels.v_position_cdiv = state->v_position_cdiv;
     s_drawn_labels.vertical_knob_mode = state->vertical_knob_mode;
 
     // the parameter controlled by the knob is highlighted
@@ -497,9 +499,12 @@ void scope_renderer_draw_vertical(const app_state_t *state) {
     snprintf(s_text_buf, sizeof(s_text_buf), "V/div:%-6s", app_state_volts_div_label(state));
     gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE3_Y, s_text_buf, &Font_7x10, volts_active ? COLOR_YELLOW : SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 
-    const int32_t offset = state->offset_y_mv;
-    const int32_t offset_abs = offset < 0 ? -offset : offset;
-    snprintf(s_text_buf, sizeof(s_text_buf), "Y:%c%ld.%02ldV ", offset < 0 ? '-' : '+', (long)(offset_abs / 1000), (long)((offset_abs % 1000) / 10));
+    const int32_t pos = state->v_position_cdiv;
+    const int32_t pos_abs = pos < 0 ? -pos : pos;
+    snprintf(s_text_buf, sizeof(s_text_buf), "VPos:%c%ld.%lddiv ",
+            pos < 0 ? '-' : '+',
+            pos_abs / V_POSITION_DIV_SCALE,
+            (pos_abs % V_POSITION_DIV_SCALE) / 10);
     gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE4_Y, s_text_buf, &Font_7x10, volts_active ? SCOPE_TEXT_COLOR : COLOR_YELLOW, SCOPE_BG_COLOR);
 }
 

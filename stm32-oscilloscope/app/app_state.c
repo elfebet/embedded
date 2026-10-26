@@ -12,7 +12,7 @@ typedef struct {
 } volts_div_t;
 
 #define DEFAULT_VOLTS_DIV_INDEX 4
-#define OFFSET_STEPS_PER_DIV 10 // one encoder click moves the trace by 1/10 div
+#define POSITION_STEPS_PER_DIV 10 // one encoder click moves the trace by 1/10 div
 
 // 1-2-5 sequence, 8 vertical divisions on screen
 static const volts_div_t volts_div_table[] = {
@@ -75,7 +75,7 @@ void app_state_init(app_state_t *state) {
     state->sample_rate_hz = time_div_table[state->time_div_index].sample_rate_hz;
     state->vertical_knob_mode = VERTICAL_KNOB_VOLTS_DIV;
     state->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
-    state->offset_y_mv = 0;
+    state->v_position_cdiv = 0;
 
     state->grouped_waves_draw_mode = state->last_grouped_waves_draw_mode = true;
 }
@@ -109,10 +109,10 @@ uint32_t app_state_volts_div_mv(const app_state_t *state) {
     return volts_div_table[state->volts_div_index < VOLTS_DIV_MODES_COUNT ? state->volts_div_index : 0].mv_per_div;
 }
 
-int32_t app_state_next_offset_mv(const app_state_t *state, int8_t delta) {
-    int32_t step = (int32_t)(app_state_volts_div_mv(state) / OFFSET_STEPS_PER_DIV);
-    int32_t offset_mv = state->offset_y_mv + delta * step;
-    return clamp_i32(offset_mv, -(int32_t)SCOPE_INPUT_MAX_MV, (int32_t)SCOPE_INPUT_MAX_MV);
+int32_t app_state_next_v_position_cdiv(const app_state_t *state, int8_t delta) {
+    int32_t limit = (int32_t)ADC_GRID_V_DIVS / 2 * V_POSITION_DIV_SCALE;
+    int32_t position = state->v_position_cdiv + delta * POSITION_STEPS_PER_DIV;
+    return clamp_i32(position, -limit, limit);
 }
 
 uint8_t app_state_next_time_div(const app_state_t *state, int8_t delta) {
