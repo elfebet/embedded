@@ -1,5 +1,6 @@
 #include "app_state.h"
 #include "config.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -75,6 +76,8 @@ void app_state_init(app_state_t *state) {
     state->vertical_knob_mode = VERTICAL_KNOB_VOLTS_DIV;
     state->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
     state->offset_y_mv = 0;
+
+    state->grouped_waves_draw_mode = state->last_grouped_waves_draw_mode = true;
 }
 
 const char *app_state_display_mode_label(const app_state_t *state) {

@@ -21,7 +21,9 @@ void app_controls_handle(app_state_t *state, const input_events_t *events) {
         // switch display mode
         state->display_mode = (state->display_mode + 1) % SCOPE_WAVE_DISPLAY_MODE_COUNT;
     }
-
+    if (events->action_triggered[INPUT_ACTION_WAVES_DRAW_MODE_NEXT]) {
+        state->grouped_waves_draw_mode = !state->grouped_waves_draw_mode;
+    }
     if (events->action_triggered[INPUT_ACTION_VERTICAL_KNOB_MODE]) {
         // switch knob mode: V/div <-> Y-pos
         state->vertical_knob_mode = (state->vertical_knob_mode + 1) % VERTICAL_KNOB_MODE_COUNT;

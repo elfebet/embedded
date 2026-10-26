@@ -31,6 +31,9 @@ typedef struct {
     bool reseting;
     bool running;
     uint8_t needs_update; // flag indicating that all values need to be updated
+
+    bool grouped_waves_draw_mode;
+    bool last_grouped_waves_draw_mode;
 } app_state_t;
 
 void app_state_init(app_state_t *state);

@@ -29,7 +29,7 @@ static void draw_status(uint32_t adc_avg) {
     const int32_t vin_abs = vin < 0 ? -vin : vin;
     snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
              adc_avg, (long)pin7_mv, vin < 0 ? '-' : '+', (long)(vin_abs / 1000), (long)(vin_abs % 1000));
-    gfx_draw_text(70, st7789_height() - 12, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
+    gfx_draw_text(60, st7789_height() - 12, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
 }
 
 static uint32_t adc_average(const uint16_t *samples, uint32_t count) {
@@ -83,7 +83,7 @@ void controls_init(void) {
         { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_RESET },
         { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },
         { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3 },
-        { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_DISPLAY_MODE_NEXT },
+        { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_DISPLAY_MODE_NEXT, INPUT_ACTION_WAVES_DRAW_MODE_NEXT },
     };
 
     const uint32_t num_buttons = sizeof(buttons) / sizeof(buttons[0]);
@@ -149,12 +149,13 @@ void app_start(void) {
 
         scope_renderer_draw_run_stop(&app_state);
         const bool display_mode_changed = scope_renderer_draw_display_mode(&app_state);
+        const bool waves_mode_changed = scope_renderer_draw_waves_mode(&app_state);
         scope_renderer_draw_time_div(&app_state);
         scope_renderer_draw_sample_rate(&app_state);
         scope_renderer_draw_vertical(&app_state);
         const bool vertical_changed = scope_renderer_update_vertical(&app_state);
 
-        if (app_state.running || vertical_changed || display_mode_changed) {
+        if (app_state.running || vertical_changed || display_mode_changed || waves_mode_changed) {
             if (app_state.running) {
                 const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
                 if (copy_status != HAL_OK) {
@@ -163,9 +164,18 @@ void app_start(void) {
                 }
             }
 
+            if (app_state.grouped_waves_draw_mode != app_state.last_grouped_waves_draw_mode) {
+                scope_renderer_erase_wave();
+                scope_renderer_erase_wave_grouped();
+                app_state.last_grouped_waves_draw_mode = app_state.grouped_waves_draw_mode;
+            }
+
             uint32_t stage_start_cycles = dwt_get_time();
-            // scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
-            scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
+            if (app_state.grouped_waves_draw_mode) {
+                scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
+            } else {
+                scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
+            }
             wave_render_cycles += dwt_get_time() - stage_start_cycles;
         }
 
