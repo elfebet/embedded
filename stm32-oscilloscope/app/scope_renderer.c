@@ -17,13 +17,13 @@
 #define SCOPE_WAVE_COLOR       COLOR_GREEN
 #define SCOPE_BG_COLOR         COLOR_BLACK
 #define SCOPE_TEXT_COLOR       COLOR_WHITE
-#define SCOPE_TEXT_BG_COLOR    COLOR_BROWN
+#define SCOPE_TEXT_BG_COLOR    COLOR_BLACK
 #define SCOPE_GROUP_MAX_WIDTH  4U
 
 #define SCOPE_MARKER_COLOR     COLOR_RED
 #define SCOPE_MARKER_WIDTH     10U
 
-#define TEXT_COLUMN1_X   0
+#define TEXT_COLUMN1_X   20
 #define TEXT_COLUMN2_X   160
 #define TEXT_LINE1_Y     0
 #define TEXT_LINE2_Y     12
@@ -447,6 +447,14 @@ bool scope_renderer_update_vertical(const app_state_t *state) {
 
 // ----------------- DRAW LABELS -----------------
 
+static inline void draw_label(uint16_t x, uint16_t y, const char *text) {
+    gfx_draw_text(x, y, text, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+}
+
+static inline void draw_active_label(uint16_t x, uint16_t y, const char *text, bool active) {
+    gfx_draw_text(x, y, text, &Font_7x10, active ? COLOR_YELLOW : SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+}
+
 void scope_renderer_draw_run_stop(const app_state_t *state) {
     if (state == NULL) return;
     if (state->running == s_drawn_labels.running && !state->needs_update) return;
@@ -476,7 +484,7 @@ bool scope_renderer_draw_display_mode(const app_state_t *state) {
 
     const char *mode = app_state_display_mode_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Mode:%-10s", mode);
-    gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE1_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_label(TEXT_COLUMN1_X, TEXT_LINE1_Y, s_text_buf);
     return true;
 }
 
@@ -487,7 +495,7 @@ void scope_renderer_draw_time_div(const app_state_t *state) {
 
     const char *time_div = app_state_time_div_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "Time/div:%-7s", time_div);
-    gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE2_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_label(TEXT_COLUMN1_X, TEXT_LINE2_Y, s_text_buf);
 }
 
 void scope_renderer_draw_vertical(const app_state_t *state) {
@@ -504,7 +512,7 @@ void scope_renderer_draw_vertical(const app_state_t *state) {
     const bool volts_active = state->vertical_knob_mode == VERTICAL_KNOB_VOLTS_DIV;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "V/div:%-6s", app_state_volts_div_label(state));
-    gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE3_Y, s_text_buf, &Font_7x10, volts_active ? COLOR_YELLOW : SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_active_label(TEXT_COLUMN1_X, TEXT_LINE3_Y, s_text_buf, volts_active);
 
     const int32_t pos = state->v_position_cdiv;
     const int32_t pos_abs = pos < 0 ? -pos : pos;
@@ -512,7 +520,7 @@ void scope_renderer_draw_vertical(const app_state_t *state) {
             pos < 0 ? '-' : '+',
             pos_abs / V_POSITION_DIV_SCALE,
             (pos_abs % V_POSITION_DIV_SCALE) / 10);
-    gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE4_Y, s_text_buf, &Font_7x10, volts_active ? SCOPE_TEXT_COLOR : COLOR_YELLOW, SCOPE_TEXT_BG_COLOR);
+    draw_active_label(TEXT_COLUMN1_X, TEXT_LINE4_Y, s_text_buf, !volts_active);
 }
 
 void scope_renderer_draw_sample_rate(const app_state_t *state) {
@@ -534,20 +542,19 @@ void scope_renderer_draw_sample_rate(const app_state_t *state) {
     }
 
     snprintf(s_text_buf, sizeof(s_text_buf), "SR:%-12s", s_subtext_buf);
-    gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE1_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_label(TEXT_COLUMN2_X, TEXT_LINE1_Y, s_text_buf);
 }
 
 void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics) {
     if (metrics == NULL) return;
-    // if (metrics->vdda_mv == s_drawn_labels.vdda_mv && !metrics->needs_update) return;
-    // s_drawn_labels.vdda_mv = metrics->vdda_mv;
 
     const int32_t mvpp = metrics->vin_max - metrics->vin_min;
     if (s_drawn_labels.vin_pp != mvpp) {
         s_drawn_labels.vin_pp = mvpp;
         const int32_t vmpp_abs = mvpp < 0 ? -mvpp : mvpp;
-        snprintf(s_text_buf, sizeof(s_text_buf), "Vpp: %c%ld.%03ldV", mvpp < 0 ? '-' : '+', (long)(vmpp_abs / 1000), (long)(vmpp_abs % 1000));
-        gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE2_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+        snprintf(s_text_buf, sizeof(s_text_buf), "Vpp: %c%ld.%03ldV",
+            mvpp < 0 ? '-' : '+', (long)(vmpp_abs / 1000), (long)(vmpp_abs % 1000));
+        draw_label(TEXT_COLUMN2_X, TEXT_LINE2_Y, s_text_buf);
     }
     if (s_drawn_labels.vin_max != metrics->vin_max && s_drawn_labels.vin_min != metrics->vin_min) {
         const int32_t vmax = metrics->vin_max;
@@ -560,20 +567,15 @@ void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics) {
         snprintf(s_text_buf, sizeof(s_text_buf), "Vmin:%c%ld.%ld Vmax:%c%ld.%ld",
             vmin < 0 ? '-' : '+', (long)(vmin_abs / 1000), (long)((vmin_abs / 100) % 10),
             vmax < 0 ? '-' : '+', (long)(vmax_abs / 1000), (long)((vmax_abs / 100) % 10));
-        gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE3_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+        draw_label(TEXT_COLUMN2_X, TEXT_LINE3_Y, s_text_buf);
     }
-    // if (s_drawn_labels.vin_min != metrics->vin_min) {
-    //     s_drawn_labels.vin_min = metrics->vin_min;
-    //     set_v_mv_subtext(s_drawn_labels.vin_min);
-    //     snprintf(s_text_buf, sizeof(s_text_buf), "Vmin:%-8s", s_subtext_buf);
-    //     gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE4_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
-    // }
     if (s_drawn_labels.vin_avg != metrics->vin_avg) {
         const int32_t vavg = metrics->vin_avg;
         s_drawn_labels.vin_avg = vavg;
         const int32_t vavg_abs = vavg < 0 ? -vavg : vavg;
-        snprintf(s_text_buf, sizeof(s_text_buf), "Vavg:%c%ld.%03ldV", vavg < 0 ? '-' : '+', (long)(vavg_abs / 1000), (long)(vavg_abs % 1000));
-        gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE4_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+        snprintf(s_text_buf, sizeof(s_text_buf), "Vavg:%c%ld.%03ldV",
+            vavg < 0 ? '-' : '+',(long)(vavg_abs / 1000), (long)(vavg_abs % 1000));
+        draw_label(TEXT_COLUMN2_X, TEXT_LINE4_Y, s_text_buf);
     }
 }
 
@@ -584,7 +586,7 @@ bool scope_renderer_draw_waves_mode(const app_state_t *state) {
 
     const char *mode = state->grouped_waves_draw_mode ? "Grouped" : "Normal";
     snprintf(s_text_buf, sizeof(s_text_buf), "%-8s", mode);
-    gfx_draw_text(st7789_width() - 50, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_label(st7789_width() - 50, st7789_height()-10, s_text_buf);
     return true;
 }
 
@@ -593,5 +595,5 @@ void scope_renderer_draw_fps(uint8_t fps) {
     s_drawn_labels.fps = fps;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", fps);
-    gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    draw_label(0, st7789_height()-10, s_text_buf);
 }
