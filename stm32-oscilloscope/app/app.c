@@ -17,9 +17,11 @@
 #include <stdio.h>
 #include "dwt_timer.h"
 #include "app_state.h"
+#include "app_profiler.h"
 
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static app_state_t app_state;
+static app_profiler_stats_t profiler_stats;
 
 static void draw_status(uint32_t adc_avg) {
     char status_text[32];
@@ -125,14 +127,10 @@ void app_start(void) {
     }
 
     // To limit the rendering time to TARGET_FPS
-    uint32_t last_frame_cycles = dwt_get_time(); // for calculate curent FPS
-    const uint32_t frame_interval_cycles = SystemCoreClock / TARGET_FPS; // preferred fPS
+    uint32_t last_frame_cycles = dwt_get_time();
+    const uint32_t frame_interval_cycles = SystemCoreClock / TARGET_FPS;
 
-    // FPS
-    uint32_t frames_in_window = 0; // for measuring and displaying FPS
-    uint32_t fps_window_start_cycles = dwt_get_time(); // time interval for displaying the FPS label: once per second
-    uint64_t wave_render_cycles = 0;
-
+    app_profiler_init();
     while (1) {
         const uint32_t now_cycles = dwt_get_time();
         if (now_cycles - last_frame_cycles < frame_interval_cycles) {
@@ -170,30 +168,23 @@ void app_start(void) {
                 app_state.last_grouped_waves_draw_mode = app_state.grouped_waves_draw_mode;
             }
 
-            uint32_t stage_start_cycles = dwt_get_time();
+            app_profiler_wave_render_begin();
             if (app_state.grouped_waves_draw_mode) {
                 scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             } else {
                 scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             }
-            wave_render_cycles += dwt_get_time() - stage_start_cycles;
+            app_profiler_wave_render_end();
         }
 
-        ++frames_in_window;
-
-        const uint32_t fps_now_cycles = dwt_get_time();
-        const uint32_t elapsed_cycles = fps_now_cycles - fps_window_start_cycles;
-        if (elapsed_cycles >= SystemCoreClock) {
-            app_state.fps = (uint32_t)(((uint64_t)frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
+        app_profiler_frame_end();
+        if (app_profiler_take_stats(&profiler_stats)) {
+            app_state.fps = profiler_stats.fps;
             scope_renderer_draw_fps(&app_state);
+
             draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
-
-            const uint32_t avg_wave_redner_us = dwt_cycles_to_us(wave_render_cycles / frames_in_window);
-            logger("FPS:%lu Render:%lu us", app_state.fps, avg_wave_redner_us);
-
-            frames_in_window = 0;
-            wave_render_cycles = 0;
-            fps_window_start_cycles = fps_now_cycles;
+            const uint32_t avg_wave_render_us = profiler_stats.avg_wave_render_us;
+            logger("FPS:%lu Render:%lu us", app_state.fps, avg_wave_render_us);
         }
 
         app_state.needs_update = 0;
