@@ -18,29 +18,12 @@
 #include "dwt_timer.h"
 #include "app_state.h"
 #include "app_profiler.h"
+#include "scope_stats.h"
 
 static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
 static app_state_t app_state;
+static adc_metrics_t adc_metrics;
 static app_profiler_stats_t profiler_stats;
-
-static void draw_status(uint32_t adc_avg) {
-    char status_text[32];
-    const float pin7_mv = (float)adc_avg * (float)app_state.adc_vdda_mv / ADC_MAX_CODE;
-    const float vin_mv = (FRONTEND_ZERO_RATIO * (float)app_state.adc_vdda_mv - pin7_mv) / FRONTEND_GAIN;
-    const int32_t vin = (int32_t)(vin_mv >= 0.0f ? vin_mv + 0.5f : vin_mv - 0.5f);
-    const int32_t vin_abs = vin < 0 ? -vin : vin;
-    snprintf(status_text, sizeof(status_text), "ADC:%lu P7:%ldmV Vin:%c%ld.%03ldV",
-             adc_avg, (long)pin7_mv, vin < 0 ? '-' : '+', (long)(vin_abs / 1000), (long)(vin_abs % 1000));
-    gfx_draw_text(60, st7789_height() - 12, status_text, &Font_7x10, COLOR_RED, COLOR_BLACK);
-}
-
-static uint32_t adc_average(const uint16_t *samples, uint32_t count) {
-    uint32_t sum = 0;
-    for (uint32_t i = 0; i < count; ++i) {
-        sum += samples[i];
-    }
-    return sum / count;
-}
 
 void display_init(void) {
     st7789_spi_connected_data_t spi_data = {
@@ -120,6 +103,7 @@ void app_start(void) {
     controls_init();
     adc_init();
 
+    scope_stats_reinit(app_state.adc_vdda_mv);
     scope_renderer_reinit(app_state.adc_vdda_mv);
     if (scope_adc_start() != HAL_OK) {
         logger("Failed to start adc");
@@ -175,13 +159,15 @@ void app_start(void) {
                 scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
             }
             app_profiler_wave_render_end();
+
+            if (scope_stats_update_periodic(adc_snapshot, ADC_SNAPSHOT_SIZE, &adc_metrics)) {
+                scope_renderer_draw_adc_vdda(&adc_metrics);
+            }
         }
 
         app_profiler_frame_end();
         if (app_profiler_take_stats(&profiler_stats)) {
             scope_renderer_draw_fps(profiler_stats.fps);
-
-            draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
             logger("FPS:%lu Render:%lu us", profiler_stats.fps, profiler_stats.avg_wave_render_us);
         }
 

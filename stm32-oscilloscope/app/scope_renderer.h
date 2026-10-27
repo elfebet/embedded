@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "config.h"
 #include "app_state.h"
+#include "scope_stats.h"
 
 #define SCOPE_GRID_H_DIVS  ADC_GRID_H_DIVS
 #define SCOPE_GRID_V_DIVS  ADC_GRID_V_DIVS
@@ -29,5 +30,6 @@ bool scope_renderer_draw_display_mode(const app_state_t *state); // true if mode
 void scope_renderer_draw_time_div(const app_state_t *state);
 void scope_renderer_draw_vertical(const app_state_t *state); // draw V/div, Vpos, active encoder action
 void scope_renderer_draw_sample_rate(const app_state_t *state);
+void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics);
 bool scope_renderer_draw_waves_mode(const app_state_t *state); // true if mode changed and the wave must be redrawn
 void scope_renderer_draw_fps(uint8_t fps);

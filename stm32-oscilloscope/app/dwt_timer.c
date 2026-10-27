@@ -26,3 +26,7 @@ uint32_t dwt_cycles_to_us(uint32_t cycles) {
 uint32_t dwt_cycles_to_ms(uint32_t cycles) {
     return (uint32_t)((uint64_t)cycles * 1000U / SystemCoreClock);
 }
+
+uint32_t dwt_ms_to_cycles(uint32_t ms) {
+    return (SystemCoreClock / 1000) * ms;
+}
