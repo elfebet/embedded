@@ -179,12 +179,10 @@ void app_start(void) {
 
         app_profiler_frame_end();
         if (app_profiler_take_stats(&profiler_stats)) {
-            app_state.fps = profiler_stats.fps;
-            scope_renderer_draw_fps(&app_state);
+            scope_renderer_draw_fps(profiler_stats.fps);
 
             draw_status(adc_average(adc_snapshot, ADC_SNAPSHOT_SIZE));
-            const uint32_t avg_wave_render_us = profiler_stats.avg_wave_render_us;
-            logger("FPS:%lu Render:%lu us", app_state.fps, avg_wave_render_us);
+            logger("FPS:%lu Render:%lu us", profiler_stats.fps, profiler_stats.avg_wave_render_us);
         }
 
         app_state.needs_update = 0;

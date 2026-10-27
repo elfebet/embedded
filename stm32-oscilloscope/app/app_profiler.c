@@ -38,7 +38,7 @@ void app_profiler_frame_end(void) {
     const uint32_t now = dwt_get_time();
     const uint32_t elapsed_cycles = now - s_window_start_cycles;
     if (elapsed_cycles >= SystemCoreClock) {
-        s_stats.fps = (uint32_t)(((uint64_t)s_frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
+        s_stats.fps = (uint8_t)(((uint64_t)s_frames_in_window * SystemCoreClock + elapsed_cycles / 2) / elapsed_cycles);
         s_stats.avg_wave_render_us = s_wave_render_count ? dwt_cycles_to_us(s_wave_render_cycles / s_wave_render_count) : 0;
 
         s_window_start_cycles = now;

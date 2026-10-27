@@ -3,8 +3,8 @@
 #include <stdbool.h>
 
 typedef struct {
-    uint32_t fps;
     uint32_t avg_wave_render_us;
+    uint8_t fps;
 } app_profiler_stats_t;
 
 void app_profiler_init(void);

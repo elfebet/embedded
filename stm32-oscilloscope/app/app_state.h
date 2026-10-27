@@ -19,8 +19,6 @@ typedef enum {
 } vertical_knob_mode_t;
 
 typedef struct {
-    // current values
-    uint8_t fps;
     uint32_t adc_vdda_mv;
     uint32_t sample_rate_hz;
     scope_wave_display_mode_t display_mode;

@@ -530,15 +530,6 @@ void scope_renderer_draw_sample_rate(const app_state_t *state) {
     gfx_draw_text(TEXT_COLUMN2_X, TEXT_LINE1_Y, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
 
-void scope_renderer_draw_fps(const app_state_t *state) {
-    if (state == NULL) return;
-    if (state->fps == s_drawn_labels.fps && !state->needs_update) return;
-    s_drawn_labels.fps = state->fps;
-
-    snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", state->fps);
-    gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
-}
-
 bool scope_renderer_draw_waves_mode(const app_state_t *state) {
     if (state == NULL) return false;
     if (state->grouped_waves_draw_mode == s_drawn_labels.grouped_waves_draw_mode && !state->needs_update) return false;
@@ -548,4 +539,12 @@ bool scope_renderer_draw_waves_mode(const app_state_t *state) {
     snprintf(s_text_buf, sizeof(s_text_buf), "%-8s", mode);
     gfx_draw_text(st7789_width() - 50, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
     return true;
+}
+
+void scope_renderer_draw_fps(uint8_t fps) {
+    if (fps == s_drawn_labels.fps) return;
+    s_drawn_labels.fps = fps;
+
+    snprintf(s_text_buf, sizeof(s_text_buf), "FPS:%-4d", fps);
+    gfx_draw_text(0, st7789_height()-10, s_text_buf, &Font_7x10, SCOPE_TEXT_COLOR, SCOPE_BG_COLOR);
 }
