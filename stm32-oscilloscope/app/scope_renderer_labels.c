@@ -31,8 +31,6 @@
 #define TEXT_BOTTOM_LINE1_Y       (SCOPE_GRID_Y + SCOPE_GRID_HEIGHT + 6)
 #define TEXT_BOTTOM_LINE2_Y       (TEXT_BOTTOM_LINE1_Y + 12)
 
-
-
 typedef struct {
     uint32_t sample_rate_hz;
     scope_wave_display_mode_t display_mode;
@@ -112,7 +110,7 @@ bool scope_renderer_draw_display_mode(const app_state_t *state) {
     s_drawn_labels.display_mode = state->display_mode;
 
     const char *mode = app_state_display_mode_label(state);
-    snprintf(s_text_buf, sizeof(s_text_buf), "Mode:%-10s", mode);
+    snprintf(s_text_buf, sizeof(s_text_buf), "DMode:%-10s", mode);
     draw_label(TEXT_COLUMN2_X, TEXT_LINE1_Y, s_text_buf);
     return true;
 }
@@ -164,7 +162,7 @@ void scope_renderer_draw_trigger_mode(const app_state_t *state) {
     if (state->trigger_mode == s_drawn_labels.trigger_mode && !state->needs_update) return;
     s_drawn_labels.trigger_mode = state->trigger_mode;
 
-    snprintf(s_text_buf, sizeof(s_text_buf), "Tmode:%-6s", app_state_trigger_mode_label(state));
+    snprintf(s_text_buf, sizeof(s_text_buf), "TMode:%-6s", app_state_trigger_mode_label(state));
     draw_label(TEXT_COLUMN1_X, TEXT_LINE1_Y, s_text_buf);
 }
 
@@ -173,7 +171,7 @@ void scope_renderer_draw_trigger_edge(const app_state_t *state) {
     if (state->trigger_edge == s_drawn_labels.trigger_edge && !state->needs_update) return;
     s_drawn_labels.trigger_edge = state->trigger_edge;
 
-    snprintf(s_text_buf, sizeof(s_text_buf), "Tedge:%-7s", app_state_trigger_edge_label(state));
+    snprintf(s_text_buf, sizeof(s_text_buf), "TEdge:%-7s", app_state_trigger_edge_label(state));
     draw_label(TEXT_COLUMN1_X, TEXT_LINE2_Y, s_text_buf);
 }
 
@@ -182,7 +180,7 @@ void scope_renderer_draw_trigger_position(const app_state_t *state) {
     if (state->trigger_position == s_drawn_labels.trigger_position && !state->needs_update) return;
     s_drawn_labels.trigger_position = state->trigger_position;
 
-    snprintf(s_text_buf, sizeof(s_text_buf), "Tpos:%lu%%", app_state_trigger_position_percent(state));
+    snprintf(s_text_buf, sizeof(s_text_buf), "TPosition:%lu%%", app_state_trigger_position_percent(state));
     draw_label(TEXT_COLUMN1_X, TEXT_LINE3_Y, s_text_buf);
 }
 
@@ -198,7 +196,7 @@ void scope_renderer_draw_trigger_level(const app_state_t *state) {
 
     const int32_t level = state->trigger_level_mv;
     const int32_t level_abs = level < 0 ? -level : level;
-    snprintf(s_text_buf, sizeof(s_text_buf), "Tlvl:%c%ld.%02ldV ",
+    snprintf(s_text_buf, sizeof(s_text_buf), "TLevel:%c%ld.%02ldV ",
         level < 0 ? '-' : '+', level_abs / 1000, (level_abs % 1000) / 10);
     gfx_draw_text(TEXT_COLUMN1_X, TEXT_LINE4_Y, s_text_buf, &Font_7x10,
          level_active ? SCOPE_TEXT_ACTIVE2 : SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
@@ -346,9 +344,9 @@ bool scope_renderer_draw_waves_mode(const app_state_t *state) {
     if (state->grouped_waves_draw_mode == s_drawn_labels.grouped_waves_draw_mode && !state->needs_update) return false;
     s_drawn_labels.grouped_waves_draw_mode = state->grouped_waves_draw_mode;
 
-    const char *mode = state->grouped_waves_draw_mode ? "Grouped" : "Normal";
-    snprintf(s_text_buf, sizeof(s_text_buf), "%-8s", mode);
-    draw_label(st7789_width() - 50, st7789_height()-10, s_text_buf);
+    snprintf(s_text_buf, sizeof(s_text_buf), "%-3s", state->grouped_waves_draw_mode ? "GRP" : "NRM");
+    gfx_draw_text(st7789_width()-18, st7789_height()-50, s_text_buf, &Font_5x7,
+        SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
     return true;
 }
 
@@ -357,5 +355,6 @@ void scope_renderer_draw_fps(uint8_t fps) {
     s_drawn_labels.fps = fps;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "%-3d", fps);
-    draw_label(0, st7789_height()-10, s_text_buf);
+    gfx_draw_text(st7789_width()-18, st7789_height()-40, s_text_buf, &Font_5x7,
+        SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
 }
