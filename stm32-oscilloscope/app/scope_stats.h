@@ -13,10 +13,10 @@ typedef struct {
 } adc_metrics_t;
 
 typedef struct {
+    uint32_t freq_hz;
+    uint32_t period_us;
+    uint16_t duty_pct;
     bool valid;
-    float freq_hz;
-    float period_us;
-    float duty_pct;
 } signal_metrics_t;
 
 void scope_stats_reinit(uint32_t vdda_mv);

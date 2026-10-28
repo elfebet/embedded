@@ -8,7 +8,7 @@
 #define SIGNAL_MIN_AMPLITUDE_RAW 100U // ~0.3V at the input, below this the signal is treated as noise
 
 static uint32_t s_start_time;
-static uint32_t s_sample_rate_hz;
+static float s_sample_rate_hz;
 static float s_vdda_mv;
 
 void scope_stats_reinit(uint32_t vdda_mv) {
@@ -18,17 +18,12 @@ void scope_stats_reinit(uint32_t vdda_mv) {
 }
 
 void scope_stats_set_sample_rate(uint32_t sample_rate_hz) {
-    s_sample_rate_hz = sample_rate_hz;
+    s_sample_rate_hz = (float)sample_rate_hz;
 }
 
 float adc_raw_to_vm(uint16_t raw) {
     const float pin_mv = (float)raw * s_vdda_mv / ADC_MAX_CODE;
     return (FRONTEND_ZERO_RATIO * s_vdda_mv - pin_mv) / FRONTEND_GAIN;
-}
-
-int16_t adc_raw_to_vm_int(uint16_t raw) {
-    const float mv = adc_raw_to_vm(raw);
-    return (int16_t)(mv >= 0.0f ? mv + 0.5f : mv - 0.5f);
 }
 
 int16_t vm_to_adc_raw(uint16_t mv) {
@@ -37,6 +32,11 @@ int16_t vm_to_adc_raw(uint16_t mv) {
     if (raw < 0.0f) raw = 0.0f;
     if (raw > ADC_MAX_CODE) raw = ADC_MAX_CODE;
     return (uint16_t)raw;
+}
+
+static inline int16_t adc_raw_to_vm_int(uint16_t raw) {
+    const float mv = adc_raw_to_vm(raw);
+    return (int16_t)(mv >= 0.0f ? mv + 0.5f : mv - 0.5f);
 }
 
 void scope_stats_calc_adc_metrics(const uint16_t *samples, uint32_t count, adc_metrics_t *stats) {
@@ -60,7 +60,7 @@ void scope_stats_calc_adc_metrics(const uint16_t *samples, uint32_t count, adc_m
 
 void scope_stats_calc_signal_metrics(const uint16_t *samples, uint32_t count, const adc_metrics_t *stats, signal_metrics_t *metrics) {
     metrics->valid = false;
-    if (count < 4 || s_sample_rate_hz == 0) return;
+    if (count < 4 || s_sample_rate_hz < ADC_MIN_SAMPLE_RATE_HZ) return;
 
     const int32_t amplitude = stats->raw_max - stats->raw_min;
     if (amplitude < (int32_t)SIGNAL_MIN_AMPLITUDE_RAW) return;
@@ -119,9 +119,9 @@ void scope_stats_calc_signal_metrics(const uint16_t *samples, uint32_t count, co
     if (duty > 100.0f) duty = 100.0f;
 
     metrics->valid = true;
-    metrics->period_us = period_samples * 1000000.0f / (float)s_sample_rate_hz;
-    metrics->freq_hz = (float)s_sample_rate_hz / period_samples;
-    metrics->duty_pct = duty;
+    metrics->period_us = (uint32_t)(period_samples * 1000000.0f / s_sample_rate_hz + 0.5f);
+    metrics->freq_hz = (uint32_t)(s_sample_rate_hz / period_samples + 0.5f);
+    metrics->duty_pct = (uint16_t)(duty + 0.5f);
 }
 
 void scope_stats_calc_metrics(const uint16_t *samples, uint32_t count, adc_metrics_t *adc, signal_metrics_t *signal) {
