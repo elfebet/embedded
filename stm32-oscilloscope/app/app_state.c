@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define TRIGGER_LEVEL_STEP_MV 50
+
 // ---------- VOLTS/DIV table ----------
 
 typedef struct {
@@ -76,6 +78,13 @@ void app_state_init(app_state_t *state) {
     state->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
     state->v_position_cdiv = 0;
 
+    state->trigger_mode = TRIGGER_MODE_ROLL;
+    state->trigger_edge = TRIGGER_EDGE_RISING;
+    state->trigger_position = TRIGGER_POSITION_25;
+    state->trigger_level_mv = 0;
+    state->trigger_status = TRIGGER_STATUS_ROLL;
+    state->single_waiting_trigger = false;
+
     state->grouped_waves_draw_mode = state->last_grouped_waves_draw_mode = true;
 }
 
@@ -89,6 +98,43 @@ const char *app_state_display_mode_label(const app_state_t *state) {
         return "Hi-Res";
     default:
         return "";
+    }
+}
+
+const char *app_state_trigger_mode_label(const app_state_t *state) {
+    switch (state->trigger_mode) {
+    case TRIGGER_MODE_ROLL:
+        return "Roll";
+    case TRIGGER_MODE_AUTO:
+        return "Auto";
+    case TRIGGER_MODE_NORMAL:
+        return "Normal";
+    case TRIGGER_MODE_SINGLE:
+        return "Single";
+    default:
+        return "";
+    }
+}
+
+const char *app_state_trigger_edge_label(const app_state_t *state) {
+    switch (state->trigger_edge) {
+    case TRIGGER_EDGE_RISING:
+        return "Rising";
+    case TRIGGER_EDGE_FALLING:
+        return "Falling";
+    default:
+        return "";
+    }
+}
+
+uint32_t app_state_trigger_position_percent(const app_state_t *state) {
+    switch (state->trigger_position) {
+    case TRIGGER_POSITION_25:
+        return 25;
+    case TRIGGER_POSITION_75:
+        return 75;
+    default:
+        return 50;
     }
 }
 
@@ -112,6 +158,11 @@ int32_t app_state_next_v_position_cdiv(const app_state_t *state, int8_t delta) {
     int32_t limit = (int32_t)ADC_GRID_V_DIVS / 2 * V_POSITION_DIV_SCALE;
     int32_t position = state->v_position_cdiv + delta * POSITION_STEPS_PER_DIV;
     return clamp_i32(position, -limit, limit);
+}
+
+int32_t app_state_next_trigger_level_mv(const app_state_t *state, int32_t delta) {
+    int32_t level = state->trigger_level_mv + delta * TRIGGER_LEVEL_STEP_MV;
+    return clamp_i32(level, -(int32_t)SCOPE_INPUT_MAX_MV, (int32_t)SCOPE_INPUT_MAX_MV);
 }
 
 uint8_t app_state_next_time_div(const app_state_t *state, int8_t delta) {
