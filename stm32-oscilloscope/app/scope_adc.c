@@ -52,6 +52,12 @@ void scope_adc_init(const scope_adc_data_t *scope_adc_data, uint32_t rate_hz) {
 }
 
 HAL_StatusTypeDef scope_adc_start(void) {
+    clear_buffer();
+    s_total_samples = 0;
+    s_dma_wraps = 0;
+    __HAL_TIM_SET_COUNTER(s_adc_data.tim, 0);
+    __HAL_TIM_CLEAR_FLAG(s_adc_data.tim, TIM_FLAG_UPDATE);
+
     HAL_StatusTypeDef status = HAL_ADC_Start_DMA(s_adc_data.adc, (uint32_t *)s_adc_buffer, ADC_DMA_BUFFER_SIZE);
     if (status != HAL_OK) return status;
 
@@ -119,10 +125,6 @@ HAL_StatusTypeDef scope_adc_set_sample_rate(uint32_t rate_hz) {
     }
 
     set_sample_timer(timer_period);
-    clear_buffer();
-    s_total_samples = 0;
-    s_dma_wraps = 0;
-
     if (was_running) {
         status = scope_adc_start();
         if (status != HAL_OK) return status;
