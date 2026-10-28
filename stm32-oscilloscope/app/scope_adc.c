@@ -5,6 +5,8 @@
 static volatile uint16_t s_adc_buffer[ADC_DMA_BUFFER_SIZE];
 static uint32_t s_sample_rate_hz = 0;
 static scope_adc_data_t s_adc_data;
+static volatile uint32_t s_dma_wraps;
+static uint32_t s_total_samples;
 
 static HAL_StatusTypeDef get_sample_timer_period(uint32_t rate_hz, uint32_t *period) {
     if (rate_hz < ADC_MIN_SAMPLE_RATE_HZ || rate_hz > ADC_MAX_SAMPLE_RATE_HZ || period == NULL) return HAL_ERROR;
@@ -37,6 +39,11 @@ static void clear_buffer() {
     }
 }
 
+// Called by HAL each time the circular DMA buffer wraps around.
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+    if (hadc == s_adc_data.adc) ++s_dma_wraps;
+}
+
 void scope_adc_init(const scope_adc_data_t *scope_adc_data, uint32_t rate_hz) {
     s_adc_data = *scope_adc_data;
     // set DMA ContinuousRequests = ENABLED
@@ -67,15 +74,26 @@ HAL_StatusTypeDef scope_adc_stop(void) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef scope_adc_copy_latest(uint16_t *destination, uint32_t sample_count) {
+HAL_StatusTypeDef scope_adc_copy_latest(uint16_t *destination, uint32_t sample_count, uint32_t *total_samples) {
     if (destination == NULL || sample_count == 0U || sample_count >= ADC_DMA_BUFFER_SIZE) return HAL_ERROR;
 
-    const uint32_t dma_remaining = __HAL_DMA_GET_COUNTER(s_adc_data.adc->DMA_Handle);
+    uint32_t wraps;
+    uint32_t dma_remaining;
+    do {
+        wraps = s_dma_wraps;
+        dma_remaining = __HAL_DMA_GET_COUNTER(s_adc_data.adc->DMA_Handle);
+    } while (wraps != s_dma_wraps);
     if (dma_remaining > ADC_DMA_BUFFER_SIZE) return HAL_ERROR;
 
     const uint32_t write_index = (ADC_DMA_BUFFER_SIZE - dma_remaining) % ADC_DMA_BUFFER_SIZE;
-    const uint32_t first_sample = (write_index + ADC_DMA_BUFFER_SIZE - sample_count) % ADC_DMA_BUFFER_SIZE;
+    if (total_samples != NULL) {
+        const uint32_t total = wraps * ADC_DMA_BUFFER_SIZE + write_index;
+        // keep the counter monotonic if the wrap interrupt is not serviced yet
+        if ((int32_t)(total - s_total_samples) > 0) s_total_samples = total;
+        *total_samples = s_total_samples;
+    }
 
+    const uint32_t first_sample = (write_index + ADC_DMA_BUFFER_SIZE - sample_count) % ADC_DMA_BUFFER_SIZE;
     for (uint32_t i = 0U; i < sample_count; ++i) {
         destination[i] = s_adc_buffer[(first_sample + i) % ADC_DMA_BUFFER_SIZE];
     }
@@ -102,6 +120,8 @@ HAL_StatusTypeDef scope_adc_set_sample_rate(uint32_t rate_hz) {
 
     set_sample_timer(timer_period);
     clear_buffer();
+    s_total_samples = 0;
+    s_dma_wraps = 0;
 
     if (was_running) {
         status = scope_adc_start();
