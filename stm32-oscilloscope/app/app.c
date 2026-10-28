@@ -63,12 +63,12 @@ void adc_init() {
 
 void controls_init(void) {
     const button_input_data_t buttons[] = {
-        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_VERTICAL_KNOB_MODE, INPUT_ACTION_RESET_VERTICAL_POSITION },
-        { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_NONE },
-        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_RESET },
-        { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE },
-        { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_BTN_3 },
+        { BTN_1_GPIO_Port,   BTN_1_Pin,   INPUT_ACTION_TRIGGER_MODE_NEXT },
+        { BTN_2_GPIO_Port,   BTN_2_Pin,   INPUT_ACTION_TRIGGER_EDGE_NEXT, INPUT_ACTION_TRIGGER_POSITION_NEXT },
+        { BTN_3_GPIO_Port,   BTN_3_Pin,   INPUT_ACTION_RUN_STOP_TOGGLE, INPUT_ACTION_RESET },
         { BTN_4_GPIO_Port,   BTN_4_Pin,   INPUT_ACTION_DISPLAY_MODE_NEXT, INPUT_ACTION_WAVES_DRAW_MODE_NEXT },
+        { ENC_SW1_GPIO_Port, ENC_SW1_Pin, INPUT_ACTION_VERTICAL_KNOB_MODE, INPUT_ACTION_RESET_VERTICAL_POSITION },
+        { ENC_SW2_GPIO_Port, ENC_SW2_Pin, INPUT_ACTION_HORIZONTAL_KNOB_MODE, INPUT_ACTION_RESET_TRIGGER_LEVEL },
     };
 
     const uint32_t num_buttons = sizeof(buttons) / sizeof(buttons[0]);
