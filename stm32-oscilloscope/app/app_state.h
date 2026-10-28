@@ -3,7 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define V_POSITION_DIV_SCALE  100
+#define V_POSITION_DIV_SCALE     100
+#define DEFAULT_TRIGGER_LEVEL_MV 100
 
 typedef enum {
     SCOPE_WAVE_DISPLAY_SAMPLE, // Select one sample per horizontal pixel.

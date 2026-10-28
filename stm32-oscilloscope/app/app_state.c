@@ -82,7 +82,7 @@ void app_state_init(app_state_t *state) {
     state->trigger_mode = TRIGGER_MODE_ROLL;
     state->trigger_edge = TRIGGER_EDGE_RISING;
     state->trigger_position = TRIGGER_POSITION_25;
-    state->trigger_level_mv = 0;
+    state->trigger_level_mv = DEFAULT_TRIGGER_LEVEL_MV;
     state->trigger_status = TRIGGER_STATUS_ROLL;
     state->single_waiting_trigger = false;
 
