@@ -1,4 +1,4 @@
-#include "app_profiler.h"
+#include "profiler.h"
 #include "stm32f4xx.h"
 #include "dwt_timer.h"
 
@@ -9,10 +9,10 @@ static uint32_t s_wave_render_start;
 static uint64_t s_wave_render_cycles;
 static uint32_t s_wave_render_count;
 
-static app_profiler_stats_t s_stats;
+static profiler_stats_t s_stats;
 static bool s_stats_ready;
 
-void app_profiler_init(void) {
+void profiler_init(void) {
     s_frames_in_window = 0;
     s_window_start_cycles = dwt_get_time();
 
@@ -23,16 +23,16 @@ void app_profiler_init(void) {
     s_stats_ready = false;
 }
 
-void app_profiler_wave_render_begin(void) {
+void profiler_wave_render_begin(void) {
     s_wave_render_start = dwt_get_time();
 }
 
-void app_profiler_wave_render_end(void) {
+void profiler_wave_render_end(void) {
     s_wave_render_cycles += dwt_get_time() - s_wave_render_start;
     s_wave_render_count++;
 }
 
-void app_profiler_frame_end(void) {
+void profiler_frame_end(void) {
     s_frames_in_window++;
 
     const uint32_t now = dwt_get_time();
@@ -50,7 +50,7 @@ void app_profiler_frame_end(void) {
     }
 }
 
-bool app_profiler_take_stats(app_profiler_stats_t *stats) {
+bool profiler_take_stats(profiler_stats_t *stats) {
     if (stats == NULL || !s_stats_ready) return false;
 
     *stats = s_stats;
