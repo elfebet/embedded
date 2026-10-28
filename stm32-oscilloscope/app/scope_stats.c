@@ -1,4 +1,4 @@
-#include "scope_adc_stats.h"
+#include "scope_stats.h"
 #include "stm32f4xx.h"
 #include "dwt_timer.h"
 #include "config.h"
