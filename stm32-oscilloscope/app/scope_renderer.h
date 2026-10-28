@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include "config.h"
 #include "app_state.h"
-#include "scope_stats.h"
 
 #define SCOPE_GRID_H_DIVS  ADC_GRID_H_DIVS
 #define SCOPE_GRID_V_DIVS  ADC_GRID_V_DIVS

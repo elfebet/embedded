@@ -1,5 +1,4 @@
 #include "scope_renderer_labels.h"
-#include "scope_renderer.h"
 
 #include "app_state.h"
 #include "colors.h"
@@ -28,7 +27,7 @@
 #define TEXT_BOTTOM_COLUMN2_X     100
 #define TEXT_BOTTOM_COLUMN3_X     170
 #define TEXT_BOTTOM_COLUMN4_X     240
-#define TEXT_BOTTOM_LINE1_Y       (SCOPE_GRID_Y + SCOPE_GRID_HEIGHT + 6)
+#define TEXT_BOTTOM_LINE1_Y       216
 #define TEXT_BOTTOM_LINE2_Y       (TEXT_BOTTOM_LINE1_Y + 12)
 
 typedef struct {
@@ -104,15 +103,14 @@ void scope_renderer_draw_run_stop(const app_state_t *state) {
     }
 }
 
-bool scope_renderer_draw_display_mode(const app_state_t *state) {
-    if (state == NULL) return false;
-    if (state->display_mode == s_drawn_labels.display_mode && !state->needs_update) return false;
+void scope_renderer_draw_display_mode(const app_state_t *state) {
+    if (state == NULL) return;
+    if (state->display_mode == s_drawn_labels.display_mode && !state->needs_update) return;
     s_drawn_labels.display_mode = state->display_mode;
 
     const char *mode = app_state_display_mode_label(state);
     snprintf(s_text_buf, sizeof(s_text_buf), "DMode:%-10s", mode);
     draw_label(TEXT_COLUMN2_X, TEXT_LINE1_Y, s_text_buf);
-    return true;
 }
 
 void scope_renderer_draw_vertical(const app_state_t *state) {
@@ -339,15 +337,14 @@ void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics) {
     }
 }
 
-bool scope_renderer_draw_waves_mode(const app_state_t *state) {
-    if (state == NULL) return false;
-    if (state->grouped_waves_draw_mode == s_drawn_labels.grouped_waves_draw_mode && !state->needs_update) return false;
+void scope_renderer_draw_waves_mode(const app_state_t *state) {
+    if (state == NULL) return;
+    if (state->grouped_waves_draw_mode == s_drawn_labels.grouped_waves_draw_mode && !state->needs_update) return;
     s_drawn_labels.grouped_waves_draw_mode = state->grouped_waves_draw_mode;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "%-3s", state->grouped_waves_draw_mode ? "GRP" : "NRM");
     gfx_draw_text(st7789_width()-18, st7789_height()-50, s_text_buf, &Font_5x7,
         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
-    return true;
 }
 
 void scope_renderer_draw_fps(uint8_t fps) {
@@ -357,4 +354,25 @@ void scope_renderer_draw_fps(uint8_t fps) {
     snprintf(s_text_buf, sizeof(s_text_buf), "%-3d", fps);
     gfx_draw_text(st7789_width()-18, st7789_height()-40, s_text_buf, &Font_5x7,
         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+}
+
+void scope_renderer_draw_top_labels(const app_state_t *state) {
+    scope_renderer_draw_run_stop(state);
+    scope_renderer_draw_display_mode(state);
+    scope_renderer_draw_waves_mode(state);
+    scope_renderer_draw_time_div(state);
+    scope_renderer_draw_sample_rate(state);
+    scope_renderer_draw_vertical(state);
+
+    scope_renderer_draw_trigger_mode(state);
+    scope_renderer_draw_trigger_edge(state);
+    scope_renderer_draw_trigger_position(state);
+    scope_renderer_draw_trigger_level(state);
+    scope_renderer_draw_trigger_status(state);
+    scope_renderer_draw_trigger_status(state);
+}
+
+void scope_renderer_draw_bottom_labels(const adc_metrics_t *adc, const signal_metrics_t *signal) {
+    scope_renderer_draw_adc_vdda(adc);
+    scope_renderer_draw_signal_metrics(signal);
 }

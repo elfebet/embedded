@@ -1,7 +1,4 @@
 #include "scope_renderer.h"
-#include "scope_renderer_labels.h"
-
-#include "app_state.h"
 #include "colors.h"
 #include "config.h"
 #include "gfx.h"
@@ -120,7 +117,6 @@ static uint16_t sample_to_y(uint16_t sample) {
 
 void scope_renderer_reinit(uint32_t vdda_mv) {
     scope_renderer_waves_clear_buffers();
-    scope_renderer_labels_clear_buffer();
     memset(&s_config, 0, sizeof(s_config));
 
     s_config.vdda_mv = vdda_mv;
