@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 #include <stdint.h>
 #include "stm32f4xx_hal.h"
 
@@ -10,6 +11,7 @@ typedef struct {
 void scope_adc_init(const scope_adc_data_t *scope_adc_data, uint32_t rate_hz);
 HAL_StatusTypeDef scope_adc_start(void);
 HAL_StatusTypeDef scope_adc_stop(void);
+bool scope_adc_is_running(void);
 
 // Copies the latest samples in chronological order (oldest first).
 // total_samples (optional): number of samples captured since the last start, wraps at 2^32.

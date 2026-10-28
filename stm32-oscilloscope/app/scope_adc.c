@@ -80,6 +80,10 @@ HAL_StatusTypeDef scope_adc_stop(void) {
     return HAL_OK;
 }
 
+bool scope_adc_is_running(void) {
+    return (s_adc_data.tim->Instance->CR1 & TIM_CR1_CEN) != 0;
+}
+
 HAL_StatusTypeDef scope_adc_copy_latest(uint16_t *destination, uint32_t sample_count, uint32_t *total_samples) {
     if (destination == NULL || sample_count == 0U || sample_count >= ADC_DMA_BUFFER_SIZE) return HAL_ERROR;
 
@@ -118,7 +122,7 @@ HAL_StatusTypeDef scope_adc_set_sample_rate(uint32_t rate_hz) {
     HAL_StatusTypeDef status = get_sample_timer_period(rate_hz, &timer_period);
     if (status != HAL_OK) return status;
 
-    const uint8_t was_running = (s_adc_data.tim->Instance->CR1 & TIM_CR1_CEN) != 0;
+    const uint8_t was_running = scope_adc_is_running();
     if (was_running) {
         status = scope_adc_stop();
         if (status != HAL_OK) return status;
