@@ -14,10 +14,15 @@ typedef enum {
 
 typedef enum {
     VERTICAL_KNOB_VOLTS_DIV,
-    VERTICAL_KNOB_OFFSET_Y, // TODO: rename to VPOS!
-    VERTICAL_KNOB_TRIGGER_LEVEL,
+    VERTICAL_KNOB_VERTICAL_POSITION,
     VERTICAL_KNOB_MODE_COUNT
 } vertical_knob_mode_t;
+
+typedef enum {
+    HORIZONTAL_KNOB_TIME_DIV,
+    HORIZONTAL_KNOB_TRIGGER_LEVEL,
+    HORIZONTAL_KNOB_MODE_COUNT
+} horizontal_knob_mode_t;
 
 typedef enum {
     TRIGGER_EDGE_RISING = 0,
@@ -54,6 +59,7 @@ typedef struct {
     uint8_t time_div_index;
 
     vertical_knob_mode_t vertical_knob_mode;
+    horizontal_knob_mode_t horizontal_knob_mode;
     int32_t v_position_cdiv; // scaled to 1/V_POSITION_DIV_SCALE div
     uint8_t volts_div_index;
 

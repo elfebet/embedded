@@ -75,6 +75,7 @@ void app_state_init(app_state_t *state) {
     state->time_div_index = find_time_div_index_by_sample_rate(ADC_PREFERRED_SAMPLE_RATE_HZ);
     state->sample_rate_hz = time_div_table[state->time_div_index].sample_rate_hz;
     state->vertical_knob_mode = VERTICAL_KNOB_VOLTS_DIV;
+    state->horizontal_knob_mode = HORIZONTAL_KNOB_TIME_DIV;
     state->volts_div_index = DEFAULT_VOLTS_DIV_INDEX;
     state->v_position_cdiv = 0;
 
