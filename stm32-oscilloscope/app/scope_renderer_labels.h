@@ -1,6 +1,7 @@
 #pragma once
 #include "app_state.h"
 #include "scope_stats.h"
+#include "scope_capture.h"
 
 void scope_renderer_labels_clear_buffer(void);
 
@@ -13,13 +14,13 @@ void scope_renderer_draw_trigger_mode(const app_state_t *state);
 void scope_renderer_draw_trigger_edge(const app_state_t *state);
 void scope_renderer_draw_trigger_position(const app_state_t *state);
 void scope_renderer_draw_trigger_level(const app_state_t *state);
-void scope_renderer_draw_trigger_status(const app_state_t *state);
 
 void scope_renderer_draw_signal_metrics(const signal_metrics_t *metrics); // frequency, period, duty under the graph
 void scope_renderer_draw_sample_rate(const app_state_t *state);
 void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics);
 
 void scope_renderer_draw_waves_mode(const app_state_t *state);
+void scope_renderer_draw_trigger_status(scope_capture_status_t status);
 void scope_renderer_draw_fps(uint8_t fps);
 
 // helper functions for drawing labels on the scope display

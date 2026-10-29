@@ -59,8 +59,8 @@ typedef struct {
     bool grouped_waves_draw_mode;
     bool running;
 
-    bool trigger_status_valid;
-    trigger_status_t trigger_status;
+    bool capture_status_valid;
+    scope_capture_status_t capture_status;
 } drawn_labels_t;
 
 static char s_text_buf[32];
@@ -200,24 +200,6 @@ void scope_renderer_draw_trigger_level(const app_state_t *state) {
          level_active ? SCOPE_TEXT_ACTIVE2 : SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
 }
 
-void scope_renderer_draw_trigger_status(const app_state_t *state) {
-    if (state == NULL) return;
-    if (s_drawn_labels.trigger_status_valid && state->trigger_status == s_drawn_labels.trigger_status && !state->needs_update) return;
-    s_drawn_labels.trigger_status_valid = true;
-    s_drawn_labels.trigger_status = state->trigger_status;
-
-    const char *text = "ROLL";
-    uint16_t color = SCOPE_TEXT_COLOR;
-    switch (state->trigger_status) {
-    case TRIGGER_STATUS_WAIT:  text = "WAIT"; color = COLOR_YELLOW; break;
-    case TRIGGER_STATUS_TRIGD: text = "TRIG"; color = COLOR_GREEN; break;
-    case TRIGGER_STATUS_AUTO:  text = "AUTO"; color = COLOR_CYAN; break;
-    default: break;
-    }
-    snprintf(s_text_buf, sizeof(s_text_buf), "%-5s", text);
-    gfx_draw_text(st7789_width() - 5 * Font_7x10.width, TEXT_LINE4_Y, s_text_buf, &Font_7x10, color, SCOPE_TEXT_BG_COLOR);
-}
-
 void scope_renderer_draw_signal_metrics(const signal_metrics_t *metrics) {
     if (metrics == NULL) return;
 
@@ -347,6 +329,34 @@ void scope_renderer_draw_waves_mode(const app_state_t *state) {
         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
 }
 
+void scope_renderer_draw_trigger_status(scope_capture_status_t status) {
+    if (s_drawn_labels.capture_status_valid && status == s_drawn_labels.capture_status) return;
+    s_drawn_labels.capture_status_valid = true;
+    s_drawn_labels.capture_status = status;
+
+    const char *text = "ROLL";
+    uint16_t color = SCOPE_TEXT_COLOR;
+    switch (status) {
+    case SCOPE_CAPTURE_STATUS_WAIT:
+        text = "WAIT";
+        color = COLOR_YELLOW;
+        break;
+    case SCOPE_CAPTURE_STATUS_TRIGD:
+    case SCOPE_CAPTURE_STATUS_SINGLE_FINISHED:
+        text = "TRIG";
+        color = COLOR_GREEN;
+        break;
+    case SCOPE_CAPTURE_STATUS_AUTO:
+        text = "AUTO";
+        color = COLOR_CYAN;
+        break;
+    default:
+        break;
+    }
+    snprintf(s_text_buf, sizeof(s_text_buf), "%-5s", text);
+    gfx_draw_text(st7789_width() - 5 * Font_7x10.width, TEXT_LINE4_Y, s_text_buf, &Font_7x10, color, SCOPE_TEXT_BG_COLOR);
+}
+
 void scope_renderer_draw_fps(uint8_t fps) {
     if (fps == s_drawn_labels.fps) return;
     s_drawn_labels.fps = fps;
@@ -368,8 +378,6 @@ void scope_renderer_draw_top_labels(const app_state_t *state) {
     scope_renderer_draw_trigger_edge(state);
     scope_renderer_draw_trigger_position(state);
     scope_renderer_draw_trigger_level(state);
-    scope_renderer_draw_trigger_status(state);
-    scope_renderer_draw_trigger_status(state);
 }
 
 void scope_renderer_draw_bottom_labels(const adc_metrics_t *adc, const signal_metrics_t *signal) {
