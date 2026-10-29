@@ -110,8 +110,8 @@ void scope_capture_update(scope_capture_result_t *result, const app_state_t *sta
     if (result == NULL) return;
 
     result->state = s_capture.state;
-    result->samples = adc_snapshot;
-    result->samples_count = ADC_SNAPSHOT_SIZE;
+    result->samples.data = adc_snapshot;
+    result->samples.count = ADC_SNAPSHOT_SIZE;
     result->single_completed_update = false;
     result->new_frame_ready = false;
     if (state == NULL) return;

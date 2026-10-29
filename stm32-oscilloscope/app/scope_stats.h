@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "scope_samples.h"
 #include <stdbool.h>
 
 typedef struct {
@@ -25,5 +25,5 @@ void scope_stats_set_sample_rate(uint32_t sample_rate_hz);
 float adc_raw_to_vm(uint16_t raw); // must be called after scope_stats_reinit() to have a valid VDDA value
 uint16_t vm_to_adc_raw(int16_t mv); // must be called after scope_stats_reinit() to have a valid VDDA value
 
-void scope_stats_calc_metrics(const uint16_t *samples, uint32_t count, adc_metrics_t *adc, signal_metrics_t *signal);
-bool scope_stats_update_periodic(const uint16_t *samples, uint32_t count, adc_metrics_t *adc, signal_metrics_t *signal);
+void scope_stats_calc_metrics(scope_samples_t samples, adc_metrics_t *adc, signal_metrics_t *signal);
+bool scope_stats_update_periodic(scope_samples_t samples, adc_metrics_t *adc, signal_metrics_t *signal);

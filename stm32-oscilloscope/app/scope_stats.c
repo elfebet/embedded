@@ -39,18 +39,18 @@ static inline int16_t adc_raw_to_vm_int(uint16_t raw) {
     return (int16_t)(mv >= 0.0f ? mv + 0.5f : mv - 0.5f);
 }
 
-void scope_stats_calc_adc_metrics(const uint16_t *samples, uint32_t count, adc_metrics_t *stats) {
+void scope_stats_calc_adc_metrics(scope_samples_t samples, adc_metrics_t *stats) {
     uint16_t min = UINT16_MAX;
     uint16_t max = 0;
     uint32_t sum = 0;
-    for (uint16_t i = 0; i < count; ++i) {
-        if (samples[i] < min) min = samples[i];
-        if (samples[i] > max) max = samples[i];
-        sum += samples[i];
+    for (uint32_t i = 0; i < samples.count; ++i) {
+        if (samples.data[i] < min) min = samples.data[i];
+        if (samples.data[i] > max) max = samples.data[i];
+        sum += samples.data[i];
     }
     stats->raw_min = min;
     stats->raw_max = max;
-    stats->raw_avg = (uint16_t)(sum / count);
+    stats->raw_avg = (uint16_t)(sum / samples.count);
 
     // adc raw values inverted. so, min=max, max=min
     stats->vin_min = adc_raw_to_vm_int(stats->raw_max);
@@ -58,9 +58,9 @@ void scope_stats_calc_adc_metrics(const uint16_t *samples, uint32_t count, adc_m
     stats->vin_avg = adc_raw_to_vm_int(stats->raw_avg);
 }
 
-void scope_stats_calc_signal_metrics(const uint16_t *samples, uint32_t count, const adc_metrics_t *stats, signal_metrics_t *metrics) {
+void scope_stats_calc_signal_metrics(scope_samples_t samples, const adc_metrics_t *stats, signal_metrics_t *metrics) {
     metrics->valid = false;
-    if (count < 4 || s_sample_rate_hz < ADC_MIN_SAMPLE_RATE_HZ) return;
+    if (samples.data == NULL || samples.count < 4 || s_sample_rate_hz < ADC_MIN_SAMPLE_RATE_HZ) return;
 
     const int32_t amplitude = stats->raw_max - stats->raw_min;
     if (amplitude < (int32_t)SIGNAL_MIN_AMPLITUDE_RAW) return;
@@ -79,9 +79,9 @@ void scope_stats_calc_signal_metrics(const uint16_t *samples, uint32_t count, co
     uint32_t high_count = 0;
     uint32_t rise_count = 0;
 
-    float prev = (float)(flip - samples[0]);
-    for (uint32_t i = 1; i < count; ++i) {
-        const float v = (float)(flip - samples[i]);
+    float prev = (float)(flip - samples.data[0]);
+    for (uint32_t i = 1; i < samples.count; ++i) {
+        const float v = (float)(flip - samples.data[i]);
         if (armed_rise && v >= mid && v != prev) {
             const float position = (float)(i - 1) + (mid - prev) / (v - prev);
             armed_rise = false;
@@ -124,19 +124,19 @@ void scope_stats_calc_signal_metrics(const uint16_t *samples, uint32_t count, co
     metrics->duty_pct = (uint16_t)(duty + 0.5f);
 }
 
-void scope_stats_calc_metrics(const uint16_t *samples, uint32_t count, adc_metrics_t *adc, signal_metrics_t *signal) {
-    if (samples == NULL || count == 0 || adc == NULL) return;
+void scope_stats_calc_metrics(scope_samples_t samples, adc_metrics_t *adc, signal_metrics_t *signal) {
+    if (samples.data == NULL || samples.count == 0 || adc == NULL) return;
 
-    scope_stats_calc_adc_metrics(samples, count, adc);
+    scope_stats_calc_adc_metrics(samples, adc);
     if (signal != NULL) {
-        scope_stats_calc_signal_metrics(samples, count, adc, signal);
+        scope_stats_calc_signal_metrics(samples, adc, signal);
     }
 }
 
-bool scope_stats_update_periodic(const uint16_t *samples, uint32_t count, adc_metrics_t *adc, signal_metrics_t *signal) {
+bool scope_stats_update_periodic(scope_samples_t samples, adc_metrics_t *adc, signal_metrics_t *signal) {
     const uint32_t now = dwt_get_time();
     if (now - s_start_time >= dwt_ms_to_cycles(300)) {
-        scope_stats_calc_metrics(samples, count, adc, signal);
+        scope_stats_calc_metrics(samples, adc, signal);
         s_start_time = now;
         return true;
     }

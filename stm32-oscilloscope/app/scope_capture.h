@@ -1,4 +1,5 @@
 #pragma once
+#include "scope_samples.h"
 #include "app_state.h"
 #include <stdint.h>
 
@@ -10,8 +11,7 @@ typedef enum {
 } scope_capture_state_t;
 
 typedef struct {
-    const uint16_t *samples;
-    uint32_t samples_count;
+    scope_samples_t samples;
     scope_capture_state_t state;
     bool single_completed_update;
     bool new_frame_ready;

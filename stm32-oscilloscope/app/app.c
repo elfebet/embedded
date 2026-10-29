@@ -224,17 +224,17 @@ void app_start(void) {
 
             profiler_wave_render_begin();
             if (app_state.grouped_waves_draw_mode) {
-                scope_renderer_draw_wave_grouped(capture_result.samples, capture_result.samples_count, app_state.display_mode);
+                scope_renderer_draw_wave_grouped(capture_result.samples, app_state.display_mode);
             } else {
-                scope_renderer_draw_wave(capture_result.samples, capture_result.samples_count, app_state.display_mode);
+                scope_renderer_draw_wave(capture_result.samples, app_state.display_mode);
             }
             profiler_wave_render_end();
 
             if (capture_result.single_completed_update) {
-                scope_stats_calc_metrics(capture_result.samples, capture_result.samples_count, &adc_metrics, &signal_metrics);
+                scope_stats_calc_metrics(capture_result.samples, &adc_metrics, &signal_metrics);
                 scope_renderer_draw_bottom_labels(&adc_metrics, &signal_metrics);
             } else {
-               if (scope_stats_update_periodic(capture_result.samples, capture_result.samples_count, &adc_metrics, &signal_metrics)) {
+               if (scope_stats_update_periodic(capture_result.samples, &adc_metrics, &signal_metrics)) {
                     scope_renderer_draw_bottom_labels(&adc_metrics, &signal_metrics);
                 }
             }

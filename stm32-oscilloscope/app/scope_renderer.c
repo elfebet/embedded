@@ -142,12 +142,12 @@ void scope_renderer_erase_wave(void) {
     s_wave_has_previous = false;
 }
 
-void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
-    if (samples == NULL || sample_count == 0U) return;
+void scope_renderer_draw_wave(scope_samples_t samples, scope_wave_display_mode_t mode) {
+    if (samples.data == NULL || samples.count == 0) return;
 
     const uint16_t graph_width = SCOPE_GRID_WIDTH;
-    const uint32_t sample_index_step = sample_count / graph_width;
-    const uint32_t sample_index_remainder = sample_count % graph_width;
+    const uint32_t sample_index_step = samples.count / graph_width;
+    const uint32_t sample_index_remainder = samples.count % graph_width;
     uint32_t sample_index = 0;
     uint32_t remainder_accumulator = 0;
     uint16_t previous_sample_y = 0;
@@ -163,21 +163,21 @@ void scope_renderer_draw_wave(const uint16_t *samples, uint32_t sample_count, sc
             remainder_accumulator -= graph_width;
         }
 
-        if (mode == SCOPE_WAVE_DISPLAY_PEAKS && sample_count > graph_width) {
+        if (mode == SCOPE_WAVE_DISPLAY_PEAKS && samples.count > graph_width) {
             uint16_t sample_min = UINT16_MAX;
             uint16_t sample_max = 0;
             for (uint32_t i = sample_index; i < bin_end; ++i) {
-                if (samples[i] < sample_min) sample_min = samples[i];
-                if (samples[i] > sample_max) sample_max = samples[i];
+                if (samples.data[i] < sample_min) sample_min = samples.data[i];
+                if (samples.data[i] > sample_max) sample_max = samples.data[i];
             }
             new_top = sample_to_y(sample_min);
             new_bottom = sample_to_y(sample_max);
         } else {
-            uint16_t sample = samples[sample_index];
-            if (mode == SCOPE_WAVE_DISPLAY_HI_RES && sample_count > graph_width) {
+            uint16_t sample = samples.data[sample_index];
+            if (mode == SCOPE_WAVE_DISPLAY_HI_RES && samples.count > graph_width) {
                 uint32_t sum = 0;
                 for (uint32_t i = sample_index; i < bin_end; ++i) {
-                    sum += samples[i];
+                    sum += samples.data[i];
                 }
                 sample = rounded_average(sum, bin_end - sample_index);
             }
@@ -238,13 +238,13 @@ void scope_renderer_erase_wave_grouped(void) {
     s_group_has_previous = false;
 }
 
-static void prepare_grouped_wave(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
+static void prepare_grouped_wave(scope_samples_t samples, scope_wave_display_mode_t mode) {
     const uint16_t graph_width = SCOPE_GRID_WIDTH;
 
-    if (sample_count <= graph_width || mode == SCOPE_WAVE_DISPLAY_SAMPLE) {
+    if (samples.count <= graph_width || mode == SCOPE_WAVE_DISPLAY_SAMPLE) {
         for (uint16_t x = 0; x < graph_width; ++x) {
-            const uint32_t sample_index = (uint32_t)x * sample_count / graph_width;
-            s_group_sample_y[x] = sample_to_y(samples[sample_index]);
+            const uint32_t sample_index = (uint32_t)x * samples.count / graph_width;
+            s_group_sample_y[x] = sample_to_y(samples.data[sample_index]);
             if (x == 0) {
                 s_group_current_top[x] = s_group_sample_y[x];
                 s_group_current_bottom[x] = s_group_sample_y[x];
@@ -260,11 +260,11 @@ static void prepare_grouped_wave(const uint16_t *samples, uint32_t sample_count,
 
     if (mode == SCOPE_WAVE_DISPLAY_HI_RES) {
         for (uint16_t x = 0; x < graph_width; ++x) {
-            const uint32_t start = (uint32_t)x * sample_count / graph_width;
-            const uint32_t end = (uint32_t)(x + 1) * sample_count / graph_width;
+            const uint32_t start = (uint32_t)x * samples.count / graph_width;
+            const uint32_t end = (uint32_t)(x + 1) * samples.count / graph_width;
             uint32_t sum = 0;
             for (uint32_t i = start; i < end; ++i) {
-                sum += samples[i];
+                sum += samples.data[i];
             }
             const uint16_t avg_sample = rounded_average(sum, end - start);
             s_group_sample_y[x] = sample_to_y(avg_sample);
@@ -285,23 +285,23 @@ static void prepare_grouped_wave(const uint16_t *samples, uint32_t sample_count,
     // якщо семплів більші ніж колонок
     // шукаємо min/max діапазон щоб не загубити піки для кожної колонки
     for (uint16_t x = 0; x < graph_width; ++x) {
-        const uint32_t start = (uint32_t)x * sample_count / graph_width;
-        const uint32_t end = (uint32_t)(x + 1) * sample_count / graph_width;
+        const uint32_t start = (uint32_t)x * samples.count / graph_width;
+        const uint32_t end = (uint32_t)(x + 1) * samples.count / graph_width;
         uint16_t sample_min = UINT16_MAX;
         uint16_t sample_max = 0;
         for (uint32_t i = start; i < end; ++i) {
-            if (samples[i] < sample_min) sample_min = samples[i];
-            if (samples[i] > sample_max) sample_max = samples[i];
+            if (samples.data[i] < sample_min) sample_min = samples.data[i];
+            if (samples.data[i] > sample_max) sample_max = samples.data[i];
         }
         s_group_current_top[x] = sample_to_y(sample_min);
         s_group_current_bottom[x] = sample_to_y(sample_max);
     }
 }
 
-void scope_renderer_draw_wave_grouped(const uint16_t *samples, uint32_t sample_count, scope_wave_display_mode_t mode) {
-    if (samples == NULL || sample_count == 0U) return;
+void scope_renderer_draw_wave_grouped(scope_samples_t samples, scope_wave_display_mode_t mode) {
+    if (samples.data == NULL || samples.count == 0) return;
 
-    prepare_grouped_wave(samples, sample_count, mode);
+    prepare_grouped_wave(samples, mode);
 
     uint16_t x = 0;
     while (x < SCOPE_GRID_WIDTH) {
