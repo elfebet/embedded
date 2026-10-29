@@ -46,13 +46,6 @@ typedef enum {
     TRIGGER_MODE_COUNT
 } trigger_mode_t;
 
-typedef enum {
-    TRIGGER_STATUS_ROLL = 0,
-    TRIGGER_STATUS_WAIT,  // armed, waiting for the trigger event
-    TRIGGER_STATUS_TRIGD, // the displayed frame was captured by a trigger event
-    TRIGGER_STATUS_AUTO   // auto timeout, free running without sync
-} trigger_status_t;
-
 typedef struct {
     uint32_t adc_vdda_mv;
     uint32_t sample_rate_hz;
@@ -68,7 +61,6 @@ typedef struct {
     trigger_edge_t trigger_edge;
     trigger_position_t trigger_position;
     int32_t trigger_level_mv; // input voltage, -SCOPE_INPUT_MAX_MV..+SCOPE_INPUT_MAX_MV
-    trigger_status_t trigger_status;
     bool single_waiting_trigger;
 
     bool reseting;
