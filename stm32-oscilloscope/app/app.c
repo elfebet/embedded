@@ -10,20 +10,30 @@
 #include "st7789_driver.h"
 #include "scope_adc.h"
 #include "scope_renderer.h"
+#include "scope_renderer_labels.h"
 #include "app_controls.h"
 #include "app_input.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "dwt_timer.h"
 #include "app_state.h"
-#include "app_profiler.h"
+#include "profiler.h"
 #include "scope_stats.h"
+#include "scope_capture.h"
+#include <string.h>
 
-static uint16_t adc_snapshot[ADC_SNAPSHOT_SIZE];
+static uint16_t adc_scan[ADC_TRIGGER_SCAN_SIZE];
 static app_state_t app_state;
 static adc_metrics_t adc_metrics;
-static app_profiler_stats_t profiler_stats;
+static signal_metrics_t signal_metrics;
+static profiler_stats_t profiler_stats;
+static scope_capture_result_t capture_result;
+
+static scope_wave_display_mode_t last_displays_mode;
+static bool last_grouped_waves_mode;
+
 
 void display_init(void) {
     st7789_spi_connected_data_t spi_data = {
@@ -88,6 +98,44 @@ void controls_init(void) {
     }
 }
 
+void splash_screen(void) {
+#if APP_SPLASH_SCREEN
+    gfx_fill_screen(COLOR_BLACK);
+
+    const char *message = "Oscilloscope";
+    const size_t length = strlen(message);
+    const font_def_t *font = &Font_16x26;
+    char str_buf[2];
+    str_buf[1] = '\0';
+    uint16_t x_pos = (st7789_width() - length * font->width) / 2;
+    uint16_t y_pos = st7789_height()/2 - Font_16x26.height;
+    for (int i = 0; i < length; i++) {
+        str_buf[0] = message[i];
+        gfx_draw_text(x_pos, y_pos, str_buf, font, COLOR_WHITE, COLOR_BLACK);
+        HAL_Delay(50);
+        x_pos += font->width;
+    }
+
+    HAL_Delay(2000);
+#endif
+}
+
+void start_stop_adc_if_needed(void) {
+    if (app_state.running == scope_adc_is_running()) return;
+
+    if (app_state.running) {
+        if (scope_adc_start() != HAL_OK) {
+            logger("Failed to start adc");
+            Error_Handler();
+        }
+    } else {
+        if (scope_adc_stop() != HAL_OK) {
+            logger("Failed to stop adc");
+            Error_Handler();
+        }
+    }
+}
+
 void update_sample_rate_if_needed(void) {
     if (app_state.sample_rate_hz == scope_adc_sample_rate()) return;
 
@@ -95,6 +143,19 @@ void update_sample_rate_if_needed(void) {
         logger("Failed to set sample rate");
         Error_Handler();
     }
+
+    scope_stats_set_sample_rate(app_state.sample_rate_hz);
+}
+
+bool should_update_waves() {
+    if (last_displays_mode != app_state.display_mode
+        || last_grouped_waves_mode != app_state.grouped_waves_draw_mode) {
+
+        last_displays_mode = app_state.display_mode;
+        last_grouped_waves_mode = app_state.grouped_waves_draw_mode;
+        return true;
+    }
+    return false;
 }
 
 void app_start(void) {
@@ -102,19 +163,23 @@ void app_start(void) {
     display_init();
     controls_init();
     adc_init();
+    splash_screen();
 
+    last_displays_mode = app_state.display_mode;
+    last_grouped_waves_mode = app_state.grouped_waves_draw_mode;
     scope_stats_reinit(app_state.adc_vdda_mv);
+    scope_stats_set_sample_rate(app_state.sample_rate_hz);
+
     scope_renderer_reinit(app_state.adc_vdda_mv);
-    if (scope_adc_start() != HAL_OK) {
-        logger("Failed to start adc");
-        Error_Handler();
-    }
+    scope_renderer_labels_clear_buffer();
+    start_stop_adc_if_needed();
+    scope_capture_init(adc_scan);
 
-    // To limit the rendering time to TARGET_FPS
+    // To limit the rendering time to APP_TARGET_FPS
     uint32_t last_frame_cycles = dwt_get_time();
-    const uint32_t frame_interval_cycles = SystemCoreClock / TARGET_FPS;
+    const uint32_t frame_interval_cycles = SystemCoreClock / APP_TARGET_FPS;
 
-    app_profiler_init();
+    profiler_init();
     while (1) {
         const uint32_t now_cycles = dwt_get_time();
         if (now_cycles - last_frame_cycles < frame_interval_cycles) {
@@ -125,50 +190,64 @@ void app_start(void) {
         input_events_t input_events;
         app_input_poll();
         app_input_take_events(&input_events);
+        if (app_controls_handle(&app_state, &input_events)) {
+            start_stop_adc_if_needed();
+            update_sample_rate_if_needed();
+        }
 
-        app_controls_handle(&app_state, &input_events);
-        update_sample_rate_if_needed();
-
-        scope_renderer_draw_run_stop(&app_state);
-        const bool display_mode_changed = scope_renderer_draw_display_mode(&app_state);
-        const bool waves_mode_changed = scope_renderer_draw_waves_mode(&app_state);
-        scope_renderer_draw_time_div(&app_state);
-        scope_renderer_draw_sample_rate(&app_state);
-        scope_renderer_draw_vertical(&app_state);
+        scope_renderer_draw_top_labels(&app_state);
         const bool vertical_changed = scope_renderer_update_vertical(&app_state);
+        const bool update_waves = should_update_waves();
 
-        if (app_state.running || vertical_changed || display_mode_changed || waves_mode_changed) {
-            if (app_state.running) {
-                const HAL_StatusTypeDef copy_status = scope_adc_copy_latest(adc_snapshot, ADC_SNAPSHOT_SIZE);
-                if (copy_status != HAL_OK) {
-                    logger("Failed to copy adc buffer");
-                    Error_Handler();
-                }
+        uint32_t total_samples = 0;
+        if (app_state.running) {
+            if (scope_adc_copy_latest(adc_scan, ADC_TRIGGER_SCAN_SIZE, &total_samples) != HAL_OK) {
+                logger("Failed to copy adc buffer");
+                Error_Handler();
             }
+        }
 
+        scope_capture_update(&capture_result, &app_state, total_samples);
+        scope_renderer_draw_capture_state(capture_result.state);
+        if (capture_result.single_completed_update) {
+            app_state.running = false;
+            start_stop_adc_if_needed();
+            scope_renderer_draw_run_stop(&app_state);
+        }
+
+        if (capture_result.new_frame_ready || vertical_changed || update_waves) {
             if (app_state.grouped_waves_draw_mode != app_state.last_grouped_waves_draw_mode) {
                 scope_renderer_erase_wave();
                 scope_renderer_erase_wave_grouped();
                 app_state.last_grouped_waves_draw_mode = app_state.grouped_waves_draw_mode;
             }
 
-            app_profiler_wave_render_begin();
+            profiler_wave_render_begin();
             if (app_state.grouped_waves_draw_mode) {
-                scope_renderer_draw_wave_grouped(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
+                scope_renderer_draw_wave_grouped(capture_result.samples, capture_result.samples_count, app_state.display_mode);
             } else {
-                scope_renderer_draw_wave(adc_snapshot, ADC_SNAPSHOT_SIZE, app_state.display_mode);
+                scope_renderer_draw_wave(capture_result.samples, capture_result.samples_count, app_state.display_mode);
             }
-            app_profiler_wave_render_end();
+            profiler_wave_render_end();
 
-            if (scope_stats_update_periodic(adc_snapshot, ADC_SNAPSHOT_SIZE, &adc_metrics)) {
-                scope_renderer_draw_adc_vdda(&adc_metrics);
+            if (capture_result.single_completed_update) {
+                scope_stats_calc_metrics(capture_result.samples, capture_result.samples_count, &adc_metrics, &signal_metrics);
+                scope_renderer_draw_bottom_labels(&adc_metrics, &signal_metrics);
+            } else {
+               if (scope_stats_update_periodic(capture_result.samples, capture_result.samples_count, &adc_metrics, &signal_metrics)) {
+                    scope_renderer_draw_bottom_labels(&adc_metrics, &signal_metrics);
+                }
             }
         }
 
-        app_profiler_frame_end();
-        if (app_profiler_take_stats(&profiler_stats)) {
+        profiler_frame_end();
+        if (profiler_take_stats(&profiler_stats)) {
+            scope_renderer_draw_waves_mode(&app_state);
             scope_renderer_draw_fps(profiler_stats.fps);
-            logger("FPS:%lu Render:%lu us", profiler_stats.fps, profiler_stats.avg_wave_render_us);
+            logger("FPS:%lu Render:%luus ADC Active:%d",
+                profiler_stats.fps,
+                profiler_stats.avg_wave_render_us,
+                scope_adc_is_running());
         }
 
         app_state.needs_update = 0;
