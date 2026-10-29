@@ -14,9 +14,6 @@ bool app_controls_handle(app_state_t *state, const input_events_t *events) {
     }
     if (events->action_triggered[INPUT_ACTION_RUN_STOP_TOGGLE]) {
         state->running = !state->running;
-        if (state->running && state->trigger_mode == TRIGGER_MODE_SINGLE) {
-            state->single_waiting_trigger = true;
-        }
         handled = true;
     }
     if (events->action_triggered[INPUT_ACTION_DISPLAY_MODE_NEXT]) {
@@ -30,7 +27,6 @@ bool app_controls_handle(app_state_t *state, const input_events_t *events) {
 
     if (events->action_triggered[INPUT_ACTION_TRIGGER_MODE_NEXT]) {
         state->trigger_mode = (state->trigger_mode + 1) % TRIGGER_MODE_COUNT;
-        state->single_waiting_trigger = state->trigger_mode == TRIGGER_MODE_SINGLE ? state->running : false;
         handled = true;
     }
     if (events->action_triggered[INPUT_ACTION_TRIGGER_EDGE_NEXT]) {

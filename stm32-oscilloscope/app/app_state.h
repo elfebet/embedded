@@ -61,7 +61,6 @@ typedef struct {
     trigger_edge_t trigger_edge;
     trigger_position_t trigger_position;
     int32_t trigger_level_mv; // input voltage, -SCOPE_INPUT_MAX_MV..+SCOPE_INPUT_MAX_MV
-    bool single_waiting_trigger;
 
     bool reseting;
     bool running;

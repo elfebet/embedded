@@ -83,7 +83,6 @@ void app_state_init(app_state_t *state) {
     state->trigger_edge = TRIGGER_EDGE_RISING;
     state->trigger_position = TRIGGER_POSITION_25;
     state->trigger_level_mv = DEFAULT_TRIGGER_LEVEL_MV;
-    state->single_waiting_trigger = false;
 
     state->grouped_waves_draw_mode = state->last_grouped_waves_draw_mode = true;
 }
