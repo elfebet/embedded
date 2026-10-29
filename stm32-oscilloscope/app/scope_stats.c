@@ -26,7 +26,7 @@ float adc_raw_to_vm(uint16_t raw) {
     return (FRONTEND_ZERO_RATIO * s_vdda_mv - pin_mv) / FRONTEND_GAIN;
 }
 
-int16_t vm_to_adc_raw(uint16_t mv) {
+uint16_t vm_to_adc_raw(int16_t mv) {
     const float pin_mv = FRONTEND_ZERO_RATIO * s_vdda_mv - (float)mv * FRONTEND_GAIN;
     float raw = pin_mv * ADC_MAX_CODE / s_vdda_mv + 0.5f;
     if (raw < 0.0f) raw = 0.0f;
