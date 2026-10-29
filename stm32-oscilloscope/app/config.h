@@ -13,18 +13,20 @@
 #define GFX_MAX_BUFFER_FONT_WIDTH  20U
 #define GFX_MAX_BUFFER_FONT_HEIGHT 28U
 
-#define TARGET_FPS 120
+#define APP_TARGET_FPS     120
+#define APP_SPLASH_SCREEN  0
 
 // Inputs (buttons, encoders, etc.)
 #define APP_INPUT_MAX_BUTTONS   8U
 #define APP_INPUT_MAX_ENCODERS  4U
 
 // ADC configuration parameters
-#define ADC_MAX_CODE         4095U
-#define ADC_DMA_BUFFER_SIZE  4096U // units for uint16_t
-#define ADC_SNAPSHOT_SIZE    1000U
-#define ADC_GRID_H_DIVS      10U
-#define ADC_GRID_V_DIVS      8U
+#define ADC_MAX_CODE          4095U
+#define ADC_DMA_BUFFER_SIZE   4096U // units for uint16_t
+#define ADC_TRIGGER_SCAN_SIZE 3072U // 3/4 of ADC_DMA_BUFFER_SIZE. Larger than the ADC_SNAPSHOT_SIZE to allow pre-trigger sampling
+#define ADC_SNAPSHOT_SIZE     1000U
+#define ADC_GRID_H_DIVS       10U
+#define ADC_GRID_V_DIVS       8U
 
 #define ADC_MIN_SAMPLE_RATE_HZ       10U
 #define ADC_MAX_SAMPLE_RATE_HZ       500000U
