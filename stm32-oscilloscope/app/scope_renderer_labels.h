@@ -20,7 +20,7 @@ void scope_renderer_draw_sample_rate(const app_state_t *state);
 void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics);
 
 void scope_renderer_draw_waves_mode(const app_state_t *state);
-void scope_renderer_draw_trigger_status(scope_capture_status_t status);
+void scope_renderer_draw_capture_state(scope_capture_state_t state);
 void scope_renderer_draw_fps(uint8_t fps);
 
 // helper functions for drawing labels on the scope display

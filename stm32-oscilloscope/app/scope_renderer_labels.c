@@ -59,8 +59,8 @@ typedef struct {
     bool grouped_waves_draw_mode;
     bool running;
 
-    bool capture_status_valid;
-    scope_capture_status_t capture_status;
+    bool capture_state_valid;
+    scope_capture_state_t capture_state;
 } drawn_labels_t;
 
 static char s_text_buf[32];
@@ -329,24 +329,23 @@ void scope_renderer_draw_waves_mode(const app_state_t *state) {
         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
 }
 
-void scope_renderer_draw_trigger_status(scope_capture_status_t status) {
-    if (s_drawn_labels.capture_status_valid && status == s_drawn_labels.capture_status) return;
-    s_drawn_labels.capture_status_valid = true;
-    s_drawn_labels.capture_status = status;
+void scope_renderer_draw_capture_state(scope_capture_state_t state) {
+    if (s_drawn_labels.capture_state_valid && state == s_drawn_labels.capture_state) return;
+    s_drawn_labels.capture_state_valid = true;
+    s_drawn_labels.capture_state = state;
 
     const char *text = "ROLL";
     uint16_t color = SCOPE_TEXT_COLOR;
-    switch (status) {
-    case SCOPE_CAPTURE_STATUS_WAIT:
+    switch (state) {
+    case SCOPE_CAPTURE_STATE_WAIT:
         text = "WAIT";
         color = COLOR_YELLOW;
         break;
-    case SCOPE_CAPTURE_STATUS_TRIGD:
-    case SCOPE_CAPTURE_STATUS_SINGLE_FINISHED:
+    case SCOPE_CAPTURE_STATE_TRIGD:
         text = "TRIG";
         color = COLOR_GREEN;
         break;
-    case SCOPE_CAPTURE_STATUS_AUTO:
+    case SCOPE_CAPTURE_STATE_AUTO:
         text = "AUTO";
         color = COLOR_CYAN;
         break;
