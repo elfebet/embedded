@@ -6,12 +6,12 @@
 bool app_controls_handle(app_state_t *state, const input_events_t *events) {
     if (state == NULL || events == NULL) return false;
 
-    bool handled = false;
-
     if (events->action_triggered[INPUT_ACTION_RESET]) {
-        state->reseting = true;
-        handled = true;
+        state->reset_requested = true;
+        return true;
     }
+
+    bool handled = false;
     if (events->action_triggered[INPUT_ACTION_RUN_STOP_TOGGLE]) {
         state->running = !state->running;
         handled = true;

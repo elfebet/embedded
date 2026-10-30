@@ -62,8 +62,8 @@ typedef struct {
     trigger_position_t trigger_position;
     int32_t trigger_level_mv; // input voltage, -SCOPE_INPUT_MAX_MV..+SCOPE_INPUT_MAX_MV
 
-    bool reseting;
     bool running;
+    bool reset_requested;
     uint8_t needs_update; // flag indicating that all values need to be updated
 
     bool grouped_waves_draw_mode;
@@ -71,6 +71,7 @@ typedef struct {
 } app_state_t;
 
 void app_state_init(app_state_t *state);
+void app_state_reset(app_state_t *state);
 
 const char *app_state_display_mode_label(const app_state_t *state);
 const char *app_state_trigger_mode_label(const app_state_t *state);

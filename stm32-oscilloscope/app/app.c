@@ -119,6 +119,15 @@ void splash_screen(void) {
 #endif
 }
 
+void reset_if_needed(void) {
+    if (!app_state.reset_requested) return;
+
+    app_state_reset(&app_state);
+    scope_capture_init(adc_scan);
+    scope_renderer_reinit(app_state.adc_vdda_mv);
+    scope_renderer_labels_clear_buffer();
+}
+
 void start_stop_adc_if_needed(void) {
     if (app_state.running == scope_adc_is_running()) return;
 
@@ -135,15 +144,22 @@ void start_stop_adc_if_needed(void) {
     }
 }
 
-void update_sample_rate_if_needed(void) {
-    if (app_state.sample_rate_hz == scope_adc_sample_rate()) return;
-
-    if (scope_adc_set_sample_rate(app_state.sample_rate_hz) != HAL_OK) {
-        logger("Failed to set sample rate");
-        Error_Handler();
+static void sync_adc_with_app_state(void) {
+    if (!app_state.running) {
+        start_stop_adc_if_needed();
     }
 
-    scope_stats_set_sample_rate(app_state.sample_rate_hz);
+    if (app_state.sample_rate_hz != scope_adc_sample_rate()) {
+        scope_stats_set_sample_rate(app_state.sample_rate_hz);
+        if (scope_adc_set_sample_rate(app_state.sample_rate_hz) != HAL_OK) {
+            logger("Failed to set sample rate");
+            Error_Handler();
+        }
+    }
+
+    if (app_state.running) {
+        start_stop_adc_if_needed();
+    }
 }
 
 bool should_update_waves() {
@@ -169,10 +185,10 @@ void app_start(void) {
     scope_stats_reinit(app_state.adc_vdda_mv);
     scope_stats_set_sample_rate(app_state.sample_rate_hz);
 
+    scope_capture_init(adc_scan);
     scope_renderer_reinit(app_state.adc_vdda_mv);
     scope_renderer_labels_clear_buffer();
     start_stop_adc_if_needed();
-    scope_capture_init(adc_scan);
 
     // To limit the rendering time to APP_TARGET_FPS
     uint32_t last_frame_cycles = dwt_get_time();
@@ -190,8 +206,8 @@ void app_start(void) {
         app_input_poll();
         app_input_take_events(&input_events);
         if (app_controls_handle(&app_state, &input_events)) {
-            start_stop_adc_if_needed();
-            update_sample_rate_if_needed();
+            reset_if_needed();
+            sync_adc_with_app_state();
         }
 
         scope_renderer_draw_top_labels(&app_state);
@@ -229,7 +245,7 @@ void app_start(void) {
             }
             profiler_wave_render_end();
 
-            if (capture_result.single_completed_update) {
+            if (capture_result.single_completed_update || app_state.needs_update) {
                 scope_stats_calc_metrics(capture_result.samples, &adc_metrics, &signal_metrics);
                 scope_renderer_draw_bottom_labels(&adc_metrics, &signal_metrics);
             } else {

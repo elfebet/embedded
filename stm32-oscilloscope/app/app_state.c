@@ -69,7 +69,7 @@ uint8_t find_time_div_index_by_sample_rate(uint32_t target_rate_hz) {
 void app_state_init(app_state_t *state) {
     state->needs_update = 1;
     state->running = true;
-    state->reseting = false;
+    state->reset_requested = false;
     state->adc_vdda_mv = 0;
     state->display_mode = SCOPE_WAVE_DISPLAY_SAMPLE;
     state->time_div_index = find_time_div_index_by_sample_rate(ADC_PREFERRED_SAMPLE_RATE_HZ);
@@ -85,6 +85,12 @@ void app_state_init(app_state_t *state) {
     state->trigger_level_mv = DEFAULT_TRIGGER_LEVEL_MV;
 
     state->grouped_waves_draw_mode = state->last_grouped_waves_draw_mode = true;
+}
+
+void app_state_reset(app_state_t *state) {
+    const uint32_t adc_vdda_mv = state->adc_vdda_mv;
+    app_state_init(state);
+    state->adc_vdda_mv = adc_vdda_mv;
 }
 
 const char *app_state_display_mode_label(const app_state_t *state) {
