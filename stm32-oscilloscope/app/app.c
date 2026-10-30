@@ -64,8 +64,8 @@ void adc_init() {
     }
     logger("Measured VDDA: %lumV", app_state.adc_vdda_mv);
 
-    if (ADC_SNAPSHOT_SIZE >= ADC_DMA_BUFFER_SIZE) {
-        logger("ADC_SNAPSHOT_SIZE must be less than ADC_DMA_BUFFER_SIZE");
+    if (ADC_SNAPSHOT_SIZE >= ADC_TRIGGER_SCAN_SIZE || ADC_TRIGGER_SCAN_SIZE >= ADC_DMA_BUFFER_SIZE) {
+        logger("Must be ADC_SNAPSHOT_SIZE < ADC_TRIGGER_SCAN_SIZE and ADC_TRIGGER_SCAN_SIZE < ADC_DMA_BUFFER_SIZE");
         Error_Handler();
     }
 }
@@ -144,7 +144,7 @@ void start_stop_adc_if_needed(void) {
     }
 }
 
-static void sync_adc_with_app_state(void) {
+void sync_adc_with_app_state(void) {
     if (!app_state.running) {
         start_stop_adc_if_needed();
     }
