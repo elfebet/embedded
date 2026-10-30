@@ -34,7 +34,6 @@ static scope_capture_result_t capture_result;
 static scope_wave_display_mode_t last_displays_mode;
 static bool last_grouped_waves_mode;
 
-
 void display_init(void) {
     st7789_spi_connected_data_t spi_data = {
         .spi = &hspi1,
@@ -244,10 +243,9 @@ void app_start(void) {
         if (profiler_take_stats(&profiler_stats)) {
             scope_renderer_draw_waves_mode(&app_state);
             scope_renderer_draw_fps(profiler_stats.fps);
-            logger("FPS:%lu Render:%luus ADC Active:%d",
+            logger("FPS:%lu Render:%luus",
                 profiler_stats.fps,
-                profiler_stats.avg_wave_render_us,
-                scope_adc_is_running());
+                profiler_stats.avg_wave_render_us);
         }
 
         app_state.needs_update = 0;

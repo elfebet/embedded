@@ -13,8 +13,9 @@
 #define GFX_MAX_BUFFER_FONT_WIDTH  20U
 #define GFX_MAX_BUFFER_FONT_HEIGHT 28U
 
-#define APP_TARGET_FPS     120
-#define APP_SPLASH_SCREEN  0
+#define APP_TARGET_FPS      120
+#define APP_SPLASH_SCREEN   0
+#define APP_SHOW_WAVES_MODE 0 // display or not waves mode: grouped or normal (GRP/NRM)
 
 // Inputs (buttons, encoders, etc.)
 #define APP_INPUT_MAX_BUTTONS   8U

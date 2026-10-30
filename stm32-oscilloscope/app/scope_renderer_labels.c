@@ -320,13 +320,14 @@ void scope_renderer_draw_adc_vdda(const adc_metrics_t *metrics) {
 }
 
 void scope_renderer_draw_waves_mode(const app_state_t *state) {
+#if APP_SHOW_WAVES_MODE
     if (state == NULL) return;
     if (state->grouped_waves_draw_mode == s_drawn_labels.grouped_waves_draw_mode && !state->needs_update) return;
     s_drawn_labels.grouped_waves_draw_mode = state->grouped_waves_draw_mode;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "%-3s", state->grouped_waves_draw_mode ? "GRP" : "NRM");
-    gfx_draw_text(st7789_width()-18, st7789_height()-50, s_text_buf, &Font_5x7,
-        SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+    gfx_draw_text(st7789_width()-18, 60, s_text_buf, &Font_5x7, SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
+#endif
 }
 
 void scope_renderer_draw_capture_state(scope_capture_state_t state) {
@@ -361,6 +362,8 @@ void scope_renderer_draw_fps(uint8_t fps) {
     s_drawn_labels.fps = fps;
 
     snprintf(s_text_buf, sizeof(s_text_buf), "%-3d", fps);
+    gfx_draw_text(st7789_width()-18, st7789_height()-50, "FPS", &Font_5x7,
+         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
     gfx_draw_text(st7789_width()-18, st7789_height()-40, s_text_buf, &Font_5x7,
         SCOPE_TEXT_COLOR, SCOPE_TEXT_BG_COLOR);
 }
