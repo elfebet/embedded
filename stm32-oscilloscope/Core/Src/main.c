@@ -73,10 +73,12 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#if APP_ENABLE_UART_LOGS
 int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
+#endif
 /* USER CODE END 0 */
 
 /**

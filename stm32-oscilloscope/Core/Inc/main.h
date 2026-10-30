@@ -50,8 +50,9 @@ extern DMA_HandleTypeDef hdma_spi1_tx;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-
+#if APP_ENABLE_UART_LOGS
 extern UART_HandleTypeDef huart1;
+#endif
 
 /* USER CODE END EC */
 

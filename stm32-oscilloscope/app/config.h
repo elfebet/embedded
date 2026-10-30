@@ -2,7 +2,6 @@
 
 #define LCD_USE_DMA          1
 #define LCD_ENABLE_TESTS     1
-#define LCD_ENABLE_UART_LOGS 1
 
 #if !LCD_USE_DMA
 // Blocking fallback buffer capacity in bytes for fixed-source transfers.
@@ -13,9 +12,10 @@
 #define GFX_MAX_BUFFER_FONT_WIDTH  20U
 #define GFX_MAX_BUFFER_FONT_HEIGHT 28U
 
-#define APP_TARGET_FPS      120
-#define APP_SPLASH_SCREEN   APP_RELEASE
-#define APP_SHOW_WAVES_MODE 0 // display or not waves mode: grouped or normal (GRP/NRM)
+#define APP_TARGET_FPS       120
+#define APP_ENABLE_UART_LOGS 1
+#define APP_SPLASH_SCREEN    APP_RELEASE
+#define APP_SHOW_WAVES_MODE  0 // display or not waves mode: grouped or normal (GRP/NRM)
 
 // Inputs (buttons, encoders, etc.)
 #define APP_INPUT_MAX_BUTTONS   8U

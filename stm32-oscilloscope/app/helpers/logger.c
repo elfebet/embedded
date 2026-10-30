@@ -8,7 +8,7 @@
 #define LOG_BUF_LENGTH 64U
 
 void logger(const char *format, ...) {
-#if LCD_ENABLE_UART_LOGS
+#if APP_ENABLE_UART_LOGS
     char text[LOG_BUF_LENGTH];
 
     va_list args;
