@@ -12,12 +12,14 @@
 
 typedef struct {
     const uint16_t *scan_samples;
-    uint32_t last_trigger_time;
+    uint32_t trigger_wait_started_at;
     uint32_t single_arm_total;
 
     // values to detect changes in the app state to reset capture logic if needed
     uint32_t sample_rate_hz;
     trigger_mode_t last_trigger_mode;
+    trigger_edge_t last_trigger_edge;
+    int32_t last_trigger_level_mv;
     bool was_running;
     scope_capture_state_t state;
 } scope_capture_data_t;
@@ -35,7 +37,7 @@ static bool is_timeout(uint32_t time) {
     uint32_t timeout_ms = 2000000U / s_capture.sample_rate_hz; // two frame durations
     if (timeout_ms < AUTO_TIMEOUT_MIN_MS) timeout_ms = AUTO_TIMEOUT_MIN_MS;
     if (timeout_ms > AUTO_TIMEOUT_MAX_MS) timeout_ms = AUTO_TIMEOUT_MAX_MS;
-    return time - s_capture.last_trigger_time >= dwt_ms_to_cycles(timeout_ms);
+    return time - s_capture.trigger_wait_started_at >= dwt_ms_to_cycles(timeout_ms);
 }
 
 // Finds a trigger crossing in samples[min_index..max_index]. The ADC is inverted:
@@ -76,9 +78,11 @@ static bool find_trigger(const app_state_t *state, uint32_t min_index, uint32_t 
 
 void scope_capture_init(const uint16_t *scan_samples) {
     s_capture.scan_samples = scan_samples;
-    s_capture.last_trigger_time = 0;
+    s_capture.trigger_wait_started_at = 0;
     s_capture.single_arm_total = 0;
     s_capture.last_trigger_mode = TRIGGER_MODE_ROLL;
+    s_capture.last_trigger_edge = TRIGGER_EDGE_RISING;
+    s_capture.last_trigger_level_mv = 0;
     s_capture.was_running = false;
     s_capture.sample_rate_hz = 0;
     s_capture.state = SCOPE_CAPTURE_STATE_ROLL;
@@ -88,10 +92,24 @@ void scope_capture_init(const uint16_t *scan_samples) {
     }
 }
 
-static void update_capture_tracking(const app_state_t *state, uint32_t total_samples) {
+static void update_capture_tracking(const app_state_t *state, uint32_t total_samples, uint32_t now) {
     const bool single_active = state->running && state->trigger_mode == TRIGGER_MODE_SINGLE;
     const bool was_single_active = s_capture.was_running && s_capture.last_trigger_mode == TRIGGER_MODE_SINGLE;
-    if (single_active && (!was_single_active || state->sample_rate_hz != s_capture.sample_rate_hz)) {
+    const bool trigger_config_changed =
+        state->trigger_edge != s_capture.last_trigger_edge ||
+        state->trigger_level_mv != s_capture.last_trigger_level_mv;
+    const bool capture_conditions_changed =
+        state->running != s_capture.was_running ||
+        state->trigger_mode != s_capture.last_trigger_mode ||
+        state->sample_rate_hz != s_capture.sample_rate_hz ||
+        trigger_config_changed;
+
+    if (capture_conditions_changed) {
+        s_capture.trigger_wait_started_at = now;
+    }
+
+    if (single_active &&
+        (!was_single_active || state->sample_rate_hz != s_capture.sample_rate_hz || trigger_config_changed)) {
         s_capture.single_arm_total = total_samples;
     }
 
@@ -100,6 +118,12 @@ static void update_capture_tracking(const app_state_t *state, uint32_t total_sam
     }
     if (state->trigger_mode != s_capture.last_trigger_mode) {
         s_capture.last_trigger_mode = state->trigger_mode;
+    }
+    if (state->trigger_edge != s_capture.last_trigger_edge) {
+        s_capture.last_trigger_edge = state->trigger_edge;
+    }
+    if (state->trigger_level_mv != s_capture.last_trigger_level_mv) {
+        s_capture.last_trigger_level_mv = state->trigger_level_mv;
     }
     if (state->running != s_capture.was_running) {
         s_capture.was_running = state->running;
@@ -116,7 +140,8 @@ void scope_capture_update(scope_capture_result_t *result, const app_state_t *sta
     result->new_frame_ready = false;
     if (state == NULL) return;
 
-    update_capture_tracking(state, total_samples);
+    const uint32_t now = dwt_get_time();
+    update_capture_tracking(state, total_samples, now);
 
     if (!state->running) return;
 
@@ -144,13 +169,11 @@ void scope_capture_update(scope_capture_result_t *result, const app_state_t *sta
             min_index = ADC_TRIGGER_SCAN_SIZE - since_arm;
         }
     }
-
     uint32_t trigger_index = 0;
-    const uint32_t now = dwt_get_time();
     const bool trigger_found = find_trigger(state, min_index, max_index, &trigger_index);
     if (trigger_found) {
         memcpy(adc_snapshot, &s_capture.scan_samples[trigger_index - pre_samples], sizeof(adc_snapshot));
-        s_capture.last_trigger_time = now;
+        s_capture.trigger_wait_started_at = now;
         result->single_completed_update = single_mode;
         set_capture_state(result, SCOPE_CAPTURE_STATE_TRIGD);
         result->new_frame_ready = true;
