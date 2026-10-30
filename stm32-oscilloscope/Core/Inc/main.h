@@ -89,10 +89,6 @@ void Error_Handler(void);
 #define BTN_3_GPIO_Port GPIOB
 #define BTN_4_Pin GPIO_PIN_15
 #define BTN_4_GPIO_Port GPIOB
-#define ENC_SW1_Pin GPIO_PIN_11
-#define ENC_SW1_GPIO_Port GPIOA
-#define ENC_SW2_Pin GPIO_PIN_12
-#define ENC_SW2_GPIO_Port GPIOA
 #define ENC1_A_Pin GPIO_PIN_4
 #define ENC1_A_GPIO_Port GPIOB
 #define ENC1_B_Pin GPIO_PIN_5
@@ -101,6 +97,10 @@ void Error_Handler(void);
 #define ENC2_A_GPIO_Port GPIOB
 #define ENC2_B_Pin GPIO_PIN_7
 #define ENC2_B_GPIO_Port GPIOB
+#define ENC_SW1_Pin GPIO_PIN_8
+#define ENC_SW1_GPIO_Port GPIOB
+#define ENC_SW2_Pin GPIO_PIN_9
+#define ENC_SW2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
